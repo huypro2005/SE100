@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kế hoạch thực hiện SE100</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky top bar + single reading column (max 1120px); wide tables and the Gantt scroll inside their own box. */
+:root {
+  --bg: #f6f5f7; --surface: #ffffff; --fg: #1e1b24; --muted: #625c6c; --line: #e3dfe8;
+  --accent: #a3245a; --accent-soft: #f7e4ed;
+  --team-a: #17766d; --team-a-soft: #dcefec;
+  --team-b: #a8570f; --team-b-soft: #f8e7d5;
+  --pm: #4650ad; --pm-soft: #e3e5f7;
+  --code-bg: #f0edf3; --ok: #2c7a31; --bad: #bf3329;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141217; --surface: #1d1a22; --fg: #ece8f1; --muted: #a59eaf; --line: #332e3a;
+    --accent: #e8749f; --accent-soft: #3b1d2a;
+    --team-a: #52c3b6; --team-a-soft: #15322f;
+    --team-b: #eaa363; --team-b-soft: #3a2918;
+    --pm: #9ca5f2; --pm-soft: #23274b;
+    --code-bg: #25212b; --ok: #72cf76; --bad: #f27c71;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141217; --surface: #1d1a22; --fg: #ece8f1; --muted: #a59eaf; --line: #332e3a;
+  --accent: #e8749f; --accent-soft: #3b1d2a;
+  --team-a: #52c3b6; --team-a-soft: #15322f;
+  --team-b: #eaa363; --team-b-soft: #3a2918;
+  --pm: #9ca5f2; --pm-soft: #23274b;
+  --code-bg: #25212b; --ok: #72cf76; --bad: #f27c71;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 15px/1.6 var(--font-body); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, .mono { font-family: var(--font-mono); font-size: .86em; }
+code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.topbar-inner { max-width: 1120px; margin: 0 auto; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.brand { font-weight: 800; letter-spacing: .02em; font-size: 13px; text-transform: uppercase; color: var(--accent); }
+.topbar nav { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; }
+.topbar nav a { color: var(--muted); text-decoration: none; }
+.topbar nav a:hover { color: var(--fg); }
+.topbar .switch { margin-left: auto; font-weight: 600; font-size: 13.5px; text-decoration: none; }
+
+main { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 80px; display: grid; gap: 64px; }
+header.hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.12; margin: 6px 0 12px; font-weight: 800; letter-spacing: -.02em; text-wrap: balance; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+header.hero p { max-width: 68ch; color: var(--muted); margin: 0; font-size: 16px; }
+section { display: grid; gap: 18px; min-width: 0; }
+section > h2 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: -.01em; text-wrap: balance; }
+section > h2 .num { color: var(--accent); margin-right: 8px; }
+h3 { font-size: 17px; margin: 0; font-weight: 700; }
+.lead { margin: 0; max-width: 72ch; color: var(--muted); }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.badge.a { background: var(--team-a-soft); color: var(--team-a); }
+.badge.b { background: var(--team-b-soft); color: var(--team-b); }
+.badge.pm { background: var(--pm-soft); color: var(--pm); }
+.badge.crit { background: var(--accent-soft); color: var(--accent); }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+
+/* Assumptions */
+.assume { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.assume > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.assume .k { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.assume .v { font-weight: 700; font-size: 17px; }
+.assume p { margin: 0; color: var(--muted); font-size: 14px; }
+.assume .a .v { color: var(--team-a); } .assume .b .v { color: var(--team-b); } .assume .pm .v { color: var(--pm); }
+
+/* Critical path */
+.path { display: flex; flex-wrap: wrap; gap: 10px 0; align-items: stretch; }
+.node { display: flex; align-items: center; }
+.node .box { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 2px; min-width: 96px; }
+.node .box b { font-family: var(--font-mono); font-size: 13px; }
+.node .box span { font-size: 12.5px; color: var(--muted); }
+.node:not(:last-child)::after { content: "→"; color: var(--muted); padding: 0 8px; font-weight: 700; }
+.node.hot .box { border: 2px solid var(--accent); background: var(--accent-soft); }
+.node.hot .box b { color: var(--accent); }
+.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 0; max-width: 75ch; }
+
+/* Layers */
+.layers { display: grid; gap: 6px; }
+.layer { display: grid; grid-template-columns: 44px minmax(150px, 220px) 1fr; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.layer .n { font-weight: 800; font-size: 22px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.layer .t { font-weight: 700; }
+.layer .ucs { font-family: var(--font-mono); font-size: 12.5px; }
+.layer .why { color: var(--muted); font-size: 13.5px; }
+.layer > div:last-child { display: grid; gap: 2px; min-width: 0; }
+@media (max-width: 640px) { .layer { grid-template-columns: 36px 1fr; } .layer > div:last-child { grid-column: 2; } }
+
+/* MoSCoW */
+.moscow { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.moscow > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; }
+.moscow h3 small { font-weight: 500; color: var(--muted); font-size: 13px; margin-left: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--code-bg); }
+.moscow .must h3 { color: var(--accent); }
+.moscow .note { font-size: 13px; color: var(--muted); margin: 0; }
+
+/* Branch groups */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { font: 600 13px var(--font-body); padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+#groups td:first-child { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#groups td.br { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; }
+#groups td.dep { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+#groups tr.crit td:first-child { color: var(--accent); }
+#groups tr.crit td:nth-child(2) b { color: var(--accent); }
+.legend { font-size: 13px; color: var(--muted); margin: 0; }
+.notes { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 80ch; }
+
+/* Gantt */
+.gantt-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.gantt { display: grid; grid-template-columns: 110px repeat(12, minmax(70px, 1fr)); min-width: 980px; font-size: 12.5px; }
+.gantt > * { padding: 8px 6px; border-bottom: 1px solid var(--line); }
+.gantt .rh { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: var(--bg); position: sticky; left: 0; z-index: 1; border-right: 1px solid var(--line); display: flex; align-items: center; }
+.gantt .wk { text-align: center; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; background: var(--bg); }
+.gantt .sp { text-align: center; font-weight: 800; border-left: 1px solid var(--line); }
+.gantt .bar { margin: 6px 3px; padding: 7px 8px; border-radius: 6px; line-height: 1.4; border-bottom: 0; }
+.gantt .bar.a { background: var(--team-a-soft); color: var(--team-a); }
+.gantt .bar.b { background: var(--team-b-soft); color: var(--team-b); }
+.gantt .bar.pm { background: var(--pm-soft); color: var(--pm); }
+.gantt .bar.all { background: var(--code-bg); color: var(--fg); }
+.gantt .bar strong { color: var(--accent); }
+.gantt .ms { display: flex; align-items: flex-start; gap: 6px; font-weight: 700; }
+.gantt .ms::before { content: ""; width: 10px; height: 10px; background: var(--accent); transform: rotate(45deg); margin-top: 4px; flex: none; }
+.gantt .rowgap { border-bottom: 1px solid var(--line); }
+
+.milestones { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.milestones li { display: grid; grid-template-columns: 46px 1fr; gap: 10px; align-items: baseline; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.milestones b { color: var(--accent); font-weight: 800; }
+.milestones span { font-size: 14px; }
+.milestones small { display: block; color: var(--muted); font-size: 12.5px; }
+
+footer { max-width: 1120px; margin: 0 auto; padding: 0 20px 40px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">SE100 · Mỹ phẩm</span>
+    <nav aria-label="Mục lục">
+      <a href="#gia-dinh">Giả định</a>
+      <a href="#duong-gang">Đường găng</a>
+      <a href="#thu-tu">Thứ tự</a>
+      <a href="#uu-tien">Ưu tiên</a>
+      <a href="#nhanh">Nhóm nhánh</a>
+      <a href="#timeline">Timeline</a>
+      <a href="#rui-ro">Rủi ro</a>
+    </nav>
+  </div>
+</div>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Hệ thống quản lý cửa hàng mỹ phẩm · 40 use case · 12 tuần</div>
+    <h1>Kế hoạch thực hiện</h1>
+    <p>Thứ tự làm use case, cách gom nhánh và timeline cho nhóm 5 người. Team Kho làm trước phần dữ liệu nền. Trong lúc đó Team Bán hàng làm những phần không cần tồn kho. Hai team gặp nhau ở POS vào Sprint 3.</p>
+  </header>
+
+  <section id="gia-dinh">
+    <h2><span class="num">1</span>Giả định và phân công</h2>
+    <div class="assume">
+      <div><span class="k">Thời gian</span><span class="v">12 tuần</span><p>Sprint 2 tuần. Tuần 1 tính từ ngày bắt đầu dự án.</p></div>
+      <div class="a"><span class="k">Team A</span><span class="v">Kho</span><p>BE-A + FE-A. Làm AUTH (xác thực), PROD, SUPP, STK.</p></div>
+      <div class="b"><span class="k">Team B</span><span class="v">Bán hàng</span><p>BE-B + FE-B. Làm AUTH (quản trị), CUS, PROM, POS.</p></div>
+      <div class="pm"><span class="k">PM</span><span class="v">Hỗ trợ BE</span><p>Setup, seed data, cấu hình hệ thống, một phần báo cáo. Không nhận task trên đường găng.</p></div>
+    </div>
+  </section>
+
+  <section id="duong-gang">
+    <h2><span class="num">2</span>Đường găng</h2>
+    <p class="lead">Chuỗi use case mà trễ một ngày thì cả dự án trễ một ngày.</p>
+    <div class="path">
+      <div class="node"><div class="box"><b>Setup</b><span>Khung dự án, DB</span></div></div>
+      <div class="node"><div class="box"><b>AUTH-01..03</b><span>Đăng nhập</span></div></div>
+      <div class="node"><div class="box"><b>PROD-02..03</b><span>Danh mục, thương hiệu</span></div></div>
+      <div class="node"><div class="box"><b>PROD-01</b><span>Sản phẩm</span></div></div>
+      <div class="node hot"><div class="box"><b>STK-01</b><span>Nhập kho, tạo lô</span></div></div>
+      <div class="node"><div class="box"><b>POS-02</b><span>Lập đơn FEFO</span></div></div>
+      <div class="node"><div class="box"><b>POS-03</b><span>Thanh toán</span></div></div>
+      <div class="node"><div class="box"><b>POS-04</b><span>Đổi trả</span></div></div>
+      <div class="node"><div class="box"><b>REP-02..03</b><span>Doanh thu, lợi nhuận</span></div></div>
+    </div>
+    <p class="callout"><strong>STK-01 (Nhập kho) là điểm nghẽn quan trọng nhất.</strong> Chưa có lô hàng thì không bán được, không kiểm kho được, không xuất hủy được, cũng không có dữ liệu cho báo cáo.</p>
+  </section>
+
+  <section id="thu-tu">
+    <h2><span class="num">3</span>Thứ tự làm theo tầng</h2>
+    <p class="lead">Tầng dưới phải có trước thì tầng trên mới chạy được.</p>
+    <div class="layers">
+      <div class="layer"><span class="n">0</span><span class="t">Nền tảng</span><div><span class="ucs">Setup · Migration DB · Seed data</span><span class="why">Mọi thứ khác đều cần</span></div></div>
+      <div class="layer"><span class="n">1</span><span class="t">Xác thực</span><div><span class="ucs">AUTH-01..03 · AUTH-04..05</span><span class="why">Mọi API đều cần đăng nhập và kiểm quyền</span></div></div>
+      <div class="layer"><span class="n">2</span><span class="t">Dữ liệu gốc</span><div><span class="ucs">PROD-01..03 · SUPP-01..02 · CUS-01..02 · AUTH-07</span><span class="why">Không phụ thuộc nghiệp vụ nào, các UC sau đều đọc dữ liệu này</span></div></div>
+      <div class="layer"><span class="n">3</span><span class="t">Cấu hình bán hàng</span><div><span class="ucs">CUS-05 · PROM-01..02 · POS-01</span><span class="why">Cần có trước khi bán: hạng thẻ, voucher, ca làm việc</span></div></div>
+      <div class="layer"><span class="n">4</span><span class="t">Nghiệp vụ lõi</span><div><span class="ucs">STK-01..03 · POS-02..03 · PROM-03 · CUS-03..04</span><span class="why">Luồng chính: nhập hàng, bán hàng</span></div></div>
+      <div class="layer"><span class="n">5</span><span class="t">Nghiệp vụ phụ</span><div><span class="ucs">STK-04..07 · POS-04..05 · SUPP-03</span><span class="why">Cần có tồn kho và đơn hàng thật</span></div></div>
+      <div class="layer"><span class="n">6</span><span class="t">Báo cáo</span><div><span class="ucs">REP-01..06 · PROM-04 · AUTH-06</span><span class="why">Chỉ đọc dữ liệu, làm cuối cùng</span></div></div>
+    </div>
+  </section>
+
+  <section id="uu-tien">
+    <h2><span class="num">4</span>Mức ưu tiên khi trễ tiến độ</h2>
+    <p class="lead">Khi trễ thì cắt từ <strong>Could</strong> trở lên, không cắt chất lượng.</p>
+    <div class="moscow">
+      <div class="must">
+        <h3>Must<small>bắt buộc</small></h3>
+        <div class="chips"><span class="chip">AUTH-01..05</span><span class="chip">AUTH-07</span><span class="chip">PROD-01..03</span><span class="chip">SUPP-01..02</span><span class="chip">STK-01..03</span><span class="chip">CUS-01..02</span><span class="chip">POS-01..05</span></div>
+      </div>
+      <div>
+        <h3>Should<small>nên có</small></h3>
+        <div class="chips"><span class="chip">STK-04..07</span><span class="chip">CUS-03..05</span><span class="chip">PROM-01..03</span><span class="chip">REP-01..04</span></div>
+      </div>
+      <div>
+        <h3>Could<small>có thì tốt</small></h3>
+        <div class="chips"><span class="chip">SUPP-03</span><span class="chip">PROM-04</span><span class="chip">REP-05</span><span class="chip">REP-06</span><span class="chip">AUTH-06</span></div>
+        <p class="note">AUTH-06 chỉ là màn hình xem log. Phần ghi log vẫn làm từ đầu.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="nhanh">
+    <h2><span class="num">5</span>Gom nhóm nhánh</h2>
+    <p class="lead">Mỗi nhóm có một nhánh BE và một nhánh FE: <code>feature/&lt;mã&gt;-be-&lt;mo-ta&gt;</code> và <code>feature/&lt;mã&gt;-fe-&lt;mo-ta&gt;</code>. Trong bảng, <code>{be|fe}</code> là chỗ điền tầng.</p>
+    <div class="filters" role="group" aria-label="Lọc nhóm nhánh">
+      <button type="button" data-filter="all" aria-pressed="true">Tất cả</button>
+      <button type="button" data-filter="a" aria-pressed="false">Team A</button>
+      <button type="button" data-filter="b" aria-pressed="false">Team B</button>
+      <button type="button" data-filter="pm" aria-pressed="false">PM</button>
+      <button type="button" data-filter="crit" aria-pressed="false">Đường găng ★</button>
+    </div>
+    <div class="table-wrap">
+      <table id="groups">
+        <thead><tr><th>Nhóm</th><th>Use case</th><th>Tên nhánh</th><th>Phụ thuộc</th><th>Người làm</th><th>Sprint</th></tr></thead>
+        <tbody>
+          <tr data-team="pm a b"><td>G00</td><td>Setup dự án</td><td class="br">chore/be-setup<br>chore/fe-setup<br>chore/be-seed-data</td><td class="dep">—</td><td><span class="badge pm">PM</span> <span class="badge a">Lead A</span> <span class="badge b">Lead B</span></td><td>S0</td></tr>
+          <tr data-team="a"><td>G01</td><td>AUTH-01..03</td><td class="br">feature/auth-01-03-{be|fe}-xac-thuc</td><td class="dep">G00</td><td><span class="badge a">Team A</span></td><td>S1</td></tr>
+          <tr data-team="b"><td>G02</td><td>AUTH-04..05</td><td class="br">feature/auth-04-05-{be|fe}-tai-khoan-phan-quyen</td><td class="dep">G01</td><td><span class="badge b">Team B</span></td><td>S1</td></tr>
+          <tr data-team="pm b"><td>G03</td><td>AUTH-07</td><td class="br">feature/auth-07-{be|fe}-cau-hinh-he-thong</td><td class="dep">G00</td><td><span class="badge pm">PM (BE)</span> <span class="badge b">FE-B</span></td><td>S1</td></tr>
+          <tr data-team="a"><td>G04</td><td>PROD-02..03</td><td class="br">feature/prod-02-03-{be|fe}-danh-muc-thuong-hieu</td><td class="dep">G01</td><td><span class="badge a">Team A</span></td><td>S1</td></tr>
+          <tr data-team="a"><td>G05</td><td>PROD-01</td><td class="br">feature/prod-01-{be|fe}-san-pham</td><td class="dep">G04</td><td><span class="badge a">Team A</span></td><td>S1</td></tr>
+          <tr data-team="b"><td>G06</td><td>CUS-01..02</td><td class="br">feature/cus-01-02-{be|fe}-khach-hang</td><td class="dep">G01</td><td><span class="badge b">Team B</span></td><td>S1</td></tr>
+          <tr data-team="a"><td>G07</td><td>SUPP-01..02</td><td class="br">feature/supp-01-02-{be|fe}-nha-cung-cap</td><td class="dep">G01</td><td><span class="badge a">Team A</span></td><td>S2</td></tr>
+          <tr data-team="a" data-crit="1" class="crit"><td>G08</td><td><b>STK-01 ★</b></td><td class="br">feature/stk-01-{be|fe}-nhap-kho</td><td class="dep">G05, G07</td><td><span class="badge a">Team A</span></td><td>S2</td></tr>
+          <tr data-team="a"><td>G09</td><td>STK-02..03</td><td class="br">feature/stk-02-03-{be|fe}-ton-kho-can-han</td><td class="dep">G08, G03</td><td><span class="badge a">Team A</span></td><td>S2</td></tr>
+          <tr data-team="b"><td>G10</td><td>CUS-05</td><td class="br">feature/cus-05-{be|fe}-cau-hinh-diem-hang</td><td class="dep">G03</td><td><span class="badge b">Team B</span></td><td>S2</td></tr>
+          <tr data-team="b"><td>G11</td><td>PROM-01..02</td><td class="br">feature/prom-01-02-{be|fe}-khuyen-mai</td><td class="dep">G10</td><td><span class="badge b">Team B</span></td><td>S2</td></tr>
+          <tr data-team="b"><td>G12</td><td>POS-01</td><td class="br">feature/pos-01-{be|fe}-mo-ca</td><td class="dep">G01</td><td><span class="badge b">Team B</span></td><td>S2</td></tr>
+          <tr data-team="b" data-crit="1" class="crit"><td>G13</td><td><b>POS-02 ★</b></td><td class="br">feature/pos-02-{be|fe}-lap-don-fefo</td><td class="dep">G08, G06, G12</td><td><span class="badge b">Team B</span></td><td>S3</td></tr>
+          <tr data-team="b"><td>G14</td><td>PROM-03</td><td class="br">feature/prom-03-{be|fe}-ap-voucher</td><td class="dep">G11, G13</td><td><span class="badge b">Team B</span></td><td>S3</td></tr>
+          <tr data-team="b" data-crit="1" class="crit"><td>G15</td><td><b>POS-03 ★</b></td><td class="br">feature/pos-03-{be|fe}-thanh-toan</td><td class="dep">G13</td><td><span class="badge b">Team B</span></td><td>S3</td></tr>
+          <tr data-team="a"><td>G16</td><td>STK-04..05</td><td class="br">feature/stk-04-05-{be|fe}-kiem-kho</td><td class="dep">G09</td><td><span class="badge a">Team A</span></td><td>S3</td></tr>
+          <tr data-team="a"><td>G17</td><td>STK-06..07</td><td class="br">feature/stk-06-07-{be|fe}-xuat-huy</td><td class="dep">G09</td><td><span class="badge a">Team A</span></td><td>S3</td></tr>
+          <tr data-team="a"><td>G18</td><td>SUPP-03</td><td class="br">feature/supp-03-{be|fe}-lich-su-nhap</td><td class="dep">G08</td><td><span class="badge a">Team A</span></td><td>S3</td></tr>
+          <tr data-team="a b"><td>G19</td><td>CUS-03..04</td><td class="br">feature/cus-03-04-{be|fe}-tich-dung-diem</td><td class="dep">G15, G10</td><td><span class="badge a">BE-A</span> <span class="badge b">FE-B</span></td><td>S4</td></tr>
+          <tr data-team="b" data-crit="1" class="crit"><td>G20</td><td><b>POS-04 ★</b></td><td class="br">feature/pos-04-{be|fe}-doi-tra</td><td class="dep">G15, G19</td><td><span class="badge b">Team B</span></td><td>S4</td></tr>
+          <tr data-team="b"><td>G21</td><td>POS-05</td><td class="br">feature/pos-05-{be|fe}-chot-ca</td><td class="dep">G15</td><td><span class="badge b">Team B</span></td><td>S4</td></tr>
+          <tr data-team="a"><td>G22</td><td>REP-04..05</td><td class="br">feature/rep-04-05-{be|fe}-bao-cao-kho-nhap</td><td class="dep">G09, G08</td><td><span class="badge a">Team A</span></td><td>S4</td></tr>
+          <tr data-team="pm a"><td>G23</td><td>REP-01</td><td class="br">feature/rep-01-{be|fe}-dashboard</td><td class="dep">G15, G09</td><td><span class="badge pm">PM (BE)</span> <span class="badge a">FE-A</span></td><td>S4</td></tr>
+          <tr data-team="a"><td>G24</td><td>AUTH-06</td><td class="br">feature/auth-06-{be|fe}-audit-log</td><td class="dep">G00</td><td><span class="badge a">Team A</span></td><td>S4</td></tr>
+          <tr data-team="b a" data-crit="1" class="crit"><td>G25</td><td><b>REP-02..03 ★</b></td><td class="br">feature/rep-02-03-{be|fe}-doanh-thu-ban-hang</td><td class="dep">G20</td><td><span class="badge b">BE-B</span> <span class="badge a">FE-A</span></td><td>S5</td></tr>
+          <tr data-team="pm b"><td>G26</td><td>REP-06</td><td class="br">feature/rep-06-{be|fe}-bao-cao-khach-hang</td><td class="dep">G19</td><td><span class="badge pm">PM (BE)</span> <span class="badge b">FE-B</span></td><td>S5</td></tr>
+          <tr data-team="pm b"><td>G27</td><td>PROM-04</td><td class="br">feature/prom-04-{be|fe}-hieu-qua-km</td><td class="dep">G14</td><td><span class="badge pm">PM (BE)</span> <span class="badge b">FE-B</span></td><td>S5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="legend"><span class="badge crit">★ Đường găng</span> Lead phải theo dõi sát các nhóm này, có vấn đề phải báo ngay.</p>
+    <ul class="notes">
+      <li><strong>G01 (AUTH-01..03)</strong> gộp được vì cùng nhóm, nhỏ, một người làm. Làm <strong>đầu tiên</strong>, vì mọi màn hình khác đều cần đăng nhập.</li>
+      <li><strong>POS-02, POS-03, POS-04</strong> là use case lớn nhất, không gộp. Quá 400 dòng thì chia nhánh nhỏ hơn, ví dụ <code>pos-02-be-fefo</code>, <code>pos-02-be-luu-nhap</code>.</li>
+      <li><strong>FE không phải chờ BE.</strong> FE làm trên mock server theo API contract, khi BE merge thì chuyển sang API thật.</li>
+      <li><strong>Audit log:</strong> phần helper ghi log làm trong G00 để mọi UC dùng chung. G24 chỉ là màn hình xem log.</li>
+    </ul>
+  </section>
+
+  <section id="timeline">
+    <h2><span class="num">6</span>Timeline</h2>
+    <p class="lead">Mã G in đậm màu hồng là nhóm nằm trên đường găng.</p>
+    <div class="gantt-wrap">
+      <div class="gantt">
+        <div class="rh">Tuần</div>
+        <div class="wk">1</div><div class="wk">2</div><div class="wk">3</div><div class="wk">4</div><div class="wk">5</div><div class="wk">6</div><div class="wk">7</div><div class="wk">8</div><div class="wk">9</div><div class="wk">10</div><div class="wk">11</div><div class="wk">12</div>
+
+        <div class="rh">Sprint</div>
+        <div class="sp" style="grid-column: 2 / span 1">S0</div>
+        <div class="sp" style="grid-column: 3 / span 2">S1</div>
+        <div class="sp" style="grid-column: 5 / span 2">S2</div>
+        <div class="sp" style="grid-column: 7 / span 2">S3</div>
+        <div class="sp" style="grid-column: 9 / span 2">S4</div>
+        <div class="sp" style="grid-column: 11 / span 1">S5</div>
+        <div class="sp" style="grid-column: 12 / span 1">Test</div>
+        <div class="sp" style="grid-column: 13 / span 1">Bàn giao</div>
+
+        <div class="rh" style="grid-row: 3">Team A</div>
+        <div class="bar all" style="grid-row: 3; grid-column: 2 / span 1">Setup, chốt API contract</div>
+        <div class="bar a" style="grid-row: 3; grid-column: 3 / span 2"><strong>G01</strong> · <strong>G04</strong> · <strong>G05</strong><br>Xác thực, danh mục, sản phẩm</div>
+        <div class="bar a" style="grid-row: 3; grid-column: 5 / span 2">G07 · <strong>G08</strong> · G09<br>NCC, nhập kho, tồn kho</div>
+        <div class="bar a" style="grid-row: 3; grid-column: 7 / span 2">G16 · G17 · G18<br>Kiểm kho, xuất hủy, lịch sử nhập</div>
+        <div class="bar a" style="grid-row: 3; grid-column: 9 / span 2">G19 (BE) · G22 · G24<br>Tích điểm, báo cáo kho, audit log</div>
+        <div class="bar a" style="grid-row: 3; grid-column: 11 / span 1">Sửa bug, hỗ trợ báo cáo</div>
+        <div class="bar all" style="grid-row: 3; grid-column: 12 / span 1">Test chéo</div>
+        <div class="bar all" style="grid-row: 3; grid-column: 13 / span 1">Tài liệu, dự phòng</div>
+
+        <div class="rh" style="grid-row: 4">Team B</div>
+        <div class="bar all" style="grid-row: 4; grid-column: 2 / span 1">Setup, chốt API contract</div>
+        <div class="bar b" style="grid-row: 4; grid-column: 3 / span 2">G02 · G06<br>Tài khoản, phân quyền, khách hàng</div>
+        <div class="bar b" style="grid-row: 4; grid-column: 5 / span 2">G10 · G11 · G12<br>Hạng thẻ, khuyến mãi, mở ca</div>
+        <div class="bar b" style="grid-row: 4; grid-column: 7 / span 2"><strong>G13</strong> · G14 · <strong>G15</strong><br>Lập đơn, voucher, thanh toán</div>
+        <div class="bar b" style="grid-row: 4; grid-column: 9 / span 2"><strong>G20</strong> · G21 · G19 (FE)<br>Đổi trả, chốt ca, dùng điểm</div>
+        <div class="bar b" style="grid-row: 4; grid-column: 11 / span 1"><strong>G25</strong><br>Báo cáo doanh thu</div>
+        <div class="bar all" style="grid-row: 4; grid-column: 12 / span 1">Test chéo</div>
+        <div class="bar all" style="grid-row: 4; grid-column: 13 / span 1">Tài liệu, dự phòng</div>
+
+        <div class="rh" style="grid-row: 5">PM</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 2 / span 1">Chốt DB, 8 câu hỏi nghiệp vụ</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 3 / span 2">G03 (BE)<br>Cấu hình hệ thống</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 5 / span 2">Seed data lô hàng cho Team B</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 7 / span 2">Hỗ trợ review POS</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 9 / span 2">G23 (BE)<br>Dashboard</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 11 / span 1">G26 · G27 (BE)</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 12 / span 1">UAT</div>
+        <div class="bar pm" style="grid-row: 5; grid-column: 13 / span 1">Tag v1.0, tập demo</div>
+
+        <div class="rh" style="grid-row: 6">Mốc</div>
+        <div class="ms" style="grid-row: 6; grid-column: 2">M0</div>
+        <div class="ms" style="grid-row: 6; grid-column: 4">M1</div>
+        <div class="ms" style="grid-row: 6; grid-column: 6">M2</div>
+        <div class="ms" style="grid-row: 6; grid-column: 8">M3</div>
+        <div class="ms" style="grid-row: 6; grid-column: 10">M4</div>
+        <div class="ms" style="grid-row: 6; grid-column: 11">M5</div>
+        <div class="ms" style="grid-row: 6; grid-column: 12">M6</div>
+        <div class="ms" style="grid-row: 6; grid-column: 13">M7</div>
+      </div>
+    </div>
+
+    <ol class="milestones">
+      <li><b>M0</b><span>Contract, mock server, DB đã chốt<small>Cuối tuần 1</small></span></li>
+      <li><b>M1</b><span>Đăng nhập, phân quyền, có sản phẩm và khách hàng<small>Cuối tuần 3</small></span></li>
+      <li><b>M2</b><span>Nhập kho tạo lô, tra tồn, có voucher và ca làm việc<small>Cuối tuần 5</small></span></li>
+      <li><b>M3</b><span>Bán hàng chạy từ đầu đến cuối<small>Cuối tuần 7</small></span></li>
+      <li><b>M4</b><span>Đổi trả, chốt ca, tích điểm, báo cáo kho<small>Cuối tuần 9</small></span></li>
+      <li><b>M5</b><span>Đủ 40 UC, code freeze<small>Cuối tuần 10</small></span></li>
+      <li><b>M6</b><span>Không còn bug Critical/High, UAT xong<small>Cuối tuần 11</small></span></li>
+      <li><b>M7</b><span>Bàn giao<small>Tuần 12</small></span></li>
+    </ol>
+  </section>
+
+  <section id="rui-ro">
+    <h2><span class="num">7</span>Rủi ro cần theo dõi</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rủi ro</th><th>Cách xử lý</th></tr></thead>
+        <tbody>
+          <tr><td><strong>STK-01 trễ</strong> thì POS bị chặn</td><td>PM tạo seed data lô hàng sẵn trong S2 để Team B code POS mà không phải chờ</td></tr>
+          <tr><td><strong>POS-02, POS-03 khó nhất</strong> (FEFO, transaction, giảm giá)</td><td>BE-B làm POS từ đầu S3. Viết unit test cho FEFO và công thức giảm giá trước khi nối FE</td></tr>
+          <tr><td><strong>Công thức giảm giá</strong> (hạng → voucher → điểm) ảnh hưởng POS-03, POS-04, CUS, REP</td><td>Chốt trong S0, ghi vào API contract. Không đổi sau khi chốt</td></tr>
+          <tr><td><strong>8 câu hỏi nghiệp vụ</strong> (mục 8 DANH_GIA) chưa trả lời</td><td>Bắt buộc chốt trong tuần 1. Câu VAT và câu dùng điểm ảnh hưởng trực tiếp DB</td></tr>
+          <tr><td><strong>Migration DB conflict</strong> khi nhiều người cùng sửa</td><td>Chốt toàn bộ 30 bảng trong G00. Cần sửa thì tạo migration mới và báo trong nhóm</td></tr>
+          <tr><td><strong>Team B quá tải ở S3 và S4</strong></td><td>BE-A làm phần BE của CUS-03..04. Nếu vẫn trễ thì cắt UC mức Could</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>Nguồn: docs/KE-HOACH-THUC-HIEN.md</footer>
+
+<script>
+(function () {
+  var buttons = document.querySelectorAll('.filters button');
+  var rows = document.querySelectorAll('#groups tbody tr');
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var f = btn.dataset.filter;
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      rows.forEach(function (r) {
+        var show = f === 'all' ||
+          (f === 'crit' ? r.dataset.crit === '1' : (r.dataset.team || '').split(' ').indexOf(f) !== -1);
+        r.hidden = !show;
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

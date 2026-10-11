@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quy tắc Git SE100</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky top bar + single reading column (max 1120px); git graph and wide tables scroll inside their own box. */
+:root {
+  --bg: #f6f5f7; --surface: #ffffff; --fg: #1e1b24; --muted: #625c6c; --line: #e3dfe8;
+  --accent: #a3245a; --accent-soft: #f7e4ed;
+  --team-a: #17766d; --team-a-soft: #dcefec;
+  --team-b: #a8570f; --team-b-soft: #f8e7d5;
+  --pm: #4650ad; --pm-soft: #e3e5f7;
+  --code-bg: #f0edf3; --ok: #2c7a31; --ok-soft: #e1f1e2; --bad: #bf3329; --bad-soft: #f9e2e0;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141217; --surface: #1d1a22; --fg: #ece8f1; --muted: #a59eaf; --line: #332e3a;
+    --accent: #e8749f; --accent-soft: #3b1d2a;
+    --team-a: #52c3b6; --team-a-soft: #15322f;
+    --team-b: #eaa363; --team-b-soft: #3a2918;
+    --pm: #9ca5f2; --pm-soft: #23274b;
+    --code-bg: #25212b; --ok: #72cf76; --ok-soft: #1a3220; --bad: #f27c71; --bad-soft: #3d1c1a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141217; --surface: #1d1a22; --fg: #ece8f1; --muted: #a59eaf; --line: #332e3a;
+  --accent: #e8749f; --accent-soft: #3b1d2a;
+  --team-a: #52c3b6; --team-a-soft: #15322f;
+  --team-b: #eaa363; --team-b-soft: #3a2918;
+  --pm: #9ca5f2; --pm-soft: #23274b;
+  --code-bg: #25212b; --ok: #72cf76; --ok-soft: #1a3220; --bad: #f27c71; --bad-soft: #3d1c1a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 15px/1.6 var(--font-body); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.topbar-inner { max-width: 1120px; margin: 0 auto; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.brand { font-weight: 800; letter-spacing: .02em; font-size: 13px; text-transform: uppercase; color: var(--accent); }
+.topbar nav { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; }
+.topbar nav a { color: var(--muted); text-decoration: none; }
+.topbar nav a:hover { color: var(--fg); }
+.topbar .switch { margin-left: auto; font-weight: 600; font-size: 13.5px; text-decoration: none; }
+
+main { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 80px; display: grid; gap: 64px; }
+header.hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.12; margin: 6px 0 12px; font-weight: 800; letter-spacing: -.02em; text-wrap: balance; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+header.hero p { max-width: 68ch; color: var(--muted); margin: 0; font-size: 16px; }
+section { display: grid; gap: 18px; min-width: 0; }
+section > h2 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: -.01em; text-wrap: balance; }
+section > h2 .num { color: var(--accent); margin-right: 8px; }
+h3 { font-size: 16px; margin: 0; font-weight: 700; }
+.lead { margin: 0; max-width: 72ch; color: var(--muted); }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 80ch; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.mono { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
+
+/* Git graph */
+.graph-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 4px; }
+.graph { display: block; width: 100%; min-width: 780px; height: auto; }
+.graph text { font-family: var(--font-mono); font-size: 12.5px; fill: var(--fg); }
+.graph .lbl-muted { fill: var(--muted); font-family: var(--font-body); font-size: 12.5px; }
+.graph .ln { fill: none; stroke-width: 3; stroke-linecap: round; }
+.graph .main { stroke: var(--accent); }
+.graph .dev { stroke: var(--team-a); }
+.graph .feat { stroke: var(--muted); }
+.graph .hot { stroke: var(--team-b); }
+.graph .dot { fill: var(--surface); stroke-width: 3; }
+.graph .dot.main { stroke: var(--accent); } .graph .dot.dev { stroke: var(--team-a); }
+.graph .dot.feat { stroke: var(--muted); } .graph .dot.hot { stroke: var(--team-b); }
+.graph .dot.fill-main { fill: var(--accent); stroke: var(--accent); }
+.graph .dot.fill-dev { fill: var(--team-a); stroke: var(--team-a); }
+.graph .tag rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+.graph .tag text { fill: var(--accent); font-weight: 600; font-size: 12px; }
+.graph .gate rect { fill: var(--accent); }
+.graph .gate text { fill: var(--surface); font-family: var(--font-body); font-weight: 700; font-size: 12.5px; }
+.graph .pr rect { fill: var(--team-a-soft); }
+.graph .pr text { fill: var(--team-a); font-family: var(--font-body); font-weight: 700; font-size: 12.5px; }
+.graph .lane-name.main { fill: var(--accent); font-weight: 600; }
+.graph .lane-name.dev { fill: var(--team-a); font-weight: 600; }
+.graph .lane-name.hot { fill: var(--team-b); font-weight: 600; }
+
+.rules3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.rules3 > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.rules3 .flow { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.rules3 p { margin: 0; font-size: 14px; color: var(--muted); }
+.rules3 .key { border: 2px solid var(--accent); background: var(--accent-soft); }
+.rules3 .key .flow { color: var(--accent); }
+.rules3 .key p { color: var(--fg); }
+
+/* Checklist */
+.checklist { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; max-width: 760px; }
+.checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.checklist input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+.checklist .status { font-size: 13.5px; font-weight: 700; color: var(--muted); padding-top: 6px; border-top: 1px solid var(--line); margin-top: 4px; }
+.checklist .status.ready { color: var(--ok); }
+.who { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; max-width: 760px; }
+.who > div { display: grid; gap: 4px; }
+.who .k { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.warn { margin: 0; max-width: 75ch; border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; }
+
+/* Branch anatomy */
+.anatomy { display: flex; flex-wrap: wrap; gap: 4px; font-family: var(--font-mono); font-size: clamp(15px, 2.6vw, 22px); }
+.anatomy > div { display: grid; gap: 6px; }
+.anatomy .seg { padding: 8px 10px; border-radius: 6px; font-weight: 600; }
+.anatomy .cap { font-family: var(--font-body); font-size: 12px; color: var(--muted); padding-left: 2px; }
+.seg.s1 { background: var(--code-bg); }
+.seg.s2 { background: var(--accent-soft); color: var(--accent); }
+.seg.s3 { background: var(--team-a-soft); color: var(--team-a); }
+.seg.s4 { background: var(--team-b-soft); color: var(--team-b); }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.cols > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.conds { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: c; }
+.conds li { display: flex; gap: 10px; align-items: baseline; }
+.conds li::before { counter-increment: c; content: counter(c); font-weight: 800; color: var(--accent); min-width: 14px; }
+
+.dodont { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.dodont > div { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.dodont .do { background: var(--ok-soft); }
+.dodont .dont { background: var(--bad-soft); }
+.dodont h3 { font-size: 14px; }
+.dodont .do h3 { color: var(--ok); } .dodont .dont h3 { color: var(--bad); }
+.dodont ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.dodont code { background: transparent; padding: 0; font-weight: 600; }
+
+/* Code blocks */
+.code { position: relative; background: var(--code-bg); border-radius: 10px; min-width: 0; }
+.code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.65; }
+.code .c { color: var(--muted); }
+.code button { position: absolute; top: 8px; right: 8px; font: 600 12px var(--font-body); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+
+.forbid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
+.forbid li { background: var(--bad-soft); border-radius: 8px; padding: 9px 12px 9px 36px; position: relative; font-size: 14px; }
+.forbid li::before { content: "✕"; position: absolute; left: 13px; top: 8px; color: var(--bad); font-weight: 800; }
+
+footer { max-width: 1120px; margin: 0 auto; padding: 0 20px 40px; color: var(--muted); font-size: 13px; }
+.types { display: flex; flex-wrap: wrap; gap: 8px; }
+.types span { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13.5px; color: var(--muted); }
+.types b { font-family: var(--font-mono); color: var(--fg); margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">SE100 · Mỹ phẩm</span>
+    <nav aria-label="Mục lục">
+      <a href="#so-do">Sơ đồ</a>
+      <a href="#merge-main">Merge vào main</a>
+      <a href="#dat-ten">Đặt tên</a>
+      <a href="#gop">Gộp UC</a>
+      <a href="#quy-trinh">Quy trình</a>
+      <a href="#commit">Commit</a>
+      <a href="#pr">PR</a>
+      <a href="#cam">Điều cấm</a>
+    </nav>
+  </div>
+</div>
+
+<main>
+  <header class="hero" id="so-do">
+    <div class="eyebrow">Áp dụng cho cả nhóm · FE và BE</div>
+    <h1>Quy tắc Git</h1>
+    <p>Mọi nhánh merge vào <code>develop</code>. Chỉ lead nhóm được merge <code>develop</code> → <code>main</code>.</p>
+  </header>
+
+  <section aria-label="Sơ đồ luồng merge">
+    <div class="graph-wrap">
+      <svg class="graph" viewBox="0 0 920 350" role="img" aria-labelledby="g-title g-desc">
+        <title id="g-title">Sơ đồ luồng merge</title>
+        <desc id="g-desc">Nhánh feature tạo từ develop và merge lại develop qua Pull Request. Develop qua checklist ổn định, lead nhóm merge vào main và gắn tag. Hotfix tạo từ main, merge vào main rồi merge ngược về develop.</desc>
+
+        <text x="16" y="52" class="lane-name main">main</text>
+        <text x="16" y="116" class="lane-name hot">hotfix/...</text>
+        <text x="16" y="188" class="lane-name dev">develop</text>
+        <text x="16" y="254">feature/auth-01-03-be-...</text>
+        <text x="16" y="308">feature/prod-01-fe-...</text>
+
+        <path class="ln main" d="M290 48 H900"/>
+        <path class="ln dev" d="M290 48 C310 48 310 184 330 184 H900"/>
+        <path class="ln feat" d="M350 184 C365 184 365 250 380 250 H450 C465 250 465 184 480 184"/>
+        <path class="ln feat" d="M500 184 C515 184 515 304 530 304 H590 C605 304 605 184 620 184"/>
+        <path class="ln main" d="M640 184 C660 184 660 48 680 48" stroke-dasharray="6 5"/>
+        <path class="ln hot" d="M700 48 C715 48 715 112 730 112 H780 C810 112 810 48 840 48"/>
+        <path class="ln hot" d="M780 112 C820 112 820 184 860 184" stroke-dasharray="6 5"/>
+
+        <circle class="dot main" cx="290" cy="48" r="7"/>
+        <circle class="dot feat" cx="400" cy="250" r="6"/>
+        <circle class="dot feat" cx="440" cy="250" r="6"/>
+        <circle class="dot fill-dev" cx="480" cy="184" r="7"/>
+        <circle class="dot feat" cx="550" cy="304" r="6"/>
+        <circle class="dot feat" cx="580" cy="304" r="6"/>
+        <circle class="dot fill-dev" cx="620" cy="184" r="7"/>
+        <circle class="dot dev" cx="640" cy="184" r="7"/>
+        <circle class="dot fill-main" cx="680" cy="48" r="8"/>
+        <circle class="dot hot" cx="760" cy="112" r="6"/>
+        <circle class="dot fill-main" cx="840" cy="48" r="8"/>
+        <circle class="dot fill-dev" cx="860" cy="184" r="7"/>
+
+        <g class="tag"><rect x="656" y="12" width="48" height="22" rx="4"/><text x="680" y="27" text-anchor="middle">v0.1</text></g>
+        <g class="tag"><rect x="808" y="12" width="64" height="22" rx="4"/><text x="840" y="27" text-anchor="middle">v0.1.1</text></g>
+        <g class="gate"><rect x="420" y="98" width="214" height="30" rx="6"/><text x="527" y="118" text-anchor="middle">Checklist ổn định + LEAD NHÓM</text></g>
+        <g class="pr"><rect x="370" y="322" width="230" height="24" rx="5"/><text x="485" y="339" text-anchor="middle">PR + ít nhất 1 người duyệt → develop</text></g>
+        <text x="690" y="214" class="lbl-muted">hotfix merge ngược về develop</text>
+      </svg>
+    </div>
+    <div class="rules3">
+      <div><span class="flow">feature · fix · chore → develop</span><p>Qua PR, ít nhất 1 người duyệt.</p></div>
+      <div class="key"><span class="flow">develop → main</span><p><strong>Chỉ lead nhóm</strong>, khi đạt checklist ổn định.</p></div>
+      <div><span class="flow">hotfix → main → develop</span><p>Tạo từ <code>main</code>, merge ngược về <code>develop</code>.</p></div>
+    </div>
+  </section>
+
+  <section id="merge-main">
+    <h2><span class="num">1</span>Merge <code>develop</code> → <code>main</code></h2>
+    <p class="lead"><strong>Chỉ lead nhóm</strong> · cuối sprint hoặc trước demo · tick đủ 6 mục mới được merge.</p>
+    <div class="checklist" id="checklist">
+      <label><input type="checkbox" id="ck1"> PR của sprint đã merge, đạt DoD</label>
+      <label><input type="checkbox" id="ck2"> Build và chạy được</label>
+      <label><input type="checkbox" id="ck3"> Migration + seed chạy trên DB trống</label>
+      <label><input type="checkbox" id="ck4"> Luồng chính chạy được: đăng nhập → nhập kho → bán → thanh toán</label>
+      <label><input type="checkbox" id="ck5"> Không còn bug Critical/High</label>
+      <label><input type="checkbox" id="ck6"> Demo cuối sprint đạt</label>
+      <div class="status" id="ck-status" aria-live="polite">Còn 6 mục chưa đạt. Chưa được merge.</div>
+    </div>
+    <div class="code"><button type="button" class="copy">Sao chép</button><pre>git checkout main &amp;&amp; git pull origin main
+git tag v0.1 &amp;&amp; git push origin v0.1   <span class="c"># bàn giao là v1.0</span></pre></div>
+  </section>
+
+  <section id="dat-ten">
+    <h2><span class="num">2</span>Đặt tên nhánh</h2>
+    <div class="anatomy" aria-label="Cấu trúc tên nhánh">
+      <div><span class="seg s1">feature/</span><span class="cap">feature · fix · chore</span></div>
+      <div><span class="seg s2">auth-01-03</span><span class="cap">Mã use case</span></div>
+      <div><span class="seg s3">-be</span><span class="cap">be hoặc fe</span></div>
+      <div><span class="seg s4">-xac-thuc</span><span class="cap">Mô tả</span></div>
+    </div>
+    <p class="lead">Viết thường, không dấu. FE và BE luôn tách nhánh.</p>
+  </section>
+
+  <section id="gop">
+    <h2><span class="num">3</span>Gộp nhiều use case</h2>
+    <div class="dodont">
+      <div class="do">
+        <h3>Được gộp khi đủ cả 4</h3>
+        <ul><li>Cùng nhóm UC</li><li>Cùng một người</li><li>Dưới 400 dòng</li><li>Xong trong 3–5 ngày</li></ul>
+      </div>
+      <div class="dont">
+        <h3>Không gộp</h3>
+        <ul><li>Khác nhóm UC</li><li>FE với BE</li><li>UC lớn: POS-02, 03, 04, STK-01, 04</li></ul>
+      </div>
+    </div>
+    <p class="lead">Mỗi UC một commit riêng.</p>
+  </section>
+
+  <section id="quy-trinh">
+    <h2><span class="num">4</span>Quy trình làm task</h2>
+    <div class="code"><button type="button" class="copy">Sao chép</button><pre>git checkout develop &amp;&amp; git pull origin develop
+git checkout -b feature/auth-01-03-be-xac-thuc
+git commit -m "feat(auth-01): đăng nhập"
+git pull origin develop                       <span class="c"># trước khi tạo PR</span>
+git push origin feature/auth-01-03-be-xac-thuc  <span class="c"># rồi tạo PR vào develop</span></pre></div>
+  </section>
+
+  <section id="commit">
+    <h2><span class="num">5</span>Commit</h2>
+    <p class="lead"><code>&lt;loại&gt;(&lt;mã-uc&gt;): &lt;mô tả&gt;</code>, ví dụ <code>feat(prod-01): thêm API tạo sản phẩm</code></p>
+    <div class="types">
+      <span><b>feat</b> tính năng</span><span><b>fix</b> sửa bug</span><span><b>refactor</b> sửa code</span><span><b>style</b> format</span><span><b>docs</b> tài liệu</span><span><b>test</b> test</span><span><b>chore</b> cấu hình</span>
+    </div>
+    <p class="lead">Cấm: <code>update</code>, <code>fix bug</code>, <code>final2</code>.</p>
+  </section>
+
+  <section id="pr">
+    <h2><span class="num">6</span>Pull Request</h2>
+    <ul class="plain">
+      <li>Dưới <strong>400 dòng</strong>, ít nhất <strong>1 người duyệt</strong>, không tự duyệt.</li>
+      <li>Review trong <strong>24 giờ</strong>: đúng use case, đúng API contract, không lộ key.</li>
+      <li>Squash and merge, merge xong xóa nhánh.</li>
+      <li>Conflict thì người tạo PR tự sửa; đụng code người khác thì hỏi trước.</li>
+    </ul>
+    <div class="code"><button type="button" class="copy">Sao chép</button><pre>[AUTH-01..03][BE] Xác thực người dùng
+
+## Use case
+## Đã làm
+## Cách test
+## Ảnh chụp (nếu là UI)</pre></div>
+  </section>
+
+  <section id="cam">
+    <h2><span class="num">7</span>Điều cấm</h2>
+    <ul class="forbid">
+      <li>Push thẳng <code>main</code> / <code>develop</code></li>
+      <li>Merge <code>feature</code> thẳng vào <code>main</code></li>
+      <li>Không phải lead mà tạo PR vào <code>main</code></li>
+      <li><code>push --force</code> lên nhánh chung</li>
+      <li>Commit <code>.env</code>, mật khẩu, key</li>
+      <li>Commit <code>node_modules</code>, <code>build</code>, <code>dist</code></li>
+      <li>Nhánh sống quá 5 ngày</li>
+      <li>Sửa migration đã merge</li>
+    </ul>
+  </section>
+</main>
+
+<footer>Nguồn: docs/QUY-TAC-GIT.md</footer>
+
+<script>
+(function () {
+  var boxes = document.querySelectorAll('#checklist input');
+  var status = document.getElementById('ck-status');
+  function update() {
+    var left = 0;
+    boxes.forEach(function (b) { if (!b.checked) left++; });
+    if (left === 0) { status.textContent = 'Đạt đủ 6 mục. Lead nhóm được merge develop vào main.'; status.classList.add('ready'); }
+    else { status.textContent = 'Còn ' + left + ' mục chưa đạt. Chưa được merge.'; status.classList.remove('ready'); }
+  }
+  boxes.forEach(function (b) { b.addEventListener('change', update); });
+  update();
+
+  document.querySelectorAll('.code .copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.parentNode.querySelector('pre');
+      var text = pre.innerText;
+      function done(msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = 'Sao chép'; }, 1500); }
+      function fallback() {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        done('Đã chọn, nhấn Ctrl+C');
+      }
+      try {
+        navigator.clipboard.writeText(text).then(function () { done('Đã sao chép'); }, fallback);
+      } catch (e) { fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

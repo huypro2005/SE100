@@ -1,0 +1,1755 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demo nghiệp vụ SE100</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: ứng dụng một màn hình — thanh khâu trên cùng, dải slide vuốt ngang (scroll-snap), thanh điều hướng dưới.
+   Mỗi slide: cột trái = các bước use case, cột phải = màn hình minh họa, dưới = dữ liệu được ghi nhận. */
+:root{
+  --bg:#f6f4f7; --surface:#ffffff; --surface-2:#efebf1; --line:#ddd6e1;
+  --ink:#251c2e; --ink-2:#5c5266; --ink-3:#8a8094;
+  --accent:#b8325f; --accent-soft:#f6e1e9; --on-accent:#ffffff;
+  --ok:#1f7a62; --ok-soft:#dcefe8; --warn:#9a6200; --warn-soft:#f8ebd2; --bad:#b42318; --bad-soft:#f9e0dd;
+  --kho:#1f7a62; --crm:#6b4fb3; --pos:#b8325f; --rep:#2c63a8; --sys:#5c5266;
+  --bar:#b8325f; --grid:#e7e1ea;
+  --shadow:0 1px 2px rgba(37,28,46,.06),0 8px 24px rgba(37,28,46,.07);
+  --f-display:"Bricolage Grotesque","Be Vietnam Pro",system-ui,sans-serif;
+  --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#17121c; --surface:#211a28; --surface-2:#2a2232; --line:#3a3044;
+  --ink:#f1ecf4; --ink-2:#c3b8cc; --ink-3:#958a9f;
+  --accent:#ec6f99; --accent-soft:#45233a; --on-accent:#1b0f17;
+  --ok:#5cc7a4; --ok-soft:#173a30; --warn:#e8b45a; --warn-soft:#3d2f14; --bad:#f2877c; --bad-soft:#45201c;
+  --kho:#5cc7a4; --crm:#a991f0; --pos:#ec6f99; --rep:#7fb0ee; --sys:#c3b8cc;
+  --bar:#ec6f99; --grid:#342b3d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17121c; --surface:#211a28; --surface-2:#2a2232; --line:#3a3044;
+  --ink:#f1ecf4; --ink-2:#c3b8cc; --ink-3:#958a9f;
+  --accent:#ec6f99; --accent-soft:#45233a; --on-accent:#1b0f17;
+  --ok:#5cc7a4; --ok-soft:#173a30; --warn:#e8b45a; --warn-soft:#3d2f14; --bad:#f2877c; --bad-soft:#45201c;
+  --kho:#5cc7a4; --crm:#a991f0; --pos:#ec6f99; --rep:#7fb0ee; --sys:#c3b8cc;
+  --bar:#ec6f99; --grid:#342b3d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark}
+
+html,body{height:100%}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;overflow:hidden}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.num{font-variant-numeric:tabular-nums}
+
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+
+/* ---------- Top bar ---------- */
+.top{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.brand b{font-family:var(--f-display);font-size:17px}
+.brand span{font-size:12px;color:var(--ink-3)}
+.stages{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1}
+.stages::-webkit-scrollbar{display:none}
+.stage{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--ink-2);font:500 12.5px var(--f-body);padding:5px 10px 5px 8px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.stage i{width:7px;height:7px;border-radius:50%;background:var(--c,var(--sys))}
+.stage:hover{border-color:var(--ink-3);color:var(--ink)}
+.stage[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stage:focus-visible,.navbtn:focus-visible,.qbtn:focus-visible,.stop:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- Track ---------- */
+.track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.track::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;padding:28px 16px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+
+.eyebrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.eyebrow .dot{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.head h2{font-size:clamp(26px,3.4vw,38px);margin-top:8px}
+.head .lead{color:var(--ink-2);max-width:68ch;margin-top:8px}
+
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:28px;align-items:start}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Flow column ---------- */
+.flow{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ucrow{display:flex;flex-wrap:wrap;gap:6px}
+.uc{font-family:var(--f-mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.actor{font-size:12.5px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start}
+ol.steps li::before{content:counter(s);font:600 12px var(--f-mono);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--c,var(--ink-3));color:var(--c,var(--ink-2))}
+ol.steps li b{font-weight:600}
+.sys{color:var(--ink-3);font-size:12px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-right:4px}
+.exc{border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2)}
+.exc h4{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.exc p b{color:var(--ink)}
+
+/* ---------- Data strip ---------- */
+.data{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.data h4{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.drow{display:grid;grid-template-columns:minmax(150px,auto) minmax(0,1fr);gap:4px 14px;font-size:13.5px;align-items:baseline}
+.drow .mono{color:var(--ink);font-size:12px}
+.drow span:last-child{color:var(--ink-2)}
+@media (max-width:560px){.drow{grid-template-columns:minmax(0,1fr)}}
+.plus{color:var(--ok);font-weight:600}.minus{color:var(--bad);font-weight:600}
+
+/* ---------- Mock window ---------- */
+.win{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.win-bar{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
+.win-bar .lights{display:flex;gap:5px}
+.win-bar .lights i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.win-bar b{color:var(--ink);font-weight:600}
+.win-bar .who{margin-left:auto;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win-body{padding:16px;display:flex;flex-direction:column;gap:14px}
+.mock-cap{font-size:12.5px;color:var(--ink-3);margin-top:8px}
+
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.field .lb{font-size:11.5px;color:var(--ink-3);font-weight:500}
+.in{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13.5px;background:var(--bg);min-height:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.in.req::after{content:" *";color:var(--accent)}
+
+.tblw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+th{font-size:11.5px;font-weight:600;color:var(--ink-3);background:var(--surface-2);letter-spacing:.02em}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+tr.dim td{color:var(--ink-3)}
+tr.hl td{background:var(--accent-soft)}
+tfoot td{font-weight:600;background:var(--surface-2)}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.muted{background:var(--surface-2);color:var(--ink-2)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.mbtn{font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.mbtn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.note{font-size:13px;padding:9px 12px;border-radius:8px;background:var(--surface-2);color:var(--ink-2)}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.bad{background:var(--bad-soft);color:var(--bad)}
+.note.ok{background:var(--ok-soft);color:var(--ok)}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13.5px}
+.kv span:nth-child(odd){color:var(--ink-2)}
+.kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.kv .tot{font-weight:700;color:var(--ink);font-size:16px}
+.kv hr{grid-column:1/-1;border:0;border-top:1px solid var(--line);margin:2px 0;width:100%}
+
+/* ---------- Cover ---------- */
+.cover h1{font-size:clamp(32px,5vw,58px);max-width:18ch;letter-spacing:-.01em}
+.cover .lead{font-size:16.5px;color:var(--ink-2);max-width:62ch;margin-top:14px}
+.route{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.stop{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;color:var(--ink);font:inherit;border-left:4px solid var(--c)}
+.stop:hover{box-shadow:var(--shadow)}
+.stop small{font:500 11.5px var(--f-mono);color:var(--ink-3)}
+.stop b{font-family:var(--f-display);font-size:16px;font-weight:600}
+.stop span{font-size:12.5px;color:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.hint{font-size:13px;color:var(--ink-3)}
+.hint kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;background:var(--surface)}
+
+/* ---------- System design ---------- */
+.arch{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.layer{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;align-items:center}
+@media (max-width:560px){.layer{grid-template-columns:minmax(0,1fr)}}
+.layer h4{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.layer h4 b{display:block;font-family:var(--f-display);text-transform:none;letter-spacing:0;font-size:15px;color:var(--ink);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:4px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.chip.c{border-left:3px solid var(--c)}
+.arrow{justify-self:center;color:var(--ink-3);font-size:12px;display:flex;align-items:center;gap:6px}
+.arrow::before{content:"";width:1.5px;height:14px;background:var(--ink-3)}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.mod{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:6px;border-top:3px solid var(--c)}
+.mod h4{margin:0;font-family:var(--f-display);font-size:15.5px;display:flex;justify-content:space-between;gap:8px}
+.mod h4 small{font:500 11.5px var(--f-mono);color:var(--ink-3)}
+.mod p{font-size:13px;color:var(--ink-2)}
+.mod .tbls{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);line-height:1.6}
+.roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.role{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.role b{font-family:var(--f-display);font-size:15px}
+.role code{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);display:block}
+.role p{font-size:13px;color:var(--ink-2);margin-top:6px}
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;counter-reset:r}
+.rule{font-size:13.5px;color:var(--ink-2);padding:10px 12px;border-radius:10px;background:var(--surface-2)}
+.rule b{color:var(--ink)}
+h3.sec{font-size:19px;display:flex;align-items:baseline;gap:10px}
+h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
+
+/* ---------- POS specific ---------- */
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)}
+.stepper button{border:0;background:transparent;color:var(--ink);width:30px;height:30px;font-size:16px;cursor:pointer}
+.stepper button:hover{background:var(--surface-2)}
+.stepper input{width:44px;border:0;background:transparent;text-align:center;font:600 14px var(--f-body);color:var(--ink);font-variant-numeric:tabular-nums}
+.stepper input:focus-visible,.stepper button:focus-visible,#cash:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.lotline{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
+.err{color:var(--bad);font-size:13px;font-weight:500}
+#cash{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:600 15px var(--f-body);color:var(--ink);background:var(--bg);width:100%;font-variant-numeric:tabular-nums}
+.qbtns{display:flex;gap:6px;flex-wrap:wrap}
+.qbtn{font:500 12.5px var(--f-body);padding:5px 10px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.qbtn:hover{border-color:var(--ink-3)}
+.receipt{font-family:var(--f-mono);font-size:11.5px;background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:14px;line-height:1.7;color:var(--ink)}
+.receipt .c{text-align:center}
+.receipt .row{display:flex;justify-content:space-between;gap:12px}
+.receipt hr{border:0;border-top:1px dashed var(--line);margin:6px 0}
+
+/* ---------- Dashboard ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.kpi small{font-size:11.5px;color:var(--ink-3)}
+.kpi b{display:block;font-family:var(--f-display);font-size:22px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--ink-2)}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block}
+.chart .gl{stroke:var(--grid);stroke-width:1}
+.chart .ax{fill:var(--ink-3);font:11px var(--f-body)}
+.chart .bar{fill:var(--bar);opacity:.55}
+.chart .bar.last{opacity:1}
+.chart .hit{fill:transparent;cursor:pointer}
+.chart .hit:hover + .bar,.chart .bar.on{opacity:1}
+.chart .vl{fill:var(--ink);font:600 11px var(--f-body)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%)}
+
+/* ---------- Database ---------- */
+.slide{position:relative}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:7px 12px;font:500 13px var(--f-body);color:var(--ink-2);cursor:pointer}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible,.search:focus-visible,.ucl:focus-visible,.tchip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.search{border:1px solid var(--line);border-radius:9px;padding:7px 10px;font:14px var(--f-body);background:var(--surface);color:var(--ink);min-width:0;flex:1 1 200px;max-width:340px}
+.dbstat{font-size:13px;color:var(--ink-2)}
+.keylegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-2);align-items:center}
+.keylegend > span{display:inline-flex;align-items:center;gap:4px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.sw.add{background:var(--ok-soft);border:1px solid var(--ok)}
+.sw.del{background:var(--bad-soft);border:1px solid var(--bad)}
+.sw.chg{background:var(--warn-soft);border:1px solid var(--warn)}
+.dbgroups{display:flex;flex-direction:column;gap:22px}
+.grp{display:flex;flex-direction:column;gap:10px}
+.grp h3{font-size:17px;display:flex;align-items:center;gap:8px}
+.grp h3 i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.grp h3 small{font:500 12px var(--f-body);color:var(--ink-3)}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;align-items:start}
+.tcard{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;border-top:3px solid var(--c);min-width:0}
+.tcard.dropped{opacity:.72}
+.tcard.flash{animation:flash 1.8s ease-out}
+@keyframes flash{0%,55%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.thd{padding:10px 12px 8px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line)}
+.thd .tn{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.thd b{font-family:var(--f-mono);font-size:13px;overflow-wrap:anywhere}
+.thd > span{font-size:12px;color:var(--ink-3)}
+.cols{list-style:none;margin:0;padding:4px 0}
+.col{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;padding:3px 12px;font-size:12px;align-items:baseline}
+.col .cn{font-family:var(--f-mono);overflow-wrap:anywhere}
+.col .ct{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);text-align:right;white-space:nowrap}
+.col .cnote{grid-column:1/-1;font-size:11px;color:var(--ink-3);margin-top:1px}
+.col.add{background:var(--ok-soft)}
+.col.add .cn::before{content:"+ ";color:var(--ok);font-weight:700}
+.col.del{background:var(--bad-soft)}
+.col.del .cn{text-decoration:line-through;color:var(--bad)}
+.col.chg{background:var(--warn-soft)}
+.col.chg .cn::before{content:"~ ";color:var(--warn);font-weight:700}
+.col.chg .cnote{color:var(--warn)}
+.k{font:600 9.5px var(--f-mono);padding:1px 4px;border-radius:4px;margin-left:4px;vertical-align:1px;white-space:nowrap}
+.k.pk{background:var(--accent-soft);color:var(--accent)}
+.k.fk{background:var(--surface-2);color:var(--rep);border:1px solid var(--line)}
+.k.uq{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.tf{padding:8px 12px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:11.5px;color:var(--ink-3)}
+.tf .lbl2{margin-right:2px}
+.ucl{font:500 11px var(--f-mono);padding:2px 6px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.ucl.w{border-color:transparent;background:var(--accent-soft);color:var(--accent)}
+.ucl:hover,.tchip:hover{border-color:var(--ink-3)}
+.uct{min-width:980px}
+.uct td{white-space:normal;vertical-align:top}
+.uct td:first-child{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
+.uct td:nth-child(3),.uct td:nth-child(4){font-size:12px;color:var(--ink-2)}
+.uct td:nth-child(4){font-family:var(--f-mono);font-size:11px}
+.uct td:nth-child(5),.uct td:nth-child(6){min-width:200px}
+.uct tr.grow td{background:var(--surface-2);font:600 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);padding-top:10px}
+.uct tr.flash td{animation:flashbg 1.8s ease-out}
+@keyframes flashbg{0%,55%{background:var(--accent-soft)}}
+.tchip{font:500 11px var(--f-mono);padding:2px 6px;border-radius:5px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);margin:0 4px 4px 0;display:inline-block}
+.tchip.w{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.newtag{font:600 10px var(--f-body);color:var(--ok)}
+@media (prefers-reduced-motion:reduce){.tcard.flash,.uct tr.flash td{animation:none;outline:2px solid var(--accent)}}
+
+/* ---------- ERD ---------- */
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);cursor:pointer}
+.chk input{accent-color:var(--accent)}
+.erdinfo{font-size:13.5px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;min-height:44px}
+.erdinfo b.mono{color:var(--ink);font-size:13px}
+.erdinfo .rel{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center}
+.erdinfo .tchip{cursor:default;margin:0}
+.erdwrap{border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:auto;height:clamp(420px,66vh,900px);cursor:grab}
+.erdwrap.drag{cursor:grabbing;user-select:none}
+.erd{display:block}
+.erd .ebox{cursor:pointer;transition:opacity .15s}
+.erd .ebox:focus-visible{outline:none}
+.erd .ebox:focus-visible .bg{stroke:var(--accent);stroke-width:2}
+.erd .bg{fill:var(--surface);stroke:var(--line);stroke-width:1}
+.erd .hd{fill:var(--surface-2)}
+.erd .ebox:hover .bg{stroke:var(--ink-3)}
+.erd .ebox.sel .bg{stroke:var(--accent);stroke-width:2}
+.erd .tname{font:600 12.5px var(--f-mono);fill:var(--ink)}
+.erd .cname{font:11.5px var(--f-mono);fill:var(--ink)}
+.erd .ctype{font:10.5px var(--f-mono);fill:var(--ink-3)}
+.erd .kpk{font:700 9px var(--f-mono);fill:var(--accent)}
+.erd .kfk{font:700 9px var(--f-mono);fill:var(--rep)}
+.erd .more{font:italic 11px var(--f-body);fill:var(--ink-3)}
+.edge{fill:none;stroke:var(--ink-3);stroke-width:1.3;transition:opacity .15s}
+.edge.actor{stroke-dasharray:4 3}
+.edge.hl{stroke:var(--accent);stroke-width:2}
+.mk{fill:none;stroke:var(--ink-3);stroke-width:1.3}
+.mk.hl{stroke:var(--accent);stroke-width:1.6}
+.erd.focus .ebox:not(.rel){opacity:.22}
+.erd.focus .edge:not(.hl){opacity:.06}
+
+/* ---------- Bottom nav ---------- */
+.bottom{display:flex;align-items:center;gap:14px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface)}
+.navbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px var(--f-body);padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+.navbtn:hover:not(:disabled){border-color:var(--ink-3)}
+.navbtn:disabled{opacity:.4;cursor:default}
+.navbtn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.progress{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.progress .lbl{font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.progress .lbl b{color:var(--ink)}
+.bar-bg{height:4px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.bar-fg{height:100%;background:var(--accent);width:0;transition:width .3s}
+@media (max-width:560px){.brand span{display:none}.navbtn .t{display:none}}
+@media (prefers-reduced-motion:reduce){.bar-fg{transition:none}.track{scroll-behavior:auto}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><b>CC</b><span>Demo nghiệp vụ · SE100</span></div>
+    <nav class="stages" id="stages" aria-label="Các khâu"></nav>
+  </header>
+
+  <main class="track" id="track">
+
+  <!-- 0. COVER -->
+  <section class="slide" data-label="Tổng quan" data-c="--sys">
+    <div class="wrap cover">
+      <div class="eyebrow"><span class="dot" style="--c:var(--accent)"></span>Hệ thống quản lý cửa hàng mỹ phẩm</div>
+      <h1>Hành trình của một chai kem chống nắng, từ kho đến tay khách</h1>
+      <p class="lead">Mỗi trang là một khâu trong vận hành cửa hàng: ai thực hiện, theo use case nào, màn hình trông ra sao và dữ liệu nào thay đổi. Toàn bộ trang dùng chung một bộ dữ liệu mẫu, nên số liệu khâu trước khớp với khâu sau.</p>
+      <div class="legend">
+        <span style="--c:var(--sys)"><i></i>Thiết lập &amp; hệ thống</span>
+        <span style="--c:var(--kho)"><i></i>Kho</span>
+        <span style="--c:var(--crm)"><i></i>Khách hàng &amp; khuyến mãi</span>
+        <span style="--c:var(--pos)"><i></i>Bán hàng tại quầy</span>
+        <span style="--c:var(--rep)"><i></i>Báo cáo</span>
+      </div>
+      <div class="route" id="route"></div>
+      <p class="hint">Vuốt ngang, bấm <kbd>←</kbd> <kbd>→</kbd> hoặc chọn một khâu ở trên. Dữ liệu mẫu và tên cửa hàng là giả lập.</p>
+    </div>
+  </section>
+
+  <!-- 1. SYSTEM DESIGN -->
+  <section class="slide" data-label="Thiết kế hệ thống" data-c="--sys" data-desc="Kiến trúc, phân hệ, vai trò">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Thiết kế hệ thống ban đầu</div>
+        <h2>Một cửa hàng, bốn vai trò, tám phân hệ</h2>
+        <p class="lead">Ứng dụng web ba tầng. Mọi yêu cầu đi qua lớp kiểm tra quyền (RBAC) trước khi vào nghiệp vụ. Mọi thay đổi tồn kho đi kèm một dòng lịch sử trong cùng một giao dịch CSDL.</p>
+      </div>
+
+      <h3 class="sec">Kiến trúc <small>3 tầng</small></h3>
+      <div class="arch">
+        <div class="layer"><h4>Tầng 1<b>Giao diện web</b></h4>
+          <div class="chips"><span class="chip c" style="--c:var(--pos)">Màn hình bán hàng (POS)</span><span class="chip c" style="--c:var(--kho)">Kho &amp; hạn dùng</span><span class="chip c" style="--c:var(--crm)">Khách hàng &amp; khuyến mãi</span><span class="chip c" style="--c:var(--rep)">Dashboard &amp; báo cáo</span><span class="chip c" style="--c:var(--sys)">Quản trị hệ thống</span></div></div>
+        <div class="arrow">REST API · JSON · token đăng nhập</div>
+        <div class="layer"><h4>Tầng 2<b>Máy chủ ứng dụng</b></h4>
+          <div class="chips"><span class="chip">Xác thực &amp; kiểm quyền (middleware)</span><span class="chip">Dịch vụ nghiệp vụ theo phân hệ</span><span class="chip">Bộ chọn lô FEFO</span><span class="chip">Tính giảm giá &amp; điểm</span><span class="chip">Ghi Audit Log</span><span class="chip">Xuất Excel</span></div></div>
+        <div class="arrow">Giao dịch CSDL (transaction)</div>
+        <div class="layer"><h4>Tầng 3<b>CSDL quan hệ</b></h4>
+          <div class="chips"><span class="chip">30 bảng</span><span class="chip">Khóa ngoại &amp; UNIQUE</span><span class="chip">Lịch sử kho có dấu (+/−)</span><span class="chip">Cấu hình trong SYSTEM_SETTINGS</span></div></div>
+      </div>
+
+      <h3 class="sec">Phân hệ <small>40 use case · bảng chính</small></h3>
+      <div class="mods">
+        <div class="mod" style="--c:var(--sys)"><h4>Xác thực &amp; hệ thống <small>AUTH 01–07</small></h4><p>Đăng nhập, tài khoản, vai trò &amp; quyền, Audit Log, cấu hình.</p><div class="tbls">USERS · ROLES · PERMISSIONS · USER_ROLES · ROLE_PERMISSIONS · AUDIT_LOGS · SYSTEM_SETTINGS · REFRESH_TOKENS</div></div>
+        <div class="mod" style="--c:var(--sys)"><h4>Sản phẩm <small>PROD 01–03</small></h4><p>SKU, giá bán, VAT, danh mục, thương hiệu.</p><div class="tbls">PRODUCTS · CATEGORIES · BRANDS</div></div>
+        <div class="mod" style="--c:var(--sys)"><h4>Nhà cung cấp <small>SUPP 01–03</small></h4><p>Hồ sơ NCC, sản phẩm cung ứng, lịch sử nhập.</p><div class="tbls">SUPPLIERS</div></div>
+        <div class="mod" style="--c:var(--kho)"><h4>Kho – Lô – Date <small>STK 01–07</small></h4><p>Nhập theo lô, tồn, cận hạn, kiểm kho, xuất hủy.</p><div class="tbls">BATCHES · STOCK_MOVEMENTS · PURCHASE_ORDERS · PURCHASE_ORDER_DETAILS · INVENTORY_CHECKS · INVENTORY_CHECK_DETAILS · DISPOSAL_REQUESTS · DISPOSAL_DETAILS</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Khách hàng <small>CUS 01–05</small></h4><p>Hồ sơ, hạng thẻ, tích &amp; dùng điểm.</p><div class="tbls">CUSTOMERS · CUSTOMER_TIERS · POINT_HISTORIES</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Khuyến mãi <small>PROM 01–04</small></h4><p>Voucher cấp đơn, hạng tối thiểu, hiệu quả.</p><div class="tbls">PROMOTIONS</div></div>
+        <div class="mod" style="--c:var(--pos)"><h4>Bán hàng &amp; đổi trả <small>POS 01–05</small></h4><p>Ca, đơn FEFO, thanh toán, đổi trả, chốt ca.</p><div class="tbls">CASHIER_SHIFTS · ORDERS · ORDER_DETAILS · RETURN_ORDERS · RETURN_ORDER_DETAILS · RETURN_POLICIES</div></div>
+        <div class="mod" style="--c:var(--rep)"><h4>Báo cáo <small>REP 01–06</small></h4><p>Dashboard, doanh thu &amp; lợi nhuận, bán hàng, kho, nhập, khách.</p><div class="tbls">Truy vấn trực tiếp, không có bảng riêng</div></div>
+      </div>
+
+      <h3 class="sec">Vai trò <small>phân quyền động: USERS → ROLES → PERMISSIONS</small></h3>
+      <div class="roles">
+        <div class="role"><b>Chủ cửa hàng</b><code>ADMIN</code><p>Tài khoản, phân quyền, Audit Log, báo cáo lợi nhuận. Toàn quyền.</p></div>
+        <div class="role"><b>Quản lý cửa hàng</b><code>STORE_MANAGER</code><p>Duyệt kiểm kho &amp; xuất hủy, khuyến mãi, hạng thẻ, NCC, xác nhận bàn giao ca.</p></div>
+        <div class="role"><b>Nhân viên kho</b><code>INVENTORY_STAFF</code><p>Sản phẩm, nhập kho theo lô, theo dõi date, đếm kiểm, lập đề nghị hủy.</p></div>
+        <div class="role"><b>Thu ngân</b><code>CASHIER</code><p>Mở/chốt ca, bán hàng, voucher, điểm, đổi trả &amp; hoàn tiền, tạo khách hàng.</p></div>
+      </div>
+
+      <h3 class="sec">Quy tắc xuyên suốt</h3>
+      <div class="rules">
+        <div class="rule"><b>Tồn khả dụng</b> = on_hand − blocked, chỉ tính lô còn hạn và không bị khóa kiểm kho.</div>
+        <div class="rule"><b>FEFO</b>: lô hết hạn trước được bán trước; một lô không đủ thì tự tách dòng sang lô kế tiếp.</div>
+        <div class="rule"><b>Mọi thay đổi tồn</b> ghi kèm một dòng STOCK_MOVEMENTS trong cùng transaction.</div>
+        <div class="rule"><b>Chứng từ hoàn tất không sửa/xóa</b>; sai thì lập chứng từ ngược (trả hàng, điều chỉnh kiểm kho).</div>
+        <div class="rule"><b>Thứ tự giảm giá</b>: hạng thẻ → voucher → điểm thưởng, phân bổ xuống từng dòng hàng.</div>
+        <div class="rule"><b>Ca làm việc</b>: mỗi thu ngân một ca đang mở; mọi hóa đơn, phiếu trả gắn vào ca.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATABASE -->
+  <section class="slide" id="sl-db" data-label="Cơ sở dữ liệu" data-kicker="CSDL" data-c="--sys" data-desc="30 bảng, so sánh bản gốc và đề xuất">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Thiết kế cơ sở dữ liệu</div>
+        <h2>30 bảng chia theo 5 cụm nghiệp vụ</h2>
+        <p class="lead">Mặc định là bản hiện tại trong tài liệu PDF. Chuyển sang “Bản đề xuất” để xem bản đã chỉnh sửa, hoặc “So sánh” để thấy từng cột được thêm, bỏ hay sửa. Cuối mỗi bảng là các use case dùng bảng đó; bấm vào mã để xem chi tiết.</p>
+      </div>
+      <div class="toolbar">
+        <div class="seg" id="dbmode" role="group" aria-label="Phiên bản CSDL">
+          <button type="button" data-m="orig" aria-pressed="true">Bản hiện tại (PDF)</button>
+          <button type="button" data-m="prop" aria-pressed="false">Bản đề xuất</button>
+          <button type="button" data-m="cmp" aria-pressed="false">So sánh</button>
+        </div>
+        <input class="search" id="dbq" type="search" placeholder="Tìm bảng hoặc cột…" aria-label="Tìm bảng hoặc cột">
+        <span class="dbstat num" id="dbstat"></span>
+      </div>
+      <div class="keylegend">
+        <span><span class="k pk">PK</span> khóa chính</span><span><span class="k fk">FK</span> khóa ngoại</span><span><span class="k uq">UQ</span> duy nhất</span>
+        <span class="lg-cmp"><span class="sw add"></span>cột thêm</span><span class="lg-cmp"><span class="sw del"></span>cột bỏ</span><span class="lg-cmp"><span class="sw chg"></span>cột sửa</span>
+        <span><span class="ucl w">STK-01</span> ghi</span><span><span class="ucl">STK-02</span> chỉ đọc</span>
+      </div>
+      <div id="dbgroups" class="dbgroups"></div>
+      <p class="hint" id="dbempty" hidden>Không có bảng hoặc cột nào khớp từ khóa.</p>
+    </div>
+  </section>
+
+  <!-- ERD -->
+  <section class="slide" id="sl-erd" data-label="Sơ đồ ERD" data-kicker="ERD" data-c="--sys" data-desc="Quan hệ giữa 30 bảng (bản đề xuất)">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Sơ đồ thực thể – quan hệ</div>
+        <h2>BATCHES và ORDERS là hai trục của cả hệ thống</h2>
+        <p class="lead">Bản đề xuất, 30 bảng. Mọi nghiệp vụ kho đều đi qua <span class="mono">BATCHES</span>, mọi nghiệp vụ bán đều đi qua <span class="mono">ORDERS</span>. Bấm vào một bảng để làm nổi bật các liên kết của nó; kéo chuột để di chuyển sơ đồ.</p>
+      </div>
+      <div class="toolbar">
+        <div class="seg" id="erdcols" role="group" aria-label="Số cột hiển thị">
+          <button type="button" data-v="keys" aria-pressed="true">Chỉ khóa</button>
+          <button type="button" data-v="all" aria-pressed="false">Đầy đủ cột</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="erdactor"> Hiện liên kết “người thực hiện” tới USERS</label>
+        <div class="seg" role="group" aria-label="Thu phóng">
+          <button type="button" id="zout" aria-label="Thu nhỏ">−</button>
+          <button type="button" id="zfit">Vừa khung</button>
+          <button type="button" id="zin" aria-label="Phóng to">+</button>
+        </div>
+        <span class="dbstat num" id="zlbl"></span>
+      </div>
+      <div class="erdinfo" id="erdinfo"></div>
+      <div class="erdwrap" id="erdwrap"><svg id="erd" class="erd" role="img" aria-label="Sơ đồ ERD 30 bảng"></svg></div>
+      <div class="keylegend">
+        <span><svg width="64" height="14" aria-hidden="true"><path d="M2 7H62" class="edge"/><path d="M2 1L12 7L2 13M2 7H12" class="mk"/><path d="M54 1V13M58 1V13" class="mk"/></svg> nhiều ← → một</span>
+        <span><svg width="40" height="14" aria-hidden="true"><path d="M2 7H38" class="edge actor"/></svg> người thực hiện (created_by, approved_by…)</span>
+        <span><span class="k pk">PK</span><span class="k fk">FK</span></span>
+        <span>STOCK_MOVEMENTS.reference_id là liên kết đa hình (theo reference_type), không vẽ FK</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- UC ↔ TABLES -->
+  <section class="slide" id="sl-uc" data-label="Use case ↔ Bảng" data-kicker="Use case" data-c="--sys" data-desc="40 UC dùng những bảng nào">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Ma trận use case và bảng dữ liệu</div>
+        <h2>Mỗi use case đọc và ghi những bảng nào</h2>
+        <p class="lead">Theo bộ 40 use case và CSDL đề xuất. Bảng tô màu là bảng bị <b>ghi</b> (thêm, sửa) khi thực hiện use case; bảng viền xám chỉ được <b>đọc</b>. Cột “Mã cũ” cho biết use case gộp từ những mã nào trong PDF.</p>
+      </div>
+      <div class="toolbar">
+        <div class="seg" id="ucgrp" role="group" aria-label="Lọc nhóm use case"></div>
+        <input class="search" id="ucq" type="search" placeholder="Tìm use case hoặc tên bảng…" aria-label="Tìm use case hoặc tên bảng">
+      </div>
+      <div class="tblw"><table class="uct">
+        <thead><tr><th>Mã</th><th>Use case</th><th>Actor</th><th>Mã cũ</th><th>Bảng ghi</th><th>Bảng chỉ đọc</th></tr></thead>
+        <tbody id="ucbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- 2. SETUP -->
+  <section class="slide" data-label="Thiết lập" data-c="--sys" data-desc="Tài khoản, sản phẩm, NCC">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Khâu 0 · Chuẩn bị dữ liệu nền</div>
+        <h2>Có người dùng, sản phẩm và nhà cung cấp trước khi nhập hàng</h2>
+        <p class="lead">Chủ cửa hàng tạo tài khoản và gán vai trò. Nhân viên kho khai báo sản phẩm. Quản lý thêm nhà cung cấp. Phải có sản phẩm thì mới nhập được lô.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--sys)">
+          <div class="ucrow"><span class="uc">AUTH-01</span><span class="uc">AUTH-04</span><span class="uc">PROD-01..03</span><span class="uc">SUPP-01</span><span class="actor">Admin · NV kho · Quản lý</span></div>
+          <ol class="steps">
+            <li><span><b>Admin tạo tài khoản</b> “Lê Văn Tâm”, mã NV0007, gán vai trò Nhân viên kho, cấp mật khẩu tạm.</span></li>
+            <li><span><b>Nhân viên đăng nhập</b>, bị yêu cầu đổi mật khẩu lần đầu, rồi vào màn hình Kho.</span></li>
+            <li><span><b>Tạo danh mục, thương hiệu</b>: “Chống nắng”, “La Roche-Posay”.</span></li>
+            <li><span><b>Thêm sản phẩm</b>: SKU, mã vạch, tên, quy cách 50ml, giá bán, VAT, loại da phù hợp, ngưỡng tồn tối thiểu.</span></li>
+            <li><span><span class="sys">Hệ thống</span>kiểm tra SKU và mã vạch không trùng rồi lưu ở trạng thái Đang kinh doanh. Tồn kho chưa đổi.</span></li>
+            <li><span><b>Quản lý thêm NCC</b> “Mỹ phẩm Hoàng Anh”. Hệ thống sinh mã NCC003.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Trùng SKU/mã vạch</b>: báo lỗi tại ô nhập, không lưu.</p>
+            <p><b>Đổi đơn vị tính</b> khi sản phẩm đã có giao dịch: bị chặn.</p>
+            <p><b>Sai mật khẩu 5 lần</b>: khóa tài khoản 15 phút.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Thêm sản phẩm</b><span class="who">NV kho · Lê Văn Tâm</span></div>
+            <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Mã SKU</span><div class="in req mono">LRP-ANT-50</div></div>
+                <div class="field"><span class="lb">Mã vạch</span><div class="in mono">3337875797627</div></div>
+              </div>
+              <div class="field"><span class="lb">Tên sản phẩm</span><div class="in req">Kem chống nắng La Roche-Posay Anthelios UVMune 400 Fluid</div></div>
+              <div class="fields">
+                <div class="field"><span class="lb">Danh mục</span><div class="in req">Chống nắng</div></div>
+                <div class="field"><span class="lb">Thương hiệu</span><div class="in req">La Roche-Posay</div></div>
+                <div class="field"><span class="lb">Quy cách · ĐVT</span><div class="in">50ml · Tuýp</div></div>
+              </div>
+              <div class="fields">
+                <div class="field"><span class="lb">Giá bán (đã gồm VAT)</span><div class="in req num">495.000đ</div></div>
+                <div class="field"><span class="lb">Thuế VAT</span><div class="in num">10%</div></div>
+                <div class="field"><span class="lb">Tồn tối thiểu</span><div class="in num">5</div></div>
+              </div>
+              <div class="field"><span class="lb">Loại da phù hợp</span><div class="in">Da dầu, Da nhạy cảm</div></div>
+              <div class="btns"><span class="mbtn">Hủy</span><span class="mbtn pri">Lưu sản phẩm</span></div>
+            </div>
+          </div>
+          <p class="mock-cap">Form PROD-01 đã bổ sung giá bán, VAT, quy cách và ngưỡng tồn (bản cũ thiếu các trường này).</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">USERS · USER_ROLES</span><span><span class="plus">+1</span> tài khoản, gán INVENTORY_STAFF, must_change_password = true</span></div>
+        <div class="drow"><span class="mono">CATEGORIES · BRANDS</span><span><span class="plus">+1</span> danh mục, <span class="plus">+1</span> thương hiệu</span></div>
+        <div class="drow"><span class="mono">PRODUCTS</span><span><span class="plus">+1</span> sản phẩm, status = ACTIVE</span></div>
+        <div class="drow"><span class="mono">SUPPLIERS</span><span><span class="plus">+1</span> NCC003, status = ACTIVE</span></div>
+        <div class="drow"><span class="mono">AUDIT_LOGS</span><span>Ghi lại các thao tác tạo tài khoản, sản phẩm, NCC</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. RECEIVE -->
+  <section class="slide" data-label="Nhập hàng" data-c="--kho" data-desc="Phiếu nhập theo lô">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--kho)"></span>Khâu 1 · Nhập hàng theo lô</div>
+        <h2>Hàng về, kiểm nhận, ghi vào đúng lô và hạn dùng</h2>
+        <p class="lead">Mỗi dòng phiếu nhập là một lô: mã lô in trên bao bì, ngày sản xuất, hạn dùng, số lượng thực nhận và giá nhập. Giá nhập của lô là cơ sở tính giá vốn khi bán.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--kho)">
+          <div class="ucrow"><span class="uc">STK-01</span><span class="actor">Nhân viên kho</span></div>
+          <ol class="steps">
+            <li><span><b>Tạo phiếu nhập</b>, chọn NCC đang hợp tác và nhập số hóa đơn của NCC.</span></li>
+            <li><span><b>Quét sản phẩm</b>, nhập mã lô, NSX, hạn dùng, số lượng thực nhận, giá nhập.</span></li>
+            <li><span>Có thể <b>lưu nháp</b> khi chưa đếm xong. Phiếu nháp chưa làm tăng tồn.</span></li>
+            <li><span><b>Xác nhận nhập kho.</b></span></li>
+            <li><span><span class="sys">Hệ thống</span>tạo lô mới, hoặc cộng vào lô cùng mã lô và cùng hạn dùng (giá vốn tính bình quân).</span></li>
+            <li><span><span class="sys">Hệ thống</span>tăng tồn từng lô, ghi lịch sử kho, chuyển phiếu sang Hoàn tất. Tất cả trong một giao dịch.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Hạn dùng đã qua</b>: chặn xác nhận, không nhận hàng hết hạn.</p>
+            <p><b>Cùng mã lô nhưng khác hạn dùng</b>: yêu cầu kiểm tra, không tự gộp.</p>
+            <p><b>Bấm xác nhận 2 lần</b>: lần sau chỉ trả về trạng thái, không cộng tồn lần nữa.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Phiếu nhập PN20260928-01</b><span class="who">NV kho · Lê Văn Tâm</span></div>
+            <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Nhà cung cấp</span><div class="in req">NCC003 · Mỹ phẩm Hoàng Anh</div></div>
+                <div class="field"><span class="lb">Số HĐ của NCC</span><div class="in mono">0004517</div></div>
+                <div class="field"><span class="lb">Ngày nhập</span><div class="in num">28/09/2026</div></div>
+              </div>
+              <div class="tblw"><table>
+                <thead><tr><th>Sản phẩm</th><th>Mã lô</th><th>Hạn dùng</th><th class="r">SL</th><th class="r">Giá nhập</th><th class="r">Thành tiền</th></tr></thead>
+                <tbody>
+                  <tr><td>Anthelios UVMune 400 50ml</td><td class="mono">LRP25B12</td><td class="num">30/08/2027</td><td class="r">24</td><td class="r">330.000</td><td class="r">7.920.000</td></tr>
+                  <tr><td>CeraVe Foaming Cleanser 236ml</td><td class="mono">52710CV</td><td class="num">15/03/2028</td><td class="r">36</td><td class="r">245.000</td><td class="r">8.820.000</td></tr>
+                  <tr><td>The Ordinary Niacinamide 30ml</td><td class="mono">TO2506A</td><td class="num">30/06/2027</td><td class="r">48</td><td class="r">165.000</td><td class="r">7.920.000</td></tr>
+                </tbody>
+                <tfoot><tr><td colspan="3">3 lô · 108 sản phẩm</td><td></td><td></td><td class="r">24.660.000</td></tr></tfoot>
+              </table></div>
+              <div class="btns"><span class="mbtn">Lưu nháp</span><span class="mbtn pri">Xác nhận nhập kho</span></div>
+            </div>
+          </div>
+          <p class="mock-cap">Phiếu nhập chọn NCC ngay từ đầu. Nhờ vậy màn hình NCC xem được lịch sử nhập và giá nhập gần nhất.</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">PURCHASE_ORDERS</span><span><span class="plus">+1</span> phiếu, DRAFT → COMPLETED, total = 24.660.000</span></div>
+        <div class="drow"><span class="mono">PURCHASE_ORDER_DETAILS</span><span><span class="plus">+3</span> dòng, mỗi dòng gắn batch_id sau khi xác nhận</span></div>
+        <div class="drow"><span class="mono">BATCHES</span><span><span class="plus">+3</span> lô, on_hand_qty = 24 / 36 / 48, cost_price = giá nhập</span></div>
+        <div class="drow"><span class="mono">STOCK_MOVEMENTS</span><span><span class="plus">+3</span> dòng PURCHASE: <span class="plus">+24</span>, <span class="plus">+36</span>, <span class="plus">+48</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. STOCK & EXPIRY -->
+  <section class="slide" data-label="Tồn kho & hạn dùng" data-c="--kho" data-desc="Tra cứu lô, cảnh báo date">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--kho)"></span>Khâu 2 · Tồn kho &amp; theo dõi hạn dùng</div>
+        <h2>Biết từng lô còn bao nhiêu, còn bao lâu thì hết hạn</h2>
+        <p class="lead">Một sản phẩm có thể có nhiều lô với hạn dùng khác nhau. Màn hình tách rõ tồn thực tế, lượng bị cách ly và lượng bán được. Lô cận hạn (≤ 60 ngày, cấu hình được) được tô vàng để ưu tiên bán.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--kho)">
+          <div class="ucrow"><span class="uc">STK-02</span><span class="uc">STK-03</span><span class="actor">NV kho · Quản lý</span></div>
+          <ol class="steps">
+            <li><span><b>Tìm sản phẩm</b> theo SKU, tên, mã vạch hoặc mã lô.</span></li>
+            <li><span><span class="sys">Hệ thống</span>hiện các lô, hạn dùng, số ngày còn lại, tồn, lượng cách ly, lượng bán được.</span></li>
+            <li><span><b>Chọn một lô</b> để xem thẻ kho: nhập, bán, trả, kiểm, hủy theo thời gian.</span></li>
+            <li><span><b>Mở “Theo dõi hạn dùng”</b> để lọc lô cận hạn hoặc đã hết hạn trong toàn cửa hàng.</span></li>
+            <li><span>Từ lô hết hạn, bấm <b>Lập đề nghị xuất hủy</b> (chuyển sang khâu 4).</span></li>
+          </ol>
+          <div class="exc"><h4>Quy tắc hạn dùng (ngày 05/10/2026)</h4>
+            <p><b>Hết hạn</b>: hạn dùng trước hôm nay. Vẫn hiện trong tồn nhưng không bán được.</p>
+            <p><b>Cận hạn</b>: từ hôm nay đến 60 ngày tới. Vẫn bán, FEFO ưu tiên xuất trước.</p>
+            <p>Màn hình chỉ xem, không tự hủy hàng hay đổi tồn.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Tồn kho · LRP-ANT-50</b><span class="who">NV kho · Lê Văn Tâm</span></div>
+            <div class="win-body">
+              <div class="kpis">
+                <div class="kpi"><small>Tồn thực tế</small><b>27</b><span>3 lô</span></div>
+                <div class="kpi"><small>Bị cách ly / hết hạn</small><b>2</b><span>không bán được</span></div>
+                <div class="kpi"><small>Bán được</small><b>25</b><span>tối thiểu 5</span></div>
+              </div>
+              <div class="tblw"><table>
+                <thead><tr><th>Mã lô</th><th>Hạn dùng</th><th class="r">Còn</th><th class="r">Tồn</th><th class="r">Cách ly</th><th class="r">Bán được</th><th>Tình trạng</th></tr></thead>
+                <tbody>
+                  <tr class="dim"><td class="mono">LRP24C02</td><td class="num">01/10/2026</td><td class="r">−4 ngày</td><td class="r">2</td><td class="r">0</td><td class="r">0</td><td><span class="pill bad">Hết hạn</span></td></tr>
+                  <tr><td class="mono">LRP24K07</td><td class="num">20/11/2026</td><td class="r">46 ngày</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td><span class="pill warn">Cận hạn</span></td></tr>
+                  <tr><td class="mono">LRP25B12</td><td class="num">30/08/2027</td><td class="r">329 ngày</td><td class="r">24</td><td class="r">0</td><td class="r">24</td><td><span class="pill ok">Còn hạn</span></td></tr>
+                </tbody>
+              </table></div>
+              <div class="note">Thẻ kho lô LRP25B12: <span class="mono">28/09 PURCHASE +24</span> · tồn sau: 24</div>
+            </div>
+          </div>
+          <p class="mock-cap">Thu ngân chỉ thấy cột “Bán được”. Nhân viên kho và quản lý thấy đủ các cột.</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu sử dụng</h4>
+        <div class="drow"><span class="mono">BATCHES</span><span>Chỉ đọc: on_hand_qty, blocked_qty, exp_date, locked_by_check_id</span></div>
+        <div class="drow"><span class="mono">STOCK_MOVEMENTS</span><span>Chỉ đọc: thẻ kho theo lô</span></div>
+        <div class="drow"><span class="mono">SYSTEM_SETTINGS</span><span>EXPIRY_WARNING_DAYS = 60</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. INVENTORY CHECK -->
+  <section class="slide" data-label="Kiểm kho" data-c="--kho" data-desc="Đếm, chênh lệch, duyệt">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--kho)"></span>Khâu 3 · Kiểm kho định kỳ</div>
+        <h2>Đếm thực tế, so với sổ sách, quản lý duyệt chênh lệch</h2>
+        <p class="lead">Khi bắt đầu kiểm, hệ thống chụp lại số tồn sổ sách và khóa các lô trong phạm vi. Đơn bán không lấy hàng từ lô đang khóa. Tồn chỉ thay đổi khi quản lý duyệt.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--kho)">
+          <div class="ucrow"><span class="uc">STK-04</span><span class="uc">STK-05</span><span class="actor">NV kho → Quản lý</span></div>
+          <ol class="steps">
+            <li><span><b>Tạo phiếu kiểm</b>, chọn phạm vi: kệ Chống nắng, thương hiệu La Roche-Posay.</span></li>
+            <li><span><span class="sys">Hệ thống</span>chụp tồn sổ sách tại thời điểm kiểm và khóa các lô trong phạm vi.</span></li>
+            <li><span><b>Đếm và nhập số thực tế</b> từng lô. Có thể lưu tạm. Ô trống không được hiểu là 0.</span></li>
+            <li><span><b>Ghi chú</b> các dòng lệch, rồi <b>gửi duyệt</b>. Hệ thống mở khóa lô.</span></li>
+            <li><span><b>Quản lý duyệt</b>. <span class="sys">Hệ thống</span> cộng chênh lệch vào tồn hiện tại (đúng cả khi đã bán thêm sau lúc kiểm).</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Phạm vi trùng phiên kiểm khác</b>: không cho bắt đầu.</p>
+            <p><b>Không có chênh lệch</b>: phiếu tự hoàn tất, không tạo biến động.</p>
+            <p><b>Điều chỉnh làm tồn âm</b>: chặn duyệt. <b>Từ chối</b>: ghi lý do, tồn giữ nguyên.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Phiếu kiểm CHK20261003-01</b><span class="pill warn">Chờ duyệt</span><span class="who">Quản lý · Phạm Ngọc Mai</span></div>
+            <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Phạm vi</span><div class="in">Kệ Chống nắng · La Roche-Posay</div></div>
+                <div class="field"><span class="lb">Chụp tồn lúc</span><div class="in num">03/10/2026 08:00</div></div>
+                <div class="field"><span class="lb">Người đếm</span><div class="in">Lê Văn Tâm</div></div>
+              </div>
+              <div class="tblw"><table>
+                <thead><tr><th>Lô</th><th class="r">Sổ sách</th><th class="r">Thực đếm</th><th class="r">Chênh lệch</th><th>Ghi chú</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">LRP24C02</td><td class="r">2</td><td class="r">2</td><td class="r">0</td><td></td></tr>
+                  <tr><td class="mono">LRP24K07</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td></td></tr>
+                  <tr class="hl"><td class="mono">LRP25B12</td><td class="r">24</td><td class="r">23</td><td class="r minus">−1</td><td>1 tuýp bị bóc làm hàng thử</td></tr>
+                </tbody>
+              </table></div>
+              <div class="note">Tồn lô LRP25B12 hiện tại: 24 → sau duyệt: <b>23</b></div>
+              <div class="btns"><span class="mbtn">Từ chối</span><span class="mbtn pri">Duyệt điều chỉnh</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">INVENTORY_CHECKS</span><span>IN_PROGRESS → WAITING_APPROVAL → APPROVED, approved_by, approved_at</span></div>
+        <div class="drow"><span class="mono">INVENTORY_CHECK_DETAILS</span><span>3 dòng: snapshot_qty, counted_qty, difference_qty</span></div>
+        <div class="drow"><span class="mono">BATCHES</span><span>locked_by_check_id gán khi bắt đầu, xóa khi gửi duyệt; LRP25B12 on_hand <span class="minus">−1</span></span></div>
+        <div class="drow"><span class="mono">STOCK_MOVEMENTS</span><span><span class="plus">+1</span> dòng CHECK_ADJUST <span class="minus">−1</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. DISPOSAL -->
+  <section class="slide" data-label="Xuất hủy" data-c="--kho" data-desc="Hàng hết hạn, hư hỏng">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--kho)"></span>Khâu 4 · Xuất hủy hàng hết hạn, hư hỏng</div>
+        <h2>Cách ly ngay khi đề nghị, chỉ trừ tồn khi được duyệt</h2>
+        <p class="lead">Lúc lập đề nghị, hàng được cách ly để không ai bán nhầm. Quản lý duyệt thì hàng rời khỏi kho và giá trị hàng hủy vào báo cáo tổn thất. Nếu từ chối, phần vừa cách ly được trả lại.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--kho)">
+          <div class="ucrow"><span class="uc">STK-06</span><span class="uc">STK-07</span><span class="actor">NV kho → Quản lý</span></div>
+          <ol class="steps">
+            <li><span><b>Lập đề nghị</b> từ màn hình hạn dùng (đã điền sẵn lô) hoặc chọn lô có hàng trả bị hỏng.</span></li>
+            <li><span><b>Nhập số lượng và lý do</b> cho từng lô.</span></li>
+            <li><span><span class="sys">Hệ thống</span>cách ly thêm phần chưa bị chặn (blocked_qty tăng) và ghi lại phần đã cách ly thêm.</span></li>
+            <li><span><b>Quản lý duyệt</b>: <span class="sys">hệ thống</span> giảm tồn và lượng cách ly, ghi lịch sử kho DISPOSAL.</span></li>
+            <li><span><b>Nhân viên kho tiêu hủy</b> hàng thực tế theo phiếu đã duyệt.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Số lượng vượt tồn còn lại</b> (đã trừ các phiếu đang chờ): chặn.</p>
+            <p><b>Từ chối</b>: blocked_qty giảm đúng phần đã cách ly thêm, tồn giữ nguyên.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Đề nghị hủy DISP20261005-01</b><span class="pill warn">Chờ duyệt</span><span class="who">Quản lý · Phạm Ngọc Mai</span></div>
+            <div class="win-body">
+              <div class="tblw"><table>
+                <thead><tr><th>Sản phẩm · Lô</th><th>Hạn dùng</th><th class="r">SL hủy</th><th class="r">Giá vốn</th><th>Lý do</th></tr></thead>
+                <tbody>
+                  <tr><td>Anthelios 50ml · <span class="mono">LRP24C02</span></td><td class="num">01/10/2026</td><td class="r">2</td><td class="r">640.000</td><td><span class="pill bad">Hết hạn</span></td></tr>
+                  <tr><td>Bioderma Sensibio H2O 500ml · <span class="mono">BD2405</span></td><td class="num">28/09/2026</td><td class="r">2</td><td class="r">600.000</td><td><span class="pill bad">Hết hạn</span></td></tr>
+                </tbody>
+                <tfoot><tr><td colspan="2">Giá trị tổn thất</td><td class="r">4</td><td class="r">1.240.000</td><td></td></tr></tfoot>
+              </table></div>
+              <div class="field"><span class="lb">Lý do chung</span><div class="in">Hàng hết hạn sử dụng, rà soát đầu tháng 10</div></div>
+              <div class="btns"><span class="mbtn">Từ chối</span><span class="mbtn pri">Duyệt xuất hủy</span></div>
+            </div>
+          </div>
+          <p class="mock-cap">Bản cũ dùng bảng DISPOSAL_ALLOCATIONS. Bản này thay bằng một cột blocked_added_qty trên chi tiết phiếu.</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">DISPOSAL_REQUESTS</span><span>WAITING_APPROVAL → APPROVED, approved_by, approved_at</span></div>
+        <div class="drow"><span class="mono">DISPOSAL_DETAILS</span><span>2 dòng: quantity, blocked_added_qty = 2, unit_cost chụp lúc duyệt</span></div>
+        <div class="drow"><span class="mono">BATCHES</span><span>Khi lập: blocked <span class="plus">+2</span> mỗi lô · Khi duyệt: on_hand <span class="minus">−2</span>, blocked <span class="minus">−2</span></span></div>
+        <div class="drow"><span class="mono">STOCK_MOVEMENTS</span><span><span class="plus">+2</span> dòng DISPOSAL <span class="minus">−2</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. CRM & PROMO -->
+  <section class="slide" data-label="Khách hàng & khuyến mãi" data-c="--crm" data-desc="Hạng thẻ, điểm, voucher">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--crm)"></span>Khâu 5 · Chuẩn bị chính sách bán hàng</div>
+        <h2>Hạng thẻ, điểm thưởng và voucher được cài đặt trước khi mở bán</h2>
+        <p class="lead">Quản lý cài mốc chi tiêu của từng hạng, tỷ lệ tích và đổi điểm, và tạo voucher cho mùa thu. Thu ngân chỉ áp dụng, không sửa được chính sách.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--crm)">
+          <div class="ucrow"><span class="uc">CUS-05</span><span class="uc">PROM-02</span><span class="uc">CUS-02</span><span class="actor">Quản lý · Thu ngân</span></div>
+          <ol class="steps">
+            <li><span><b>Cấu hình hạng thẻ</b>: mốc chi tiêu của hạng sau phải lớn hơn hạng trước.</span></li>
+            <li><span><b>Cấu hình điểm</b>: 10.000đ thanh toán = 1 điểm; 1 điểm = 100đ khi đổi; tối đa 50% giá trị đơn.</span></li>
+            <li><span><b>Tạo voucher</b> THU2026: giảm 10%, tối đa 50.000đ, đơn từ 500.000đ, chỉ cho hạng Bạc trở lên.</span></li>
+            <li><span><span class="sys">Hệ thống</span>kiểm ngày bắt đầu ≤ ngày kết thúc, mã không trùng, lượt/khách ≤ tổng lượt.</span></li>
+            <li><span><b>Thu ngân tạo hồ sơ khách</b> bằng số điện thoại khi khách muốn tích điểm.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Voucher đã có người dùng</b>: khóa sửa mức giảm, chỉ cho gia hạn hoặc tăng lượt.</p>
+            <p><b>SĐT khách đã tồn tại</b>: báo trùng, mở hồ sơ cũ.</p></div>
+        </div>
+        <div class="two">
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Hạng thẻ</b></div>
+            <div class="win-body">
+              <div class="tblw"><table>
+                <thead><tr><th>Hạng</th><th class="r">Chi tiêu từ</th><th class="r">Giảm</th></tr></thead>
+                <tbody>
+                  <tr><td>Đồng</td><td class="r">0</td><td class="r">0%</td></tr>
+                  <tr class="hl"><td>Bạc</td><td class="r">3.000.000</td><td class="r">3%</td></tr>
+                  <tr><td>Vàng</td><td class="r">10.000.000</td><td class="r">5%</td></tr>
+                  <tr><td>Kim Cương</td><td class="r">25.000.000</td><td class="r">8%</td></tr>
+                </tbody></table></div>
+            </div>
+          </div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Voucher THU2026</b><span class="pill ok">Đang chạy</span></div>
+            <div class="win-body">
+              <div class="kv">
+                <span>Mức giảm</span><span>10%, tối đa 50.000đ</span>
+                <span>Đơn tối thiểu</span><span>500.000đ</span>
+                <span>Hiệu lực</span><span>15/09 – 31/10/2026</span>
+                <span>Hạng tối thiểu</span><span>Bạc</span>
+                <span>Đã dùng</span><span>87 / 200 lượt</span>
+                <span>Mỗi khách</span><span>1 lượt</span>
+              </div>
+            </div>
+          </div>
+          <div class="win" style="grid-column:1/-1">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Hồ sơ khách hàng KH0042</b><span class="who">Thu ngân · Trần Minh Khoa</span></div>
+            <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Họ tên</span><div class="in">Nguyễn Thu Hà</div></div>
+                <div class="field"><span class="lb">Số điện thoại</span><div class="in num">0912 345 678</div></div>
+                <div class="field"><span class="lb">Hạng · Điểm</span><div class="in"><span class="pill acc">Bạc</span> 320 điểm</div></div>
+                <div class="field"><span class="lb">Tổng chi tiêu</span><div class="in num">4.860.000đ</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">CUSTOMER_TIERS</span><span>4 hạng với min_spend, discount_rate</span></div>
+        <div class="drow"><span class="mono">SYSTEM_SETTINGS</span><span>POINT_EARN_AMOUNT = 10000, POINT_REDEEM_VALUE = 100, POINT_MAX_REDEEM_PERCENT = 50</span></div>
+        <div class="drow"><span class="mono">PROMOTIONS</span><span><span class="plus">+1</span> THU2026, min_tier_id = Bạc, status = ACTIVE</span></div>
+        <div class="drow"><span class="mono">CUSTOMERS</span><span>KH0042, tier = Bạc, reward_points = 320</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. OPEN SHIFT -->
+  <section class="slide" data-label="Mở ca" data-c="--pos" data-desc="Bắt đầu ca thu ngân">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--pos)"></span>Khâu 6 · Mở ca thu ngân</div>
+        <h2>Chưa mở ca thì chưa bán được hàng</h2>
+        <p class="lead">Ca là đơn vị đối soát tiền. Mọi hóa đơn và phiếu trả đều gắn vào ca đang mở của thu ngân. Cuối ca, tiền trong két phải khớp với sổ sách của ca.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--pos)">
+          <div class="ucrow"><span class="uc">POS-01</span><span class="actor">Thu ngân</span></div>
+          <ol class="steps">
+            <li><span><b>Đăng nhập</b>. Hệ thống thấy chưa có ca đang mở nên hiện hộp Mở ca.</span></li>
+            <li><span><b>Đếm tiền lẻ</b> có sẵn trong két và nhập tiền đầu ca.</span></li>
+            <li><span><b>Bấm Mở ca.</b></span></li>
+            <li><span><span class="sys">Hệ thống</span>sinh mã ca, ghi giờ mở, trạng thái Đang mở, rồi chuyển sang màn hình bán hàng.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Đã có ca đang mở</b>: không cho mở ca thứ hai, đưa thẳng vào ca hiện tại.</p>
+            <p><b>Tiền đầu ca âm hoặc bỏ trống</b>: chặn.</p></div>
+        </div>
+        <div>
+          <div class="win" style="max-width:460px">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Mở ca làm việc</b><span class="who">Thu ngân · Trần Minh Khoa</span></div>
+            <div class="win-body">
+              <div class="kv">
+                <span>Mã ca</span><span class="mono">CA20261005-02</span>
+                <span>Quầy</span><span>Quầy 1</span>
+                <span>Giờ mở</span><span>05/10/2026 13:00</span>
+              </div>
+              <div class="field"><span class="lb">Tiền mặt đầu ca</span><div class="in req num">2.000.000đ</div></div>
+              <div class="btns"><span class="mbtn pri">Mở ca</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">CASHIER_SHIFTS</span><span><span class="plus">+1</span> ca, opening_cash = 2.000.000, status = OPEN</span></div>
+        <div class="drow"><span class="mono">AUDIT_LOGS</span><span>OPEN_SHIFT</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. SELL -->
+  <section class="slide" data-label="Bán hàng" data-c="--pos" data-desc="Lập đơn, chọn lô FEFO">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--pos)"></span>Khâu 7 · Lập đơn bán hàng tại quầy</div>
+        <h2>Quét mã, hệ thống tự chọn lô hết hạn trước</h2>
+        <p class="lead">Thu ngân không cần biết lô nào. Hệ thống bỏ qua lô hết hạn hoặc đang khóa kiểm kho, lấy lô gần hết hạn nhất trước, thiếu thì tách sang lô kế tiếp. Thử đổi số lượng Anthelios bên dưới để xem cách tách lô.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--pos)">
+          <div class="ucrow"><span class="uc">POS-02</span><span class="uc">CUS-01</span><span class="uc">PROM-03</span><span class="actor">Thu ngân</span></div>
+          <ol class="steps">
+            <li><span><b>Tạo đơn mới</b>, quét mã vạch hoặc gõ SKU/tên, nhập số lượng.</span></li>
+            <li><span><span class="sys">Hệ thống</span>chọn lô theo FEFO, thêm dòng hàng kèm mã lô, đơn giá, VAT.</span></li>
+            <li><span><b>Nhập SĐT khách</b>. <span class="sys">Hệ thống</span> tìm hồ sơ và tự áp chiết khấu hạng thẻ.</span></li>
+            <li><span><b>Nhập voucher.</b> <span class="sys">Hệ thống</span> kiểm 5 điều kiện: trạng thái, thời hạn, đơn tối thiểu, tổng lượt, lượt/khách (và hạng tối thiểu).</span></li>
+            <li><span><b>Bấm Thanh toán</b>. Đơn vẫn là nháp, chưa trừ tồn.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Hộp khách cầm thuộc lô khác</b>: thu ngân đổi lô thủ công (lô đó phải còn hạn).</p>
+            <p><b>Hết hàng bán được</b>: báo lỗi, không thêm vào đơn.</p>
+            <p><b>Voucher không hợp lệ</b>: báo lý do cụ thể, giữ nguyên tổng tiền.</p>
+            <p><b>Khách cần lấy thêm hàng</b>: lưu tạm đơn, phục vụ khách sau.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Bán hàng · Đơn HD20261005-0015</b><span class="who">Ca CA20261005-02 · Trần Minh Khoa</span></div>
+            <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Khách hàng</span><div class="in">0912 345 678 · Nguyễn Thu Hà · <span class="pill acc">Bạc −3%</span></div></div>
+                <div class="field"><span class="lb">Voucher</span><div class="in mono">THU2026 ✓</div></div>
+              </div>
+              <div class="tblw"><table>
+                <thead><tr><th>Sản phẩm</th><th class="r">SL</th><th class="r">Đơn giá</th><th class="r">Thành tiền</th></tr></thead>
+                <tbody>
+                  <tr><td>Anthelios UVMune 400 50ml<div id="lotlines"></div></td>
+                    <td class="r"><span class="stepper"><button type="button" id="qminus" aria-label="Giảm số lượng">−</button><input id="qty" type="text" inputmode="numeric" value="2" aria-label="Số lượng Anthelios"><button type="button" id="qplus" aria-label="Tăng số lượng">+</button></span></td>
+                    <td class="r">495.000</td><td class="r" id="l1tot">990.000</td></tr>
+                  <tr><td>CeraVe Foaming Cleanser 236ml<div class="lotline">Lô 52710CV · HSD 15/03/2028 × 1</div></td><td class="r">1</td><td class="r">385.000</td><td class="r">385.000</td></tr>
+                </tbody>
+              </table></div>
+              <p class="err" id="qerr" hidden></p>
+              <div class="kv" id="sumkv">
+                <span>Tiền hàng</span><span id="sSub">1.375.000đ</span>
+                <span>Chiết khấu hạng Bạc (3%)</span><span id="sTier">−41.250đ</span>
+                <span>Voucher THU2026</span><span id="sVou">−50.000đ</span>
+                <hr>
+                <span class="tot">Cần thanh toán</span><span class="tot" id="sTot">1.283.750đ</span>
+              </div>
+              <div class="btns"><span class="mbtn">Lưu tạm</span><span class="mbtn">Hủy đơn</span><span class="mbtn pri">Thanh toán</span></div>
+            </div>
+          </div>
+          <p class="mock-cap">Lô LRP24C02 (hết hạn 01/10) không bao giờ được chọn. Lô LRP24K07 cận hạn được lấy trước.</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận (đơn nháp)</h4>
+        <div class="drow"><span class="mono">ORDERS</span><span><span class="plus">+1</span> đơn, status = DRAFT, customer_id, promotion_id, shift_id</span></div>
+        <div class="drow"><span class="mono">ORDER_DETAILS</span><span>1 dòng cho mỗi lô xuất, chụp unit_price, cost_price, tax_rate</span></div>
+        <div class="drow"><span class="mono">BATCHES</span><span>Chưa thay đổi, chỉ đọc để chọn lô</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. PAY -->
+  <section class="slide" data-label="Thanh toán" data-c="--pos" data-desc="Điểm, hóa đơn, trừ tồn">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--pos)"></span>Khâu 8 · Thanh toán &amp; xuất hóa đơn</div>
+        <h2>Một lần bấm: trừ tồn, ghi doanh thu vào ca, cộng điểm cho khách</h2>
+        <p class="lead">Khách dùng 320 điểm để giảm thêm, trả tiền mặt. Hệ thống kiểm tra lại lô lần cuối, rồi ghi mọi thứ trong một giao dịch: lỗi ở bất kỳ bước nào thì không có gì được ghi. Thử nhập số tiền khách đưa.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--pos)">
+          <div class="ucrow"><span class="uc">POS-03</span><span class="uc">CUS-04</span><span class="uc">CUS-03</span><span class="actor">Thu ngân · Hệ thống</span></div>
+          <ol class="steps">
+            <li><span><b>Khách muốn dùng điểm</b>: nhập số điểm (tối đa 50% đơn).</span></li>
+            <li><span><b>Chọn phương thức</b> tiền mặt, chuyển khoản hoặc thẻ. Tiền mặt thì nhập số tiền khách đưa.</span></li>
+            <li><span><b>Bấm Hoàn tất &amp; in hóa đơn.</b></span></li>
+            <li><span><span class="sys">Hệ thống</span>kiểm tra lại lô (còn hàng, không bị khóa) và lượt voucher.</span></li>
+            <li><span><span class="sys">Hệ thống</span>trừ tồn từng lô và ghi lịch sử kho, phân bổ giảm giá xuống từng dòng, chuyển đơn sang Hoàn tất.</span></li>
+            <li><span><span class="sys">Hệ thống</span>trừ điểm đã dùng, cộng điểm mới, cộng tổng chi tiêu, xét lên hạng.</span></li>
+            <li><span><b>In hóa đơn</b> giao khách.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Tiền khách đưa không đủ</b>: chặn hoàn tất.</p>
+            <p><b>Lô vừa bị khóa kiểm kho</b>: quay lại đơn để đổi lô.</p>
+            <p><b>Lỗi máy in</b>: đơn vẫn hoàn tất, cho phép in lại.</p></div>
+        </div>
+        <div class="two">
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Thanh toán</b></div>
+            <div class="win-body">
+              <div class="kv">
+                <span>Tiền hàng</span><span>1.375.000đ</span>
+                <span>Hạng Bạc −3%</span><span>−41.250đ</span>
+                <span>Voucher THU2026</span><span>−50.000đ</span>
+                <span>Dùng 320 điểm</span><span>−32.000đ</span>
+                <hr>
+                <span class="tot">Khách trả</span><span class="tot">1.251.750đ</span>
+                <span>Trong đó VAT</span><span>113.795đ</span>
+              </div>
+              <div class="field"><label for="cash">Tiền mặt khách đưa</label><input id="cash" type="text" inputmode="numeric" value="1.300.000"></div>
+              <div class="qbtns"><button class="qbtn" type="button" data-v="1260000">1.260.000</button><button class="qbtn" type="button" data-v="1300000">1.300.000</button><button class="qbtn" type="button" data-v="1500000">1.500.000</button><button class="qbtn" type="button" data-v="1000000">1.000.000</button></div>
+              <div class="note ok" id="change">Tiền thừa trả khách: <b>48.250đ</b></div>
+              <div class="btns"><span class="mbtn pri">Hoàn tất &amp; in hóa đơn</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="receipt" aria-label="Mẫu hóa đơn">
+              <div class="c"><b>MỘC LAN BEAUTY</b><br>12 Nguyễn Trãi, Q.1 · 028 3822 0000</div><hr>
+              <div class="row"><span>HD20261005-0015</span><span>05/10 15:42</span></div>
+              <div class="row"><span>Thu ngân: M.Khoa</span><span>KH0042</span></div><hr>
+              <div>Anthelios UVMune 50ml</div>
+              <div class="row"><span>&nbsp;Lô LRP24K07 × 1</span><span>495.000</span></div>
+              <div class="row"><span>&nbsp;Lô LRP25B12 × 1</span><span>495.000</span></div>
+              <div>CeraVe Foaming 236ml</div>
+              <div class="row"><span>&nbsp;Lô 52710CV × 1</span><span>385.000</span></div><hr>
+              <div class="row"><span>Giảm giá</span><span>−123.250</span></div>
+              <div class="row"><b>TỔNG</b><b>1.251.750</b></div>
+              <div class="row"><span>Tiền mặt</span><span>1.300.000</span></div>
+              <div class="row"><span>Tiền thừa</span><span>48.250</span></div><hr>
+              <div class="row"><span>Điểm cộng</span><span>+125</span></div>
+              <div class="row"><span>Điểm còn lại</span><span>125</span></div>
+              <div class="c">Đổi trả trong 7 ngày kèm hóa đơn</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận (một giao dịch)</h4>
+        <div class="drow"><span class="mono">ORDERS</span><span>DRAFT → COMPLETED, payment_method = CASH, amount_received, change_due, completed_at</span></div>
+        <div class="drow"><span class="mono">ORDER_DETAILS</span><span>discount_allocated: 44.370 / 44.370 / 34.510 (tổng 123.250)</span></div>
+        <div class="drow"><span class="mono">BATCHES · STOCK_MOVEMENTS</span><span>LRP24K07 <span class="minus">−1</span>, LRP25B12 <span class="minus">−1</span>, 52710CV <span class="minus">−1</span>; 3 dòng SALE</span></div>
+        <div class="drow"><span class="mono">POINT_HISTORIES</span><span>REDEEM <span class="minus">−320</span>, EARN <span class="plus">+125</span></span></div>
+        <div class="drow"><span class="mono">CUSTOMERS</span><span>reward_points = 125, total_spent = 6.111.750 (vẫn hạng Bạc)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. RETURN -->
+  <section class="slide" data-label="Đổi trả" data-c="--pos" data-desc="Nhận hàng trả, hoàn tiền">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--pos)"></span>Khâu 9 · Đổi trả &amp; hoàn tiền</div>
+        <h2>Hàng trả về đúng lô; hàng đã mở nắp bị cách ly ngay</h2>
+        <p class="lead">Hai ngày sau, chị Hà mang trả một tuýp Anthelios vì bị kích ứng, tuýp đã mở nắp. Tiền hoàn tính theo giá khách thực trả cho dòng đó (đã trừ các khoản giảm), không theo giá niêm yết.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--pos)">
+          <div class="ucrow"><span class="uc">POS-04</span><span class="uc">CUS-03</span><span class="actor">Thu ngân</span></div>
+          <ol class="steps">
+            <li><span><b>Tra hóa đơn gốc</b> theo mã hoặc SĐT khách.</span></li>
+            <li><span><span class="sys">Hệ thống</span>hiện các dòng đã mua kèm lô, số lượng đã trả trước đó, chính sách đổi trả của đơn.</span></li>
+            <li><span><b>Chọn dòng, số lượng, lý do</b> và tình trạng hàng: nguyên vẹn hay đã mở/hư hỏng.</span></li>
+            <li><span><span class="sys">Hệ thống</span>kiểm hạn 7 ngày, số lượng còn được trả, rồi tính tiền hoàn và điểm cần thu hồi.</span></li>
+            <li><span><b>Chọn hình thức hoàn</b> (tiền mặt/chuyển khoản), <b>xác nhận</b>, chi tiền cho khách.</span></li>
+            <li><span><span class="sys">Hệ thống</span>cộng hàng về đúng lô (hàng hỏng thì cộng cả lượng cách ly), thu hồi điểm, ghi khoản chi vào ca hiện tại.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Quá 7 ngày hoặc vượt số lượng đã mua</b>: chặn.</p>
+            <p><b>Chính sách chỉ cho đổi, không hoàn tiền</b>: chuyển sang lập đơn mới để cấn trừ.</p>
+            <p><b>Lô đang khóa kiểm kho</b>: chờ kết thúc phiên kiểm.</p>
+            <p><b>Két không đủ tiền mặt</b>: hoàn bằng chuyển khoản.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Phiếu trả RET20261007-0003</b><span class="who">Ca CA20261007-01 · Trần Minh Khoa</span></div>
+            <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Hóa đơn gốc</span><div class="in mono">HD20261005-0015</div></div>
+                <div class="field"><span class="lb">Ngày mua · Chính sách</span><div class="in">05/10 · Tiêu chuẩn 7 ngày <span class="pill ok">Còn 5 ngày</span></div></div>
+              </div>
+              <div class="tblw"><table>
+                <thead><tr><th>Dòng gốc</th><th class="r">Đã mua</th><th class="r">Trả</th><th class="r">Khách đã trả</th><th>Tình trạng</th></tr></thead>
+                <tbody>
+                  <tr><td>Anthelios · <span class="mono">LRP24K07</span></td><td class="r">1</td><td class="r">0</td><td class="r">450.630</td><td></td></tr>
+                  <tr class="hl"><td>Anthelios · <span class="mono">LRP25B12</span></td><td class="r">1</td><td class="r">1</td><td class="r">450.630</td><td><span class="pill bad">Đã mở nắp</span></td></tr>
+                  <tr><td>CeraVe · <span class="mono">52710CV</span></td><td class="r">1</td><td class="r">0</td><td class="r">350.490</td><td></td></tr>
+                </tbody>
+              </table></div>
+              <div class="field"><span class="lb">Lý do</span><div class="in">Kích ứng da sau 1 lần dùng</div></div>
+              <div class="kv">
+                <span>Tiền hoàn (phí trả hàng 0%)</span><span class="tot">450.630đ</span>
+                <span>Điểm thu hồi (125 × 36%)</span><span>−45 điểm</span>
+                <span>Hình thức</span><span>Tiền mặt</span>
+              </div>
+              <div class="btns"><span class="mbtn pri">Xác nhận trả hàng &amp; hoàn tiền</span></div>
+            </div>
+          </div>
+          <p class="mock-cap">Bản cũ tách nhận hàng và hoàn tiền thành 2 UC có trạng thái chờ ở giữa. Bản này gộp thành một giao dịch tại quầy.</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">RETURN_ORDERS</span><span><span class="plus">+1</span> phiếu, total_refund = 450.630, refund_method = CASH, shift_id = ca hiện tại</span></div>
+        <div class="drow"><span class="mono">RETURN_ORDER_DETAILS</span><span>order_detail_id của dòng gốc, item_condition = DAMAGED_OR_OPENED, unit_cost = 330.000</span></div>
+        <div class="drow"><span class="mono">BATCHES · STOCK_MOVEMENTS</span><span>LRP25B12 on_hand <span class="plus">+1</span>, blocked <span class="plus">+1</span>; 1 dòng RETURN</span></div>
+        <div class="drow"><span class="mono">POINT_HISTORIES · CUSTOMERS</span><span>REVOKE <span class="minus">−45</span>; điểm còn 80, total_spent <span class="minus">−450.630</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. CLOSE SHIFT -->
+  <section class="slide" data-label="Chốt ca" data-c="--pos" data-desc="Đếm két, chênh lệch">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--pos)"></span>Khâu 10 · Kiểm đếm tiền &amp; chốt ca</div>
+        <h2>Tiền trong két phải khớp với sổ của ca</h2>
+        <p class="lead">Hệ thống tự tính số tiền mặt lẽ ra phải có. Thu ngân đếm thực tế; nếu lệch thì bắt buộc giải trình. Ca đã chốt thì không thể phát sinh thêm hóa đơn.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--pos)">
+          <div class="ucrow"><span class="uc">POS-05</span><span class="actor">Thu ngân · Quản lý xác nhận</span></div>
+          <ol class="steps">
+            <li><span><b>Chọn Chốt ca.</b> <span class="sys">Hệ thống</span> tạm khóa giao dịch mới trong ca.</span></li>
+            <li><span><span class="sys">Hệ thống</span>tổng hợp: tiền đầu ca + thu tiền mặt − chi hoàn tiền mặt = tiền mặt hệ thống.</span></li>
+            <li><span><b>Đếm két</b> và nhập số tiền thực tế.</span></li>
+            <li><span><span class="sys">Hệ thống</span>tính chênh lệch = thực tế − hệ thống.</span></li>
+            <li><span><b>Nhập giải trình</b> nếu lệch, bấm <b>Xác nhận chốt ca</b>.</span></li>
+            <li><span><span class="sys">Hệ thống</span>đóng ca, in phiếu bàn giao. Quản lý xác nhận nhận tiền.</span></li>
+          </ol>
+          <div class="exc"><h4>Ngoại lệ chính</h4>
+            <p><b>Còn đơn nháp trong ca</b>: phải thanh toán hoặc hủy trước.</p>
+            <p><b>Lệch tiền mà không ghi chú</b>: không cho chốt.</p>
+            <p><b>Muốn đếm lại</b>: quay lại, mở khóa giao dịch.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Chốt ca CA20261005-02</b><span class="who">13:00 – 21:30 · Trần Minh Khoa</span></div>
+            <div class="win-body">
+              <div class="kv">
+                <span>Tiền mặt đầu ca</span><span>2.000.000đ</span>
+                <span>Thu tiền mặt (14 hóa đơn)</span><span>+8.465.500đ</span>
+                <span>Chi hoàn tiền mặt (1 phiếu)</span><span>−189.000đ</span>
+                <hr>
+                <span class="tot">Tiền mặt hệ thống</span><span class="tot">10.276.500đ</span>
+                <span>Tiền mặt thực đếm</span><span>10.256.500đ</span>
+                <span>Chênh lệch</span><span class="minus">−20.000đ</span>
+              </div>
+              <div class="note warn">Có chênh lệch, bắt buộc nhập giải trình.</div>
+              <div class="field"><span class="lb">Ghi chú bàn giao</span><div class="in req">Thối nhầm tiền lẻ cho khách khoảng 18h</div></div>
+              <div class="kv">
+                <span>Chuyển khoản / thẻ (không vào két)</span><span>5.120.000đ</span>
+                <span>Tổng số hóa đơn trong ca</span><span>23</span>
+              </div>
+              <div class="btns"><span class="mbtn">Đếm lại</span><span class="mbtn pri">Xác nhận chốt ca</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">CASHIER_SHIFTS</span><span>OPEN → CLOSED, expected = 10.276.500, actual = 10.256.500, difference = −20.000, note, closed_at</span></div>
+        <div class="drow"><span class="mono">AUDIT_LOGS</span><span>CLOSE_SHIFT kèm số chênh lệch</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. REPORTS -->
+  <section class="slide" data-label="Báo cáo" data-c="--rep" data-desc="Dashboard, doanh thu, lợi nhuận">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--rep)"></span>Khâu 11 · Dashboard &amp; báo cáo</div>
+        <h2>Mọi khâu trước đều đổ về đây</h2>
+        <p class="lead">Báo cáo tính trực tiếp từ hóa đơn, phiếu trả, lô và phiếu hủy. Hàng trả trừ vào kỳ phát sinh trả, nên báo cáo kỳ trước không bị thay đổi.</p>
+      </div>
+      <div class="split">
+        <div class="flow" style="--c:var(--rep)">
+          <div class="ucrow"><span class="uc">REP-01..06</span><span class="actor">Admin · Quản lý · NV kho (báo cáo kho)</span></div>
+          <ol class="steps">
+            <li><span><b>Mở Dashboard</b>: doanh thu hôm nay, số đơn, số khách, lô cận hạn, cảnh báo kho.</span></li>
+            <li><span><b>Chọn báo cáo</b>: doanh thu &amp; lợi nhuận, bán hàng theo ca/thu ngân, tồn kho &amp; hạn dùng, nhập hàng, khách hàng.</span></li>
+            <li><span><b>Lọc thời gian</b> (hôm nay, tuần, tháng, quý hoặc khoảng tùy chọn, từ ngày ≤ đến ngày).</span></li>
+            <li><span>Bật <b>so sánh kỳ trước</b> nếu cần, rồi <b>xuất Excel</b>.</span></li>
+          </ol>
+          <div class="exc"><h4>Công thức doanh thu &amp; lợi nhuận (05/10)</h4>
+            <div class="kv">
+              <span>Tiền hàng (đơn hoàn tất)</span><span>17.580.000</span>
+              <span>Giảm giá (hạng + voucher + điểm)</span><span>−640.000</span>
+              <span>Hàng bán bị trả</span><span>−240.000</span>
+              <hr>
+              <span><b>Doanh thu thuần (gồm VAT)</b></span><span><b>16.700.000</b></span>
+              <span>Doanh thu chưa VAT</span><span>15.181.818</span>
+              <span>Giá vốn (bán − trả)</span><span>−9.850.000</span>
+              <hr>
+              <span><b>Lợi nhuận gộp</b></span><span><b>5.331.818</b></span>
+            </div></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Dashboard · 05/10/2026</b><span class="who">Admin · Chủ cửa hàng</span></div>
+            <div class="win-body">
+              <div class="kpis">
+                <div class="kpi"><small>Doanh thu hôm nay</small><b>16,7tr</b><span>−12% so với hôm qua</span></div>
+                <div class="kpi"><small>Đơn hoàn tất</small><b>38</b><span>2 phiếu trả</span></div>
+                <div class="kpi"><small>Khách phục vụ</small><b>31</b><span>4 khách mới</span></div>
+                <div class="kpi"><small>Lô cận hạn</small><b>6</b><span>2 lô hết hạn</span></div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Doanh thu thuần 7 ngày gần nhất <span style="color:var(--ink-3);font-weight:400">(triệu đồng)</span></div>
+                <div class="chart" id="chart">
+                  <svg viewBox="0 0 360 178" role="img" aria-label="Doanh thu 7 ngày: 29/09 12,4; 30/09 9,8; 01/10 11,2; 02/10 14,6; 03/10 13,1; 04/10 18,9; 05/10 16,7 triệu đồng">
+                    <g>
+                      <line class="gl" x1="36" x2="352" y1="150" y2="150"/><line class="gl" x1="36" x2="352" y1="116.5" y2="116.5"/><line class="gl" x1="36" x2="352" y1="83" y2="83"/><line class="gl" x1="36" x2="352" y1="49.5" y2="49.5"/><line class="gl" x1="36" x2="352" y1="16" y2="16"/>
+                      <text class="ax" x="30" y="153.5" text-anchor="end">0</text><text class="ax" x="30" y="120" text-anchor="end">5</text><text class="ax" x="30" y="86.5" text-anchor="end">10</text><text class="ax" x="30" y="53" text-anchor="end">15</text><text class="ax" x="30" y="19.5" text-anchor="end">20</text>
+                    </g>
+                    <g id="bars"></g>
+                  </svg>
+                  <div class="tip" id="tip" hidden></div>
+                </div>
+              </div>
+              <div class="tblw"><table>
+                <thead><tr><th>Nhóm hàng</th><th class="r">Doanh thu</th><th class="r">Tỷ trọng</th></tr></thead>
+                <tbody>
+                  <tr><td>Chăm sóc da</td><td class="r">9.686.000</td><td class="r">58%</td></tr>
+                  <tr><td>Trang điểm</td><td class="r">4.008.000</td><td class="r">24%</td></tr>
+                  <tr><td>Tẩy trang &amp; làm sạch</td><td class="r">3.006.000</td><td class="r">18%</td></tr>
+                </tbody></table></div>
+              <div class="note bad">Cảnh báo kho: Bioderma Sensibio H2O 500ml còn 3, dưới mức tối thiểu 5.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="data"><h4>Nguồn dữ liệu</h4>
+        <div class="drow"><span class="mono">ORDERS · ORDER_DETAILS</span><span>Đơn COMPLETED theo completed_at; giá vốn = cost_price × quantity</span></div>
+        <div class="drow"><span class="mono">RETURN_ORDERS · DETAILS</span><span>Trừ tiền hoàn và giá vốn hàng trả vào ngày trả</span></div>
+        <div class="drow"><span class="mono">BATCHES · DISPOSAL_*</span><span>Tồn, giá trị tồn, cận hạn, giá trị hàng hủy</span></div>
+        <div class="drow"><span class="mono">CASHIER_SHIFTS · CUSTOMERS · PROMOTIONS</span><span>Theo ca, theo khách, hiệu quả voucher</span></div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <footer class="bottom">
+    <button class="navbtn" id="prev" type="button" aria-label="Khâu trước">← <span class="t">Trước</span></button>
+    <div class="progress"><div class="lbl" id="plbl"></div><div class="bar-bg"><div class="bar-fg" id="pfg"></div></div></div>
+    <button class="navbtn pri" id="next" type="button" aria-label="Khâu tiếp theo"><span class="t">Tiếp</span> →</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var track=document.getElementById('track');
+  var slides=[].slice.call(track.querySelectorAll('.slide'));
+  var stagesEl=document.getElementById('stages');
+  var route=document.getElementById('route');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cur=0;
+
+  var stageNo=0;
+  slides.forEach(function(s,i){
+    var c='var('+s.dataset.c+')';
+    var kicker=i===0?'':i===1?'Thiết kế':(s.dataset.kicker||('Khâu '+(stageNo++)));
+    var b=document.createElement('button');
+    b.type='button';b.className='stage';b.style.setProperty('--c',c);
+    b.innerHTML='<i></i>'+s.dataset.label;
+    b.addEventListener('click',function(){go(i)});
+    stagesEl.appendChild(b);
+    if(i>0){
+      var st=document.createElement('button');
+      st.type='button';st.className='stop';st.style.setProperty('--c',c);
+      st.innerHTML='<small>'+kicker+'</small><b>'+s.dataset.label+'</b><span>'+(s.dataset.desc||'')+'</span>';
+      st.addEventListener('click',function(){go(i)});
+      route.appendChild(st);
+    }
+  });
+  var stageBtns=[].slice.call(stagesEl.children);
+
+  function go(i){
+    i=Math.max(0,Math.min(slides.length-1,i));
+    track.scrollTo({left:i*track.clientWidth,behavior:reduce?'auto':'smooth'});
+  }
+  function update(i){
+    cur=i;
+    stageBtns.forEach(function(b,j){b.setAttribute('aria-current',j===i?'true':'false')});
+    var ab=stageBtns[i]; if(ab&&ab.scrollIntoView){var r=ab.getBoundingClientRect(),p=stagesEl.getBoundingClientRect(); if(r.left<p.left||r.right>p.right) stagesEl.scrollTo({left:ab.offsetLeft-p.width/2+r.width/2,behavior:reduce?'auto':'smooth'});}
+    document.getElementById('plbl').innerHTML='<b>'+(i+1)+' / '+slides.length+'</b> · '+slides[i].dataset.label;
+    document.getElementById('pfg').style.width=((i+1)/slides.length*100)+'%';
+    document.getElementById('prev').disabled=i===0;
+    document.getElementById('next').disabled=i===slides.length-1;
+    try{history.replaceState(null,'','#s'+i)}catch(e){}
+  }
+  var t;
+  track.addEventListener('scroll',function(){
+    clearTimeout(t);
+    t=setTimeout(function(){var i=Math.round(track.scrollLeft/track.clientWidth); if(i!==cur) update(i)},60);
+  },{passive:true});
+  window.addEventListener('resize',function(){track.scrollLeft=cur*track.clientWidth});
+  document.getElementById('prev').addEventListener('click',function(){go(cur-1)});
+  document.getElementById('next').addEventListener('click',function(){go(cur+1)});
+  document.addEventListener('keydown',function(e){
+    var tg=e.target&&e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return;
+    if(e.key==='ArrowRight'){e.preventDefault();go(cur+1)}
+    else if(e.key==='ArrowLeft'){e.preventDefault();go(cur-1)}
+  });
+  var m=/^#s(\d+)$/.exec(location.hash||'');
+  var start=m?Math.min(slides.length-1,+m[1]):0;
+  update(start);
+  if(start) requestAnimationFrame(function(){track.scrollLeft=start*track.clientWidth});
+
+  /* ---------- Money ---------- */
+  function vnd(n){return Math.round(n).toLocaleString('vi-VN')+'đ'}
+  function plain(n){return Math.round(n).toLocaleString('vi-VN')}
+  function parse(s){return parseInt(String(s).replace(/[^\d]/g,''),10)||0}
+
+  /* ---------- FEFO demo ---------- */
+  var lots=[
+    {code:'LRP24C02',exp:'01/10/2026',avail:2,expired:true},
+    {code:'LRP24K07',exp:'20/11/2026',avail:1},
+    {code:'LRP25B12',exp:'30/08/2027',avail:23}
+  ];
+  var maxAvail=lots.reduce(function(a,l){return a+(l.expired?0:l.avail)},0);
+  var qtyEl=document.getElementById('qty');
+  function renderSale(){
+    var q=parse(qtyEl.value); if(q<1) q=1;
+    var err=document.getElementById('qerr');
+    if(q>maxAvail){err.textContent='Chỉ còn '+maxAvail+' tuýp bán được (lô LRP24C02 đã hết hạn nên không tính). Giảm số lượng để tiếp tục.';err.hidden=false;q=maxAvail;}
+    else err.hidden=true;
+    qtyEl.value=q;
+    var rem=q,html='';
+    lots.forEach(function(l){
+      if(l.expired){html+='<div class="lotline" style="text-decoration:line-through">Lô '+l.code+' · HSD '+l.exp+' · bỏ qua, đã hết hạn</div>';return;}
+      var take=Math.min(rem,l.avail); rem-=take;
+      if(take>0) html+='<div class="lotline">Lô '+l.code+' · HSD '+l.exp+' × '+take+'</div>';
+    });
+    document.getElementById('lotlines').innerHTML=html;
+    var l1=q*495000, sub=l1+385000, tier=Math.round(sub*0.03), after=sub-tier;
+    var vou=after>=500000?Math.min(Math.round(after*0.10),50000):0;
+    document.getElementById('l1tot').textContent=plain(l1);
+    document.getElementById('sSub').textContent=vnd(sub);
+    document.getElementById('sTier').textContent='−'+vnd(tier);
+    document.getElementById('sVou').textContent=vou?'−'+vnd(vou):'Chưa đạt đơn tối thiểu';
+    document.getElementById('sTot').textContent=vnd(after-vou);
+  }
+  document.getElementById('qminus').addEventListener('click',function(){qtyEl.value=Math.max(1,parse(qtyEl.value)-1);renderSale()});
+  document.getElementById('qplus').addEventListener('click',function(){qtyEl.value=parse(qtyEl.value)+1;renderSale()});
+  qtyEl.addEventListener('change',renderSale);
+  qtyEl.addEventListener('keydown',function(e){if(e.key==='Enter')renderSale()});
+  renderSale();
+
+  /* ---------- Cash change ---------- */
+  var TOTAL=1251750, cash=document.getElementById('cash'), ch=document.getElementById('change');
+  function renderCash(){
+    var v=parse(cash.value);
+    if(!v){ch.className='note';ch.innerHTML='Nhập số tiền khách đưa.';return;}
+    if(v<TOTAL){ch.className='note bad';ch.innerHTML='Tiền khách đưa chưa đủ, còn thiếu <b>'+vnd(TOTAL-v)+'</b>. Không thể hoàn tất hóa đơn.';}
+    else{ch.className='note ok';ch.innerHTML='Tiền thừa trả khách: <b>'+vnd(v-TOTAL)+'</b>';}
+  }
+  cash.addEventListener('input',renderCash);
+  cash.addEventListener('blur',function(){var v=parse(cash.value); if(v) cash.value=plain(v)});
+  [].forEach.call(document.querySelectorAll('.qbtn'),function(b){b.addEventListener('click',function(){cash.value=plain(+b.dataset.v);renderCash()})});
+  renderCash();
+
+  /* ---------- Revenue chart (one series, one hue) ---------- */
+  var data=[['29/09',12.4],['30/09',9.8],['01/10',11.2],['02/10',14.6],['03/10',13.1],['04/10',18.9],['05/10',16.7]];
+  var g=document.getElementById('bars'),NS='http://www.w3.org/2000/svg',x0=36,w=316,base=150,h=134,max=20,step=w/data.length,bw=26;
+  var tip=document.getElementById('tip'),chart=document.getElementById('chart'),svg=chart.querySelector('svg');
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e}
+  data.forEach(function(d,i){
+    var bh=d[1]/max*h, x=x0+i*step+(step-bw)/2, y=base-bh, r=4, last=i===data.length-1;
+    var path='M'+x+','+base+'V'+(y+r)+'Q'+x+','+y+' '+(x+r)+','+y+'H'+(x+bw-r)+'Q'+(x+bw)+','+y+' '+(x+bw)+','+(y+r)+'V'+base+'Z';
+    var hit=el('rect',{x:x0+i*step,y:10,width:step,height:base-10,class:'hit'});
+    var bar=el('path',{d:path,class:'bar'+(last?' last':'')});
+    g.appendChild(hit);g.appendChild(bar);
+    g.appendChild(el('text',{x:x+bw/2,y:base+15,'text-anchor':'middle',class:'ax'})).textContent=d[0];
+    if(last) g.appendChild(el('text',{x:x+bw/2,y:y-5,'text-anchor':'middle',class:'vl'})).textContent=String(d[1]).replace('.',',');
+    function show(){
+      bar.classList.add('on');
+      var sr=svg.getBoundingClientRect(),cr=chart.getBoundingClientRect(),sc=sr.width/360;
+      tip.textContent=d[0]+': '+String(d[1]).replace('.',',')+' triệu';
+      tip.style.left=((x+bw/2)*sc+(sr.left-cr.left))+'px';
+      tip.style.top=(y*sc+(sr.top-cr.top))+'px';
+      tip.hidden=false;
+    }
+    function hide(){bar.classList.remove('on');tip.hidden=true}
+    hit.addEventListener('mouseenter',show);hit.addEventListener('mouseleave',hide);
+    hit.addEventListener('touchstart',show,{passive:true});
+  });
+
+  /* =====================================================================
+     DATABASE: cột viết "tên|kiểu|khóa|ghi chú"; tiền tố + (thêm), - (bỏ), ~ (sửa)
+     ===================================================================== */
+  var GROUPS=[
+    {id:'auth',name:'Cụm 1 · Hệ thống & phân quyền',c:'--sys'},
+    {id:'kho',name:'Cụm 2 · Sản phẩm & kho – lô – date',c:'--kho'},
+    {id:'ncc',name:'Cụm 3 · Nhà cung cấp & nhập hàng',c:'--sys'},
+    {id:'crm',name:'Cụm 4 · Khách hàng & khuyến mãi',c:'--crm'},
+    {id:'pos',name:'Cụm 5 · Bán hàng, đổi trả & báo cáo',c:'--pos'}
+  ];
+  var TABLES=[
+    ['USERS','auth','Tài khoản nhân viên','',['user_id|INT|PK','username|VARCHAR(50)|UQ','email|VARCHAR(100)|UQ','password_hash|VARCHAR(255)','full_name|VARCHAR(100)','phone_number|VARCHAR(15)','status|VARCHAR(20)||ACTIVE, LOCKED','created_at|DATETIME','+employee_code|VARCHAR(20)|UQ|Mã NV có trên form tạo tài khoản','+failed_login_count|INT||Đếm số lần sai mật khẩu','+locked_until|DATETIME||Khóa tạm 15 phút sau 5 lần sai','+must_change_password|BOOLEAN||Bắt đổi mật khẩu tạm','+last_login_at|DATETIME','+updated_at|DATETIME']],
+    ['ROLES','auth','Vai trò','',['role_id|INT|PK','~role_code|VARCHAR(50)|UQ|Bỏ giá trị SALE_STAFF','role_name|VARCHAR(100)','description|VARCHAR(255)','+is_system|BOOLEAN||Role mặc định, không cho xóa']],
+    ['PERMISSIONS','auth','Quyền hạn nguyên tử','',['permission_id|INT|PK','permission_code|VARCHAR(100)|UQ','module|VARCHAR(50)','description|VARCHAR(255)','+permission_name|VARCHAR(100)||Tên hiển thị']],
+    ['USER_ROLES','auth','Người dùng – vai trò','',['user_id|INT|PK FK','role_id|INT|PK FK']],
+    ['ROLE_PERMISSIONS','auth','Vai trò – quyền','',['role_id|INT|PK FK','permission_id|INT|PK FK']],
+    ['AUDIT_LOGS','auth','Nhật ký hệ thống','',['log_id|BIGINT|PK','user_id|INT|FK','action|VARCHAR(100)','module|VARCHAR(50)','ip_address|VARCHAR(45)','details|TEXT||JSON trước / sau','created_at|DATETIME','+entity_type|VARCHAR(50)||Lọc lịch sử theo đối tượng','+entity_id|BIGINT']],
+    ['SYSTEM_SETTINGS','auth','Tham số cấu hình','new',['setting_key|VARCHAR(50)|PK','setting_value|VARCHAR(255)','description|VARCHAR(255)','updated_by|INT|FK','updated_at|DATETIME']],
+    ['REFRESH_TOKENS','auth','Phiên đăng nhập (nếu dùng JWT)','new',['token_id|BIGINT|PK','user_id|INT|FK','token_hash|VARCHAR(255)|UQ','expires_at|DATETIME','revoked_at|DATETIME']],
+
+    ['CATEGORIES','kho','Danh mục','',['category_id|INT|PK','category_code|VARCHAR(50)|UQ','category_name|VARCHAR(100)','status|VARCHAR(20)||ACTIVE, INACTIVE','+description|VARCHAR(255)||Form có trường mô tả']],
+    ['BRANDS','kho','Thương hiệu','',['brand_id|INT|PK','brand_code|VARCHAR(50)|UQ','brand_name|VARCHAR(100)','status|VARCHAR(20)','+description|VARCHAR(255)']],
+    ['PRODUCTS','kho','Sản phẩm / SKU','',['product_id|INT|PK','sku|VARCHAR(50)|UQ','barcode|VARCHAR(50)|UQ','product_name|VARCHAR(255)','category_id|INT|FK','brand_id|INT|FK','unit|VARCHAR(20)','skin_type|VARCHAR(50)','retail_price|DECIMAL(12,2)','tax_rate|DECIMAL(4,2)','min_stock_alert|INT','status|VARCHAR(20)||ACTIVE, DISCONTINUED','+volume|VARCHAR(30)||Quy cách, vd 50ml','+description|TEXT','+image_url|VARCHAR(255)','+created_at|DATETIME','+updated_at|DATETIME']],
+    ['BATCHES','kho','Lô hàng & hạn dùng','',['batch_id|INT|PK','product_id|INT|FK','~lot_code|VARCHAR(50)|UQ|UNIQUE(product_id, lot_code)','mfg_date|DATE','exp_date|DATE||Cơ sở FEFO','~cost_price|DECIMAL(12,2)||Bình quân gia quyền khi nhập thêm','on_hand_qty|INT','blocked_qty|INT||Hàng cách ly','+locked_by_check_id|INT|FK|Lô đang bị khóa kiểm kho','+created_at|DATETIME||Tính tuổi tồn kho']],
+    ['STOCK_MOVEMENTS','kho','Lịch sử biến động kho (+/−)','',['movement_id|BIGINT|PK','batch_id|INT|FK','~reference_type|VARCHAR(30)||PURCHASE, SALE, RETURN, CHECK_ADJUST, DISPOSAL','reference_id|BIGINT','quantity_change|INT','reason|VARCHAR(255)','created_at|DATETIME','+created_by|INT|FK','+balance_after|INT||Tồn sau biến động, cho thẻ kho']],
+    ['INVENTORY_CHECKS','kho','Phiếu kiểm kho','',['check_id|INT|PK','check_code|VARCHAR(50)|UQ','created_by|INT|FK','approved_by|INT|FK','~status|VARCHAR(30)||+ CANCELLED, NO_DIFFERENCE','snapshot_at|DATETIME','+scope_note|VARCHAR(255)','+submitted_at|DATETIME','+approved_at|DATETIME','+reject_reason|TEXT']],
+    ['INVENTORY_CHECK_DETAILS','kho','Chi tiết đếm theo lô','',['check_detail_id|INT|PK','check_id|INT|FK','batch_id|INT|FK','snapshot_qty|INT','~counted_qty|INT||Cho phép NULL khi đang đếm','~difference_qty|INT||NULL đến khi gửi duyệt','note|VARCHAR(255)']],
+    ['DISPOSAL_REQUESTS','kho','Phiếu đề nghị xuất hủy','',['disposal_id|INT|PK','disposal_code|VARCHAR(50)|UQ','requested_by|INT|FK','approved_by|INT|FK','~status|VARCHAR(30)||WAITING_APPROVAL, APPROVED, REJECTED','reason|TEXT','created_at|DATETIME','+approved_at|DATETIME','+reject_reason|TEXT']],
+    ['DISPOSAL_DETAILS','kho','Chi tiết lô xuất hủy','',['disposal_detail_id|INT|PK','disposal_id|INT|FK','batch_id|INT|FK','quantity|INT','item_reason|VARCHAR(255)','+blocked_added_qty|INT||Thay cho DISPOSAL_ALLOCATIONS','+unit_cost|DECIMAL(12,2)||Giá vốn lúc duyệt']],
+    ['DISPOSAL_ALLOCATIONS','kho','Phân bổ giữ chỗ chống trừ trùng','drop',['allocation_id|INT|PK','disposal_id|INT|FK','batch_id|INT|FK','from_blocked_qty|INT','from_unblocked_qty|INT']],
+
+    ['SUPPLIERS','ncc','Nhà cung cấp','',['supplier_id|INT|PK','supplier_code|VARCHAR(50)|UQ','supplier_name|VARCHAR(255)','tax_code|VARCHAR(50)|UQ','~phone_number|VARCHAR(15)|UQ|Thêm UNIQUE (UC kiểm trùng SĐT)','email|VARCHAR(100)','-debt_limit|DECIMAL(12,2)||Bỏ công nợ','status|VARCHAR(20)','+address|VARCHAR(255)||Bắt buộc trên form','+contact_person|VARCHAR(100)','+note|TEXT||Chính sách chiết khấu','+created_at|DATETIME','+updated_at|DATETIME']],
+    ['PURCHASE_ORDERS','ncc','Phiếu nhập kho','',['po_id|INT|PK','po_code|VARCHAR(50)|UQ','supplier_id|INT|FK','created_by|INT|FK','total_amount|DECIMAL(12,2)','-paid_amount|DECIMAL(12,2)||Bỏ công nợ','-debt_amount|DECIMAL(12,2)||Bỏ công nợ','~status|VARCHAR(30)||DRAFT, COMPLETED, CANCELLED; mặc định DRAFT','created_at|DATETIME','+supplier_invoice_no|VARCHAR(50)','+note|TEXT','+confirmed_at|DATETIME']],
+    ['PURCHASE_ORDER_DETAILS','ncc','Chi tiết phiếu nhập','new',['po_detail_id|INT|PK','po_id|INT|FK','product_id|INT|FK','batch_id|INT|FK|NULL khi còn nháp','lot_code|VARCHAR(50)','mfg_date|DATE','exp_date|DATE','quantity|INT','unit_cost|DECIMAL(12,2)','line_total|DECIMAL(14,2)']],
+
+    ['CUSTOMER_TIERS','crm','Hạng thẻ thành viên','',['tier_id|INT|PK','tier_name|VARCHAR(50)|UQ','~min_spend|DECIMAL(12,2)|UQ|Thêm UNIQUE','discount_rate|DECIMAL(4,2)','+tier_code|VARCHAR(20)|UQ|BRONZE, SILVER, GOLD, DIAMOND']],
+    ['CUSTOMERS','crm','Hồ sơ khách hàng','',['customer_id|INT|PK','customer_code|VARCHAR(50)|UQ','phone_number|VARCHAR(15)|UQ','full_name|VARCHAR(100)','tier_id|INT|FK','reward_points|INT','total_spent|DECIMAL(12,2)','skin_type|VARCHAR(50)','status|VARCHAR(20)','+email|VARCHAR(100)','+date_of_birth|DATE','+gender|VARCHAR(10)','+address|VARCHAR(255)','+note|TEXT','+created_at|DATETIME||Báo cáo khách mới','+updated_at|DATETIME']],
+    ['POINT_HISTORIES','crm','Nhật ký điểm thưởng','',['point_id|BIGINT|PK','customer_id|INT|FK','order_id|INT|FK','points_changed|INT','~action_type|VARCHAR(30)||EARN, REDEEM, REVOKE, ADJUST','created_at|DATETIME','+return_id|INT|FK|Thu hồi điểm khi trả hàng','+balance_after|INT']],
+    ['PROMOTIONS','crm','Chương trình khuyến mãi','',['promotion_id|INT|PK','voucher_code|VARCHAR(50)|UQ','promotion_name|VARCHAR(255)','discount_type|VARCHAR(20)||PERCENT, FIXED_AMOUNT','discount_value|DECIMAL(12,2)','max_discount_amount|DECIMAL(12,2)','min_order_value|DECIMAL(12,2)','start_date|DATE','end_date|DATE','~usage_limit|INT||NULL = không giới hạn','~limit_per_customer|INT||NULL = không giới hạn','-is_stackable|BOOLEAN||1 voucher/đơn','~status|VARCHAR(20)||Chỉ ACTIVE, PAUSED; còn lại tính theo ngày','+min_tier_id|INT|FK|Hạng thẻ tối thiểu','+description|TEXT','+created_by|INT|FK','+created_at|DATETIME','+updated_at|DATETIME']],
+    ['PROMOTION_USAGES','crm','Lịch sử dùng voucher','drop',['usage_id|INT|PK','promotion_id|INT|FK','customer_id|INT|FK','order_id|INT|FK','used_at|DATETIME']],
+
+    ['CASHIER_SHIFTS','pos','Ca làm việc thu ngân','',['shift_id|INT|PK','cashier_id|INT|FK','opened_at|DATETIME','closed_at|DATETIME','opening_cash|DECIMAL(12,2)','expected_cash|DECIMAL(12,2)','actual_cash|DECIMAL(12,2)','difference_amount|DECIMAL(12,2)','note|TEXT||Bắt buộc khi lệch','status|VARCHAR(20)||OPEN, CLOSED','+shift_code|VARCHAR(30)|UQ','+handover_confirmed_by|INT|FK|Quản lý nhận bàn giao']],
+    ['RETURN_POLICIES','pos','Chính sách đổi trả','',['policy_id|INT|PK','policy_name|VARCHAR(100)','max_return_days|INT','is_refund_allowed|BOOLEAN','restocking_fee_percent|DECIMAL(4,2)','+is_default|BOOLEAN','+status|VARCHAR(20)']],
+    ['ORDERS','pos','Hóa đơn bán hàng','',['order_id|INT|PK','order_code|VARCHAR(50)|UQ','shift_id|INT|FK','customer_id|INT|FK','cashier_id|INT|FK','-salesperson_id|INT||Bỏ role SALES','policy_id|INT|FK','subtotal_amount|DECIMAL(12,2)','discount_amount|DECIMAL(12,2)||= hạng + voucher + điểm','tax_amount|DECIMAL(12,2)','total_amount|DECIMAL(12,2)','~payment_method|VARCHAR(20)||Cho phép NULL đến khi thanh toán','~status|VARCHAR(30)||DRAFT, COMPLETED, CANCELLED','created_at|DATETIME','+promotion_id|INT|FK|Thay PROMOTION_USAGES','+tier_discount_amount|DECIMAL(12,2)','+voucher_discount_amount|DECIMAL(12,2)','+points_used|INT','+points_discount_amount|DECIMAL(12,2)','+amount_received|DECIMAL(12,2)','+change_due|DECIMAL(12,2)','+completed_at|DATETIME||Báo cáo tính theo cột này']],
+    ['ORDER_DETAILS','pos','Chi tiết dòng bán (lưu giá vốn)','',['order_detail_id|BIGINT|PK','order_id|INT|FK','product_id|INT|FK','batch_id|INT|FK','quantity|INT','unit_price|DECIMAL(12,2)','cost_price|DECIMAL(12,2)||Giá vốn cho COGS','tax_amount|DECIMAL(12,2)','+tax_rate|DECIMAL(4,2)','+discount_allocated|DECIMAL(12,2)||Giảm giá phân bổ, để tính tiền hoàn','+line_total|DECIMAL(12,2)']],
+    ['RETURN_ORDERS','pos','Phiếu đổi trả','',['return_id|INT|PK','return_code|VARCHAR(50)|UQ','original_order_id|INT|FK','shift_id|INT|FK','processed_by|INT|FK','total_refund_amount|DECIMAL(12,2)','refund_method|VARCHAR(20)','~status|VARCHAR(30)||COMPLETED, CANCELLED (gộp hoàn tiền)','return_reason|TEXT','created_at|DATETIME','+restocking_fee_amount|DECIMAL(12,2)','+points_revoked|INT']],
+    ['RETURN_ORDER_DETAILS','pos','Chi tiết hàng trả','',['return_detail_id|INT|PK','return_id|INT|FK','batch_id|INT|FK','quantity|INT','refund_unit_price|DECIMAL(12,2)','item_condition|VARCHAR(30)||INTACT, DAMAGED_OR_OPENED','+order_detail_id|BIGINT|FK|Kiểm số lượng còn được trả','+unit_cost|DECIMAL(12,2)||Trừ giá vốn hàng trả']],
+    ['DAILY_SALES_REPORTS','pos','Tổng hợp báo cáo theo ngày','drop',['report_id|INT|PK','report_date|DATE|UQ','total_orders|INT','gross_revenue|DECIMAL(14,2)','total_discount|DECIMAL(14,2)','total_refund|DECIMAL(14,2)','net_revenue|DECIMAL(14,2)','total_cogs|DECIMAL(14,2)','gross_profit|DECIMAL(14,2)','calculated_at|DATETIME']]
+  ];
+  var DROP_REASON={DISPOSAL_ALLOCATIONS:'Bỏ: thay bằng cột blocked_added_qty',PROMOTION_USAGES:'Bỏ: dùng ORDERS.promotion_id',DAILY_SALES_REPORTS:'Bỏ: báo cáo truy vấn trực tiếp'};
+
+  /* Use case: [mã, tên, actor, mã cũ, bảng ghi, bảng đọc] */
+  var UCS=[
+    ['AUTH-01','Đăng nhập','Mọi người dùng','AUTH-01','USERS REFRESH_TOKENS AUDIT_LOGS','USER_ROLES ROLES ROLE_PERMISSIONS PERMISSIONS'],
+    ['AUTH-02','Đăng xuất','Mọi người dùng','AUTH-02','REFRESH_TOKENS AUDIT_LOGS',''],
+    ['AUTH-03','Đổi mật khẩu','Mọi người dùng','AUTH-03','USERS REFRESH_TOKENS AUDIT_LOGS',''],
+    ['AUTH-04','Quản lý tài khoản nhân viên','Admin','AUTH-04, 05, 06, 09','USERS USER_ROLES REFRESH_TOKENS AUDIT_LOGS','ROLES'],
+    ['AUTH-05','Quản lý vai trò & phân quyền','Admin','AUTH-07, 08, 10','ROLES ROLE_PERMISSIONS AUDIT_LOGS','PERMISSIONS USER_ROLES'],
+    ['AUTH-06','Xem nhật ký hệ thống','Admin','Mới','','AUDIT_LOGS USERS'],
+    ['AUTH-07','Cấu hình hệ thống','Admin, Quản lý','Mới','SYSTEM_SETTINGS RETURN_POLICIES AUDIT_LOGS',''],
+    ['PROD-01','Quản lý sản phẩm / SKU','NV kho, Quản lý, Admin','PROD-01','PRODUCTS AUDIT_LOGS','CATEGORIES BRANDS STOCK_MOVEMENTS'],
+    ['PROD-02','Quản lý danh mục','NV kho, Quản lý, Admin','PROD-02','CATEGORIES','PRODUCTS'],
+    ['PROD-03','Quản lý thương hiệu','NV kho, Quản lý, Admin','PROD-03','BRANDS','PRODUCTS'],
+    ['STK-01','Lập phiếu nhập kho theo lô','NV kho','STK-04','PURCHASE_ORDERS PURCHASE_ORDER_DETAILS BATCHES STOCK_MOVEMENTS','SUPPLIERS PRODUCTS'],
+    ['STK-02','Tra cứu tồn kho theo sản phẩm & lô','NV kho, Quản lý, Thu ngân (xem)','STK-05','','PRODUCTS BATCHES STOCK_MOVEMENTS'],
+    ['STK-03','Theo dõi hàng cận hạn / hết hạn','NV kho, Quản lý','STK-06','','BATCHES PRODUCTS SYSTEM_SETTINGS'],
+    ['STK-04','Lập phiếu kiểm kho','NV kho','STK-07','INVENTORY_CHECKS INVENTORY_CHECK_DETAILS BATCHES','PRODUCTS'],
+    ['STK-05','Duyệt điều chỉnh sau kiểm kho','Quản lý','STK-08','INVENTORY_CHECKS BATCHES STOCK_MOVEMENTS AUDIT_LOGS','INVENTORY_CHECK_DETAILS'],
+    ['STK-06','Lập đề nghị xuất hủy','NV kho','Mới (ma trận có STK-06..08)','DISPOSAL_REQUESTS DISPOSAL_DETAILS BATCHES','PRODUCTS'],
+    ['STK-07','Duyệt đề nghị xuất hủy','Quản lý','Mới','DISPOSAL_REQUESTS DISPOSAL_DETAILS BATCHES STOCK_MOVEMENTS AUDIT_LOGS',''],
+    ['SUPP-01','Quản lý nhà cung cấp','Admin, Quản lý','SUPP-02, 03, 06, 09','SUPPLIERS AUDIT_LOGS','PURCHASE_ORDERS'],
+    ['SUPP-02','Tra cứu & xem chi tiết NCC','Admin, Quản lý, NV kho','SUPP-01, 04, 05, 08','','SUPPLIERS PURCHASE_ORDER_DETAILS PRODUCTS'],
+    ['SUPP-03','Xem lịch sử nhập hàng của NCC','Admin, Quản lý, NV kho','SUPP-07','','PURCHASE_ORDERS PURCHASE_ORDER_DETAILS BATCHES USERS'],
+    ['CUS-01','Tra cứu & xem hồ sơ khách hàng','Admin, Quản lý, Thu ngân','CUS-01, 04, 05','','CUSTOMERS CUSTOMER_TIERS ORDERS POINT_HISTORIES'],
+    ['CUS-02','Quản lý hồ sơ khách hàng','Thu ngân (thêm/sửa), Admin, Quản lý','CUS-02, 03, 06, 07','CUSTOMERS AUDIT_LOGS','CUSTOMER_TIERS'],
+    ['CUS-03','Tích điểm, thu hồi điểm & xét hạng','Hệ thống','CUS-08','CUSTOMERS POINT_HISTORIES AUDIT_LOGS','CUSTOMER_TIERS SYSTEM_SETTINGS'],
+    ['CUS-04','Dùng điểm thưởng khi thanh toán','Thu ngân','Mới','ORDERS POINT_HISTORIES CUSTOMERS','SYSTEM_SETTINGS'],
+    ['CUS-05','Cấu hình tích điểm & hạng thẻ','Admin, Quản lý','CUS-09','CUSTOMER_TIERS SYSTEM_SETTINGS AUDIT_LOGS',''],
+    ['PROM-01','Tra cứu chương trình khuyến mãi','Admin, Quản lý, Thu ngân','PROM-01, 05','','PROMOTIONS ORDERS'],
+    ['PROM-02','Quản lý chương trình khuyến mãi','Admin, Quản lý','PROM-02, 03, 04','PROMOTIONS AUDIT_LOGS','CUSTOMER_TIERS ORDERS'],
+    ['PROM-03','Áp dụng voucher khi bán hàng','Thu ngân','PROM-06','ORDERS','PROMOTIONS CUSTOMERS'],
+    ['PROM-04','Xem hiệu quả chương trình khuyến mãi','Admin, Quản lý','PROM-07','','PROMOTIONS ORDERS CUSTOMERS'],
+    ['POS-01','Mở ca làm việc','Thu ngân','Mới','CASHIER_SHIFTS AUDIT_LOGS',''],
+    ['POS-02','Lập đơn bán hàng tại quầy (FEFO)','Thu ngân','POS-01','ORDERS ORDER_DETAILS','PRODUCTS BATCHES CUSTOMERS CUSTOMER_TIERS CASHIER_SHIFTS RETURN_POLICIES'],
+    ['POS-03','Thanh toán & xuất hóa đơn','Thu ngân','POS-02','ORDERS ORDER_DETAILS BATCHES STOCK_MOVEMENTS CUSTOMERS POINT_HISTORIES','PROMOTIONS'],
+    ['POS-04','Đổi trả & hoàn tiền','Thu ngân','POS-03, 04','RETURN_ORDERS RETURN_ORDER_DETAILS BATCHES STOCK_MOVEMENTS CUSTOMERS POINT_HISTORIES','ORDERS ORDER_DETAILS RETURN_POLICIES CASHIER_SHIFTS'],
+    ['POS-05','Kiểm đếm tiền & chốt ca','Thu ngân, Quản lý xác nhận','POS-05','CASHIER_SHIFTS AUDIT_LOGS','ORDERS RETURN_ORDERS'],
+    ['REP-01','Dashboard tổng quan','Admin, Quản lý, NV kho','REP-07','','ORDERS ORDER_DETAILS RETURN_ORDERS BATCHES CUSTOMERS PRODUCTS CATEGORIES'],
+    ['REP-02','Báo cáo doanh thu & lợi nhuận gộp','Admin, Quản lý (doanh thu)','REP-01, 10','','ORDERS ORDER_DETAILS RETURN_ORDERS RETURN_ORDER_DETAILS'],
+    ['REP-03','Báo cáo bán hàng','Admin, Quản lý, Thu ngân (ca mình)','REP-02, 05','','ORDERS ORDER_DETAILS CASHIER_SHIFTS USERS PRODUCTS'],
+    ['REP-04','Báo cáo tồn kho & hạn dùng','Admin, Quản lý, NV kho','REP-03','','BATCHES PRODUCTS STOCK_MOVEMENTS DISPOSAL_REQUESTS DISPOSAL_DETAILS SYSTEM_SETTINGS'],
+    ['REP-05','Báo cáo nhập hàng','Admin, Quản lý','REP-04','','PURCHASE_ORDERS PURCHASE_ORDER_DETAILS SUPPLIERS PRODUCTS BRANDS'],
+    ['REP-06','Báo cáo khách hàng','Admin, Quản lý','REP-06','','CUSTOMERS CUSTOMER_TIERS ORDERS']
+  ];
+  var UCGROUPS=[['AUTH','Xác thực & hệ thống'],['PROD','Sản phẩm'],['STK','Kho'],['SUPP','Nhà cung cấp'],['CUS','Khách hàng'],['PROM','Khuyến mãi'],['POS','Bán hàng'],['REP','Báo cáo']];
+
+  /* usage index: table -> {w:[uc], r:[uc]} */
+  var USE={};
+  UCS.forEach(function(u){
+    u[4].split(' ').filter(Boolean).forEach(function(t){(USE[t]=USE[t]||{w:[],r:[]}).w.push(u[0])});
+    u[5].split(' ').filter(Boolean).forEach(function(t){(USE[t]=USE[t]||{w:[],r:[]}).r.push(u[0])});
+  });
+
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function parseCol(s){
+    var f='';if('+-~'.indexOf(s[0])>=0){f=s[0];s=s.slice(1)}
+    var p=s.split('|');return{f:f,n:p[0],t:p[1]||'',k:p[2]||'',note:p[3]||''};
+  }
+  var dbMode='orig',dbQuery='';
+  var dbGroupsEl=document.getElementById('dbgroups');
+  function keyBadges(k){return k.split(' ').filter(Boolean).map(function(x){return'<span class="k '+x.toLowerCase()+'">'+x+'</span>'}).join('')}
+  function renderDB(){
+    var html='',nT=0,nC=0,q=dbQuery.trim().toLowerCase();
+    GROUPS.forEach(function(g){
+      var cards='';
+      TABLES.filter(function(t){return t[1]===g.id}).forEach(function(t){
+        var st=t[3];
+        if(dbMode==='orig'&&st==='new')return;
+        if(dbMode==='prop'&&st==='drop')return;
+        var cols=t[4].map(parseCol).filter(function(c){
+          if(dbMode==='orig'&&c.f==='+')return false;
+          if(dbMode==='prop'&&c.f==='-')return false;
+          return true;
+        });
+        if(q&&t[0].toLowerCase().indexOf(q)<0&&!cols.some(function(c){return c.n.toLowerCase().indexOf(q)>=0}))return;
+        nT++;nC+=cols.length;
+        var tag='';
+        if(st==='new'&&dbMode!=='orig')tag='<span class="pill ok">Bảng mới</span>';
+        if(st==='drop'&&dbMode==='cmp')tag='<span class="pill bad">Bỏ</span>';
+        var rows=cols.map(function(c){
+          var cls='col';
+          if(dbMode==='cmp'){if(c.f==='+')cls+=' add';else if(c.f==='-')cls+=' del';else if(c.f==='~')cls+=' chg'}
+          var showNote=c.note&&(dbMode==='cmp'||c.f==='');
+          if(dbMode==='prop'&&c.note&&c.f!=='-')showNote=true;
+          return'<li class="'+cls+'"><span class="cn">'+esc(c.n)+keyBadges(c.k)+'</span><span class="ct">'+esc(c.t)+'</span>'+(showNote?'<span class="cnote">'+esc(c.note)+'</span>':'')+'</li>';
+        }).join('');
+        var u=USE[t[0]],foot;
+        if(st==='drop')foot='<span>'+esc(DROP_REASON[t[0]]||'Bỏ trong bản đề xuất')+'</span>';
+        else if(!u)foot='<span>Chưa có use case dùng</span>';
+        else foot='<span class="lbl2">Dùng bởi:</span>'+u.w.map(function(c){return'<button type="button" class="ucl w" data-uc="'+c+'" title="Ghi">'+c+'</button>'}).join('')+u.r.map(function(c){return'<button type="button" class="ucl" data-uc="'+c+'" title="Chỉ đọc">'+c+'</button>'}).join('');
+        cards+='<article class="tcard'+(st==='drop'&&dbMode==='cmp'?' dropped':'')+'" id="t-'+t[0]+'" style="--c:var('+g.c+')"><div class="thd"><div class="tn"><b>'+t[0]+'</b>'+tag+'</div><span>'+esc(t[2])+' · '+cols.length+' cột</span></div><ul class="cols">'+rows+'</ul><div class="tf">'+foot+'</div></article>';
+      });
+      if(cards)html+='<section class="grp"><h3 style="--c:var('+g.c+')"><i></i>'+g.name+'</h3><div class="tcards">'+cards+'</div></section>';
+    });
+    dbGroupsEl.innerHTML=html;
+    document.getElementById('dbempty').hidden=nT>0;
+    var label={orig:'Bản hiện tại',prop:'Bản đề xuất',cmp:'So sánh'}[dbMode];
+    document.getElementById('dbstat').textContent=label+': '+nT+' bảng · '+nC+' cột';
+    [].forEach.call(document.querySelectorAll('.lg-cmp'),function(e){e.hidden=dbMode!=='cmp'});
+  }
+  function setMode(m){
+    dbMode=m;
+    [].forEach.call(document.querySelectorAll('#dbmode button'),function(b){b.setAttribute('aria-pressed',b.dataset.m===m?'true':'false')});
+    renderDB();
+  }
+  document.getElementById('dbmode').addEventListener('click',function(e){var b=e.target.closest('button');if(b)setMode(b.dataset.m)});
+  document.getElementById('dbq').addEventListener('input',function(e){dbQuery=e.target.value;renderDB()});
+  renderDB();
+
+  /* ---------- UC table ---------- */
+  var ucGroup='ALL',ucQuery='';
+  var segEl=document.getElementById('ucgrp');
+  segEl.innerHTML='<button type="button" data-g="ALL" aria-pressed="true">Tất cả</button>'+UCGROUPS.map(function(g){return'<button type="button" data-g="'+g[0]+'" aria-pressed="false">'+g[0]+'</button>'}).join('');
+  function chips(list,w){return list.split(' ').filter(Boolean).map(function(t){return'<button type="button" class="tchip'+(w?' w':'')+'" data-t="'+t+'">'+t+'</button>'}).join('')||'<span style="color:var(--ink-3)">—</span>'}
+  function renderUC(){
+    var q=ucQuery.trim().toLowerCase(),html='';
+    UCGROUPS.forEach(function(g){
+      if(ucGroup!=='ALL'&&ucGroup!==g[0])return;
+      var rows=UCS.filter(function(u){return u[0].indexOf(g[0]+'-')===0}).filter(function(u){
+        return!q||(u.join(' ').toLowerCase().indexOf(q)>=0);
+      });
+      if(!rows.length)return;
+      html+='<tr class="grow"><td colspan="6">'+g[0]+' · '+g[1]+' ('+rows.length+')</td></tr>';
+      rows.forEach(function(u){
+        var isNew=u[3].indexOf('Mới')===0;
+        html+='<tr id="u-'+u[0]+'"><td>'+u[0]+'</td><td>'+esc(u[1])+'</td><td>'+esc(u[2])+'</td><td>'+(isNew?'<span class="newtag">'+esc(u[3])+'</span>':esc(u[3]))+'</td><td>'+chips(u[4],true)+'</td><td>'+chips(u[5],false)+'</td></tr>';
+      });
+    });
+    document.getElementById('ucbody').innerHTML=html||'<tr><td colspan="6" style="color:var(--ink-3)">Không có use case nào khớp.</td></tr>';
+  }
+  segEl.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;ucGroup=b.dataset.g;
+    [].forEach.call(segEl.children,function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+    renderUC();
+  });
+  document.getElementById('ucq').addEventListener('input',function(e){ucQuery=e.target.value;renderUC()});
+  renderUC();
+
+  /* ---------- Cross links ---------- */
+  var dbSlide=document.getElementById('sl-db'),ucSlide=document.getElementById('sl-uc');
+  function reveal(slide,el){
+    go(slides.indexOf(slide));
+    setTimeout(function(){
+      slide.scrollTo({top:Math.max(0,el.offsetTop-90),behavior:reduce?'auto':'smooth'});
+      el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');
+    },reduce?0:420);
+  }
+  function showTable(name){
+    var t=TABLES.filter(function(x){return x[0]===name})[0];if(!t)return;
+    if((dbMode==='orig'&&t[3]==='new')||(dbMode==='prop'&&t[3]==='drop'))setMode('cmp');
+    if(dbQuery){dbQuery='';document.getElementById('dbq').value='';renderDB()}
+    var el=document.getElementById('t-'+name);if(el)reveal(dbSlide,el);
+  }
+  function showUC(code){
+    if(ucGroup!=='ALL'||ucQuery){ucGroup='ALL';ucQuery='';document.getElementById('ucq').value='';[].forEach.call(segEl.children,function(x){x.setAttribute('aria-pressed',x.dataset.g==='ALL'?'true':'false')});renderUC()}
+    var el=document.getElementById('u-'+code);if(el)reveal(ucSlide,el);
+  }
+  document.getElementById('ucbody').addEventListener('click',function(e){var b=e.target.closest('.tchip');if(b)showTable(b.dataset.t)});
+  dbGroupsEl.addEventListener('click',function(e){var b=e.target.closest('.ucl');if(b)showUC(b.dataset.uc)});
+
+  /* =====================================================================
+     ERD (bản đề xuất) — vẽ SVG thủ công, không cần thư viện
+     ===================================================================== */
+  var FKT={user_id:'USERS',created_by:'USERS',approved_by:'USERS',requested_by:'USERS',processed_by:'USERS',cashier_id:'USERS',handover_confirmed_by:'USERS',updated_by:'USERS',role_id:'ROLES',permission_id:'PERMISSIONS',category_id:'CATEGORIES',brand_id:'BRANDS',product_id:'PRODUCTS',batch_id:'BATCHES',locked_by_check_id:'INVENTORY_CHECKS',check_id:'INVENTORY_CHECKS',disposal_id:'DISPOSAL_REQUESTS',supplier_id:'SUPPLIERS',po_id:'PURCHASE_ORDERS',tier_id:'CUSTOMER_TIERS',min_tier_id:'CUSTOMER_TIERS',customer_id:'CUSTOMERS',order_id:'ORDERS',original_order_id:'ORDERS',return_id:'RETURN_ORDERS',promotion_id:'PROMOTIONS',shift_id:'CASHIER_SHIFTS',policy_id:'RETURN_POLICIES',order_detail_id:'ORDER_DETAILS'};
+  var LAYOUT=[
+    ['CATEGORIES','BRANDS','SUPPLIERS','PURCHASE_ORDERS','PURCHASE_ORDER_DETAILS'],
+    ['PRODUCTS','BATCHES','STOCK_MOVEMENTS'],
+    ['INVENTORY_CHECKS','INVENTORY_CHECK_DETAILS','DISPOSAL_REQUESTS','DISPOSAL_DETAILS'],
+    ['ORDERS','ORDER_DETAILS','RETURN_ORDERS','RETURN_ORDER_DETAILS'],
+    ['CASHIER_SHIFTS','RETURN_POLICIES','PROMOTIONS','CUSTOMER_TIERS','CUSTOMERS','POINT_HISTORIES'],
+    ['USERS','USER_ROLES','ROLES','ROLE_PERMISSIONS','PERMISSIONS','REFRESH_TOKENS','AUDIT_LOGS','SYSTEM_SETTINGS']
+  ];
+  var EW=260,EH=30,ER=19,COLX=330,MX=30,MY=24,GAPY=30;
+  var GC={};GROUPS.forEach(function(g){GC[g.id]=g.c});
+  var TBY={};TABLES.forEach(function(t){TBY[t[0]]=t});
+  var erdSvg=document.getElementById('erd'),erdWrap=document.getElementById('erdwrap'),erdInfo=document.getElementById('erdinfo');
+  var erdColsMode='keys',erdActor=false,erdZoom=1,erdSel=null,erdW=0,erdH=0;
+  var BOX={},EDGES=[];
+  var INFO_DEFAULT='Bấm vào một bảng để xem bảng đó tham chiếu tới đâu và được bảng nào tham chiếu. Bấm lại hoặc bấm vào nền để bỏ chọn.';
+
+  function propCols(t){return t[4].map(parseCol).filter(function(c){return c.f!=='-'})}
+  function fkTarget(c){return /FK/.test(c.k)?FKT[c.n]||null:null}
+  function isActor(t,target){return target==='USERS'&&t[1]!=='auth'}
+
+  function renderERD(){
+    BOX={};EDGES=[];
+    var out=[],maxY=0;
+    LAYOUT.forEach(function(col,ci){
+      var y=MY,x=MX+ci*COLX;
+      col.forEach(function(name){
+        var t=TBY[name];if(!t||t[3]==='drop')return;
+        var cols=propCols(t),shown,hidden=0;
+        if(erdColsMode==='keys'){shown=cols.filter(function(c){return /PK|FK/.test(c.k)});hidden=cols.length-shown.length}
+        else shown=cols;
+        var h=EH+shown.length*ER+(hidden?ER:0)+6;
+        BOX[name]={x:x,y:y,h:h,rows:shown,t:t};
+        y+=h+GAPY;
+      });
+      maxY=Math.max(maxY,y);
+    });
+    erdW=MX*2+(LAYOUT.length-1)*COLX+EW;erdH=maxY+MY;
+
+    Object.keys(BOX).forEach(function(name){
+      var b=BOX[name],t=b.t;
+      b.rows.forEach(function(c,ri){
+        var tg=fkTarget(c);if(!tg||!BOX[tg])return;
+        var actor=isActor(t,tg);if(actor&&!erdActor)return;
+        var T=BOX[tg],y1=b.y+EH+ri*ER+ER/2,y2=T.y+EH+ER/2,x1,x2,c1,c2,d;
+        if(T.x>b.x){x1=b.x+EW;x2=T.x;d=Math.max(50,(x2-x1)/2);c1=x1+d;c2=x2-d}
+        else if(T.x<b.x){x1=b.x;x2=T.x+EW;d=Math.max(50,(x1-x2)/2);c1=x1-d;c2=x2+d}
+        else{x1=b.x;x2=T.x;c1=x1-60;c2=x2-60}
+        EDGES.push({from:name,to:tg,ri:ri,actor:actor,d:'M'+x1+','+y1+' C'+c1+','+y1+' '+c2+','+y2+' '+x2+','+y2});
+      });
+    });
+
+    function mk(id,cls,d,orient){return'<marker id="'+id+'" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="'+orient+'" markerUnits="userSpaceOnUse"><path class="'+cls+'" d="'+d+'"/></marker>'}
+    var many='M1 7L13 1M1 7L13 7M1 7L13 13',one='M5 1V13M9 1V13';
+    out.push('<defs>'+mk('mMany','mk',many,'auto-start-reverse')+mk('mManyH','mk hl',many,'auto-start-reverse')+mk('mOne','mk',one,'auto')+mk('mOneH','mk hl',one,'auto')+'</defs>');
+    out.push('<rect x="0" y="0" width="'+erdW+'" height="'+erdH+'" style="fill:transparent"/>');
+    out.push('<g>');
+    EDGES.forEach(function(e,i){out.push('<path class="edge'+(e.actor?' actor':'')+'" data-i="'+i+'" d="'+e.d+'" marker-start="url(#mMany)" marker-end="url(#mOne)"/>')});
+    out.push('</g><g>');
+    Object.keys(BOX).forEach(function(name){
+      var b=BOX[name],t=b.t,x=b.x,y=b.y,c='var('+GC[t[1]]+')';
+      var s='<g class="ebox" data-t="'+name+'" tabindex="0" role="button" aria-label="Bảng '+name+'">';
+      s+='<rect class="bg" x="'+x+'" y="'+y+'" width="'+EW+'" height="'+b.h+'" rx="8"/>';
+      s+='<path class="hd" d="M'+(x+.5)+','+(y+EH)+'V'+(y+8)+'Q'+(x+.5)+','+(y+.5)+' '+(x+8)+','+(y+.5)+'H'+(x+EW-8)+'Q'+(x+EW-.5)+','+(y+.5)+' '+(x+EW-.5)+','+(y+8)+'V'+(y+EH)+'Z"/>';
+      s+='<rect x="'+x+'" y="'+(y+6)+'" width="3" height="'+(EH-12)+'" style="fill:'+c+'"/>';
+      s+='<text class="tname" x="'+(x+12)+'" y="'+(y+19.5)+'">'+name+'</text>';
+      b.rows.forEach(function(r,ri){
+        var ry=y+EH+ri*ER,pk=/PK/.test(r.k),fk=/FK/.test(r.k);
+        s+='<rect class="rowbg" data-r="'+ri+'" x="'+(x+1)+'" y="'+ry+'" width="'+(EW-2)+'" height="'+ER+'" style="fill:transparent"/>';
+        if(pk)s+='<text class="kpk" x="'+(x+8)+'" y="'+(ry+13)+'">PK</text>';
+        if(fk)s+='<text class="kfk" x="'+(x+(pk?22:8))+'" y="'+(ry+13)+'">FK</text>';
+        s+='<text class="cname" x="'+(x+40)+'" y="'+(ry+13.5)+'">'+esc(r.n)+'</text>';
+        s+='<text class="ctype" x="'+(x+EW-10)+'" y="'+(ry+13.5)+'" text-anchor="end">'+esc(r.t)+'</text>';
+      });
+      var hidden=propCols(t).length-b.rows.length;
+      if(hidden>0)s+='<text class="more" x="'+(x+40)+'" y="'+(y+EH+b.rows.length*ER+13)+'">+ '+hidden+' cột khác</text>';
+      out.push(s+'</g>');
+    });
+    out.push('</g>');
+    erdSvg.setAttribute('viewBox','0 0 '+erdW+' '+erdH);
+    erdSvg.innerHTML=out.join('');
+    applyZoom();
+    highlight(erdSel);
+  }
+
+  function highlight(name){
+    var edges=erdSvg.querySelectorAll('.edge'),boxes=erdSvg.querySelectorAll('.ebox');
+    [].forEach.call(erdSvg.querySelectorAll('.rowbg'),function(r){r.style.fill='transparent'});
+    var on=!!(name&&BOX[name]),rel={};
+    erdSvg.classList.toggle('focus',on);
+    if(on)rel[name]=1;
+    [].forEach.call(edges,function(p){
+      var e=EDGES[+p.dataset.i],h=on&&(e.from===name||e.to===name);
+      p.classList.toggle('hl',h);
+      p.setAttribute('marker-start',h?'url(#mManyH)':'url(#mMany)');
+      p.setAttribute('marker-end',h?'url(#mOneH)':'url(#mOne)');
+      if(h){rel[e.from]=1;rel[e.to]=1;
+        var fb=erdSvg.querySelector('.ebox[data-t="'+e.from+'"] .rowbg[data-r="'+e.ri+'"]');if(fb)fb.style.fill='var(--accent-soft)';}
+    });
+    if(on){var g=erdSvg.querySelectorAll('.ebox'),last=null;[].forEach.call(g,function(b){if(b.dataset.t===name)last=b});if(last&&last!==last.parentNode.lastChild)last.parentNode.appendChild(last)}
+    [].forEach.call(boxes,function(b){b.classList.toggle('rel',!!rel[b.dataset.t]);b.classList.toggle('sel',on&&b.dataset.t===name)});
+  }
+
+  function showInfo(name){
+    if(!name){erdInfo.textContent=INFO_DEFAULT;return}
+    var t=TBY[name],outE=[],inE=[];
+    TABLES.forEach(function(s){if(s[3]==='drop')return;propCols(s).forEach(function(c){
+      var tg=fkTarget(c);if(!tg)return;
+      if(s[0]===name)outE.push(c.n+' → '+tg);
+      if(tg===name)inE.push(s[0]+'.'+c.n);
+    })});
+    function list(a){return a.length?a.map(function(x){return'<span class="tchip">'+esc(x)+'</span>'}).join(''):'<span>không có</span>'}
+    erdInfo.innerHTML='<b class="mono">'+name+'</b><span>'+esc(t[2])+' · '+propCols(t).length+' cột</span>'+
+      '<span class="rel">Tham chiếu tới: '+list(outE)+'</span><span class="rel">Được tham chiếu bởi: '+list(inE)+'</span>'+
+      '<button type="button" class="qbtn" id="erdgo">Xem cột chi tiết →</button>';
+    document.getElementById('erdgo').addEventListener('click',function(){setMode('prop');showTable(name)});
+  }
+  function select(name){erdSel=name;highlight(name);showInfo(name)}
+
+  function applyZoom(){
+    erdSvg.setAttribute('width',Math.round(erdW*erdZoom));
+    erdSvg.setAttribute('height',Math.round(erdH*erdZoom));
+    document.getElementById('zlbl').textContent='Thu phóng '+Math.round(erdZoom*100)+'%';
+  }
+  function zoomTo(z){
+    var cx=(erdWrap.scrollLeft+erdWrap.clientWidth/2)/erdZoom,cy=(erdWrap.scrollTop+erdWrap.clientHeight/2)/erdZoom;
+    erdZoom=Math.max(.3,Math.min(1.6,z));applyZoom();
+    erdWrap.scrollLeft=cx*erdZoom-erdWrap.clientWidth/2;erdWrap.scrollTop=cy*erdZoom-erdWrap.clientHeight/2;
+  }
+  function fit(){if(!erdWrap.clientWidth)return;erdZoom=Math.max(.3,Math.min(1,(erdWrap.clientWidth-4)/erdW));applyZoom();erdWrap.scrollLeft=0;erdWrap.scrollTop=0}
+  document.getElementById('zin').addEventListener('click',function(){zoomTo(erdZoom*1.2)});
+  document.getElementById('zout').addEventListener('click',function(){zoomTo(erdZoom/1.2)});
+  document.getElementById('zfit').addEventListener('click',fit);
+  document.getElementById('erdcols').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;erdColsMode=b.dataset.v;
+    [].forEach.call(this.children,function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+    renderERD();
+  });
+  document.getElementById('erdactor').addEventListener('change',function(e){erdActor=e.target.checked;renderERD()});
+
+  /* Chuột: kéo để di chuyển. Cảm ứng: dùng cuộn mặc định của trình duyệt. */
+  var drag=null,justDragged=false;
+  erdWrap.addEventListener('pointerdown',function(e){
+    if(e.pointerType!=='mouse'||e.button!==0)return;
+    drag={x:e.clientX,y:e.clientY,sl:erdWrap.scrollLeft,st:erdWrap.scrollTop,moved:false};
+  });
+  window.addEventListener('pointermove',function(e){
+    if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    if(!drag.moved&&Math.abs(dx)+Math.abs(dy)>4){drag.moved=true;erdWrap.classList.add('drag')}
+    if(drag.moved){erdWrap.scrollLeft=drag.sl-dx;erdWrap.scrollTop=drag.st-dy}
+  });
+  window.addEventListener('pointerup',function(){
+    if(drag&&drag.moved){erdWrap.classList.remove('drag');justDragged=true;setTimeout(function(){justDragged=false},0)}
+    drag=null;
+  });
+  erdSvg.addEventListener('click',function(e){
+    if(justDragged)return;
+    var g=e.target.closest('.ebox');select(g&&g.dataset.t!==erdSel?g.dataset.t:null);
+  });
+  erdSvg.addEventListener('keydown',function(e){
+    var g=e.target.closest&&e.target.closest('.ebox');
+    if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();select(g.dataset.t===erdSel?null:g.dataset.t)}
+  });
+  erdSvg.addEventListener('mouseover',function(e){if(erdSel)return;var g=e.target.closest('.ebox');highlight(g?g.dataset.t:null)});
+  erdSvg.addEventListener('mouseleave',function(){if(!erdSel)highlight(null)});
+
+  renderERD();showInfo(null);
+  var erdSlide=document.getElementById('sl-erd'),erdFitted=false;
+  function maybeFit(){
+    if(erdFitted)return;
+    var r=erdSlide.getBoundingClientRect();
+    if(Math.abs(r.left)<5&&erdWrap.clientWidth){erdFitted=true;fit()}
+  }
+  track.addEventListener('scroll',maybeFit,{passive:true});
+  maybeFit();
+})();
+</script>
