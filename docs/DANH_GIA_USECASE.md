@@ -315,7 +315,7 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 
 **Đổi hàng (`EXCHANGE`):** phiếu trả sinh một giá trị quy đổi (`total_refund_amount`, không chi tiền). Thu ngân lập đơn bán mới với `exchange_return_id`; đơn này được trừ `exchange_credit_amount`.
 - Hàng mới **đắt hơn**: khách nộp phần chênh lệch.
-- Hàng mới **rẻ hơn** (còn dư): khách **phải mua thêm hàng** để bù phần dư. Không hoàn tiền thừa, không cấp voucher. Hệ thống chặn thanh toán khi tổng tiền hàng mới < giá trị hàng trả.
+- Hàng mới **rẻ hơn** (còn dư): **vẫn được đổi, nhưng phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết giá trị thì khách tự mua thêm hàng. Hệ thống nên cảnh báo thu ngân và khách trước khi xác nhận. Đơn đổi có `exchange_credit_amount = MIN(giá trị hàng trả, tổng đơn mới)`; `total_refund_amount` của phiếu trả bằng đúng khoản này, nên phần dư vẫn tính là doanh thu của cửa hàng.
 - Điểm thưởng vẫn thu hồi theo công thức hiện hành; đơn đổi tích điểm theo số tiền khách thực nộp.
 
 **Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE`/`WRONG_ITEM` hoàn tiền):**
@@ -607,6 +607,6 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | # | Nội dung | Quyết định |
 |---|---|---|
 | 9 | Khách đổi ý có được hoàn tiền không? | **Không**, chỉ đổi hàng (nguyên seal, trong hạn) |
-| 10 | Đổi sang hàng rẻ hơn | Khách **phải mua thêm hàng** để bù phần dư. Không hoàn tiền, không cấp voucher |
+| 10 | Đổi sang hàng rẻ hơn | Được đổi, nhưng **phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết thì tự mua thêm hàng |
 | 11 | Hàng trưng bày móp hộp, bạc màu | **Không làm** giảm giá theo dòng. Hàng trên kệ là hàng bán bình thường, trừ tồn khi bán theo FEFO |
 | 12 | Tester | Xuất bằng phiếu `TESTER` dùng chung bảng `DISPOSAL_REQUESTS`; **Manager duyệt**; sau khi duyệt hệ thống hết trách nhiệm (không theo dõi hạn, không lập phiếu hủy) |
