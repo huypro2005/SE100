@@ -111,6 +111,8 @@ Dữ liệu mặc định:
 | POINT_EARN_AMOUNT | 10000 | Số tiền (VNĐ) khách trả để được 1 điểm |
 | POINT_REDEEM_VALUE | 100 | Giá trị 1 điểm khi đổi (VNĐ) |
 | POINT_MAX_REDEEM_PERCENT | 50 | Tối đa % giá trị đơn được trừ bằng điểm |
+| EXCHANGE_VOUCHER_VALUES | 10000,20000,50000,100000 | Các mệnh giá voucher bù chênh lệch khi đổi sang hàng rẻ hơn |
+| EXCHANGE_VOUCHER_TOLERANCE | 5000 | Mệnh giá voucher được phép lệch tối đa ±N đồng so với phần chênh lệch |
 | STORE_NAME / STORE_ADDRESS / STORE_PHONE | … | In trên hóa đơn |
 
 ### 8. REFRESH_TOKENS
@@ -165,6 +167,7 @@ Hồ sơ sản phẩm / SKU.
 | min_stock_alert | INT | NOT NULL, DEFAULT 5 | Ngưỡng tồn tối thiểu cảnh báo | |
 | description | TEXT | NULL | Mô tả sản phẩm | Mới |
 | image_url | VARCHAR(255) | NULL | Ảnh sản phẩm | Mới |
+| is_sellable | BOOLEAN | NOT NULL, DEFAULT TRUE | FALSE = SKU **tester của hãng** (nhập giá 0đ, chỉ xuất bằng phiếu `TESTER`); POS và FEFO bỏ qua | Mới |
 | status | VARCHAR(20) | NOT NULL, DEFAULT 'ACTIVE' | `ACTIVE`, `DISCONTINUED` | |
 | created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | | Mới |
 | updated_at | DATETIME | NULL | | Mới |
@@ -194,8 +197,8 @@ Thẻ kho: mọi tăng/giảm tồn đều có một dòng ở đây, ghi trong 
 |---|---|---|---|---|
 | movement_id | BIGINT | PK | Khóa chính | |
 | batch_id | INT | NOT NULL, FK → BATCHES | Lô bị biến động | |
-| reference_type | VARCHAR(30) | NOT NULL | `PURCHASE`, `SALE`, `RETURN`, `CHECK_ADJUST`, `DISPOSAL` | Sửa: chuẩn hóa giá trị |
-| reference_id | BIGINT | NOT NULL | ID chứng từ gốc (po_id, order_id, return_id, check_id, disposal_id). Không đặt FK vì trỏ nhiều bảng | |
+| reference_type | VARCHAR(30) | NOT NULL | `PURCHASE`, `SALE`, `RETURN`, `CHECK_ADJUST`, `DISPOSAL`, `TESTER`, `SUPPLIER_RETURN` (3 giá trị cuối ứng với `issue_type` của DISPOSAL_REQUESTS) | Sửa: chuẩn hóa giá trị |
+| reference_id | BIGINT | NOT NULL | ID chứng từ gốc (po_id, order_id, return_id, check_id, disposal_id; phiếu tester và trả NCC cũng dùng disposal_id). Không đặt FK vì trỏ nhiều bảng | |
 | quantity_change | INT | NOT NULL, ≠ 0 | Có dấu: nhập/trả (+), bán/hủy (−), kiểm kho (±) | |
 | balance_after | INT | NOT NULL | Tồn của lô sau biến động | Mới |
 | reason | VARCHAR(255) | NULL | Ghi chú | |
@@ -230,14 +233,16 @@ Phiếu kiểm kho.
 | note | VARCHAR(255) | NULL | Giải trình chênh lệch | |
 
 ### 16. DISPOSAL_REQUESTS
-Phiếu đề nghị xuất hủy.
+Phiếu đề nghị **xuất kho khác**: xuất hủy, xuất tester, trả nhà cung cấp. Cùng một luồng: NV kho lập → cách ly hàng → Manager duyệt → trừ tồn.
 
 | Cột | Kiểu | Ràng buộc | Mô tả | Thay đổi |
 |---|---|---|---|---|
 | disposal_id | INT | PK | Khóa chính | |
 | disposal_code | VARCHAR(50) | UNIQUE, NOT NULL | Mã phiếu (DISP20261005-01) | |
+| issue_type | VARCHAR(30) | NOT NULL, DEFAULT 'DESTROY' | `DESTROY` (tiêu hủy), `TESTER` (đưa ra quầy làm tester), `RETURN_TO_SUPPLIER` (trả NCC) | Mới |
+| reason_code | VARCHAR(30) | NOT NULL | `EXPIRED`, `NEAR_EXPIRY`, `DAMAGED`, `RECALL`, `RETURN_DEFECT`, `TESTER_USE` | Mới |
 | status | VARCHAR(30) | NOT NULL, DEFAULT 'WAITING_APPROVAL' | `WAITING_APPROVAL`, `APPROVED` (đã trừ tồn), `REJECTED` | Sửa: bỏ `APPROVED_PENDING`, `COMPLETED` |
-| reason | TEXT | NOT NULL | Lý do chung | |
+| reason | TEXT | NOT NULL | Diễn giải lý do (văn bản tự do) | |
 | requested_by | INT | NOT NULL, FK → USERS | Nhân viên kho lập | |
 | created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | Ngày lập | |
 | approved_by | INT | NULL, FK → USERS | Quản lý duyệt / từ chối | |
@@ -254,6 +259,8 @@ Phiếu đề nghị xuất hủy.
 | blocked_added_qty | INT | NOT NULL, DEFAULT 0 | Lượng hệ thống cách ly thêm khi lập phiếu (trả lại nếu từ chối) | Mới (thay DISPOSAL_ALLOCATIONS) |
 | unit_cost | DECIMAL(12,2) | NULL | Giá vốn lô, chụp lúc duyệt (báo cáo tổn thất) | Mới |
 | item_reason | VARCHAR(255) | NULL | Lý do riêng từng lô | |
+
+**Quy tắc phiếu `TESTER`:** Manager duyệt mới trừ tồn. Sau khi duyệt, hệ thống **không theo dõi tiếp** chai tester (hết hạn hay dùng hết thì nhân viên tự bỏ, không lập phiếu hủy). Chi phí tester = Σ `quantity × unit_cost` (bằng 0 với tester của hãng). Không phát sinh doanh thu, điểm thưởng, ca làm việc. Phiếu in kèm `exp_date` của lô để nhân viên biết khi nào thay.
 
 ---
 
@@ -370,6 +377,7 @@ Voucher cấp đơn hàng, **1 voucher/đơn**.
 | max_discount_amount | DECIMAL(12,2) | NULL | Trần giảm cho loại % | |
 | min_order_value | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Đơn tối thiểu (so với tiền sau chiết khấu hạng) | |
 | min_tier_id | INT | NULL, FK → CUSTOMER_TIERS | Hạng thẻ tối thiểu; khác NULL thì bắt buộc có khách | Mới |
+| customer_id | INT | NULL, FK → CUSTOMERS | Voucher **dành riêng một khách** (voucher bù chênh lệch khi đổi hàng); khác NULL thì chỉ khách này dùng được, bắt buộc có khách | Mới |
 | start_date | DATE | NOT NULL | Ngày bắt đầu | |
 | end_date | DATE | NOT NULL, ≥ start_date | Ngày kết thúc | |
 | usage_limit | INT | NULL = không giới hạn | Tổng lượt dùng | Sửa: cho NULL |
@@ -409,8 +417,8 @@ Ràng buộc nghiệp vụ: mỗi `cashier_id` tối đa 1 ca `OPEN` (kiểm ở
 | policy_id | INT | PK | Khóa chính | |
 | policy_name | VARCHAR(100) | NOT NULL | Tên (Tiêu chuẩn 7 ngày) | |
 | max_return_days | INT | NOT NULL, DEFAULT 7 | Số ngày được trả kể từ ngày mua | |
-| is_refund_allowed | BOOLEAN | NOT NULL, DEFAULT TRUE | FALSE = chỉ đổi hàng | |
-| restocking_fee_percent | DECIMAL(4,2) | NOT NULL, DEFAULT 0 | Phí trả hàng | |
+| is_refund_allowed | BOOLEAN | NOT NULL, DEFAULT TRUE | Áp dụng cho lý do `CHANGE_OF_MIND`: FALSE = **chỉ đổi hàng, không hoàn tiền** (chính sách mặc định đặt FALSE). Hàng lỗi / giao nhầm luôn được hoàn tiền | Sửa: ghi rõ phạm vi |
+| restocking_fee_percent | DECIMAL(4,2) | NOT NULL, DEFAULT 0 | Phí trả hàng (chỉ có tác dụng khi `is_refund_allowed = TRUE`; chính sách mặc định không dùng) | |
 | is_default | BOOLEAN | NOT NULL, DEFAULT FALSE | Chính sách gắn mặc định cho đơn mới (chỉ 1 dòng TRUE) | Mới |
 | status | VARCHAR(20) | NOT NULL, DEFAULT 'ACTIVE' | `ACTIVE`, `INACTIVE` | Mới |
 
@@ -434,6 +442,8 @@ Hóa đơn bán hàng.
 | discount_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Tổng 3 khoản giảm trên | |
 | tax_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Tiền VAT | |
 | total_amount | DECIMAL(12,2) | NOT NULL | Khách phải trả | |
+| exchange_return_id | INT | NULL, FK → RETURN_ORDERS | Đơn này là đơn **mua hàng đổi** của phiếu trả nào | Mới |
+| exchange_credit_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Giá trị hàng trả được trừ vào đơn đổi (không phải giảm giá). Tiền khách phải nộp = `total_amount − exchange_credit_amount` | Mới |
 | payment_method | VARCHAR(20) | **NULL** đến khi hoàn tất | `CASH`, `BANK_TRANSFER`, `CARD` | Sửa: PDF NOT NULL |
 | amount_received | DECIMAL(12,2) | NULL | Tiền khách đưa (tiền mặt) | Mới |
 | change_due | DECIMAL(12,2) | NULL | Tiền thừa | Mới |
@@ -470,10 +480,12 @@ Phiếu đổi trả. Nhận hàng và hoàn tiền là **một giao dịch**.
 | original_order_id | INT | NOT NULL, FK → ORDERS | Hóa đơn gốc (phải COMPLETED) | |
 | shift_id | INT | NOT NULL, FK → CASHIER_SHIFTS | Ca **hiện tại** chi tiền | |
 | processed_by | INT | NOT NULL, FK → USERS | Thu ngân xử lý | |
-| return_reason | TEXT | NOT NULL | Lý do | |
+| return_reason | VARCHAR(30) | NOT NULL | `DEFECTIVE` (lỗi, hư, hết hạn), `WRONG_ITEM` (giao nhầm), `CHANGE_OF_MIND` (đổi ý, không hợp da) | Sửa: từ TEXT sang enum |
+| return_note | TEXT | NULL | Ghi chú thêm của thu ngân | Mới |
 | restocking_fee_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Phí trả hàng đã trừ | Mới |
-| total_refund_amount | DECIMAL(12,2) | NOT NULL | Tiền hoàn thực tế | |
-| refund_method | VARCHAR(20) | NOT NULL | `CASH`, `BANK_TRANSFER` | |
+| total_refund_amount | DECIMAL(12,2) | NOT NULL | Giá trị hàng trả sau trừ phí. Với `EXCHANGE` đây là **giá trị quy đổi**, không chi tiền; báo cáo vẫn trừ vào doanh thu | |
+| refund_method | VARCHAR(20) | NOT NULL | `CASH`, `BANK_TRANSFER`, `EXCHANGE` (đổi hàng, bắt buộc với `CHANGE_OF_MIND`) | Sửa: thêm EXCHANGE |
+| compensation_promotion_id | INT | NULL, FK → PROMOTIONS | Voucher cấp bù khi đổi sang hàng rẻ hơn | Mới |
 | points_revoked | INT | NOT NULL, DEFAULT 0 | Điểm bị thu hồi | Mới |
 | status | VARCHAR(30) | NOT NULL, DEFAULT 'COMPLETED' | `COMPLETED`, `CANCELLED` | Sửa: bỏ WAITING_FOR_REFUND, REJECTED |
 | created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | Ngày trả (báo cáo trừ vào ngày này) | |
@@ -510,13 +522,13 @@ Tất cả là quan hệ **1 – n** (bảng bên trái là “1”).
 | SUPPLIERS | PURCHASE_ORDERS.supplier_id |
 | PURCHASE_ORDERS | PURCHASE_ORDER_DETAILS.po_id |
 | CUSTOMER_TIERS | CUSTOMERS.tier_id · PROMOTIONS.min_tier_id |
-| CUSTOMERS | ORDERS.customer_id · POINT_HISTORIES.customer_id |
-| PROMOTIONS | ORDERS.promotion_id |
+| CUSTOMERS | ORDERS.customer_id · POINT_HISTORIES.customer_id · PROMOTIONS.customer_id |
+| PROMOTIONS | ORDERS.promotion_id · RETURN_ORDERS.compensation_promotion_id |
 | CASHIER_SHIFTS | ORDERS.shift_id · RETURN_ORDERS.shift_id |
 | RETURN_POLICIES | ORDERS.policy_id |
 | ORDERS | ORDER_DETAILS.order_id · RETURN_ORDERS.original_order_id · POINT_HISTORIES.order_id |
 | ORDER_DETAILS | RETURN_ORDER_DETAILS.order_detail_id |
-| RETURN_ORDERS | RETURN_ORDER_DETAILS.return_id · POINT_HISTORIES.return_id |
+| RETURN_ORDERS | RETURN_ORDER_DETAILS.return_id · POINT_HISTORIES.return_id · ORDERS.exchange_return_id |
 
 **Liên kết đa hình (không có FK):** `STOCK_MOVEMENTS(reference_type, reference_id)` trỏ tới PURCHASE_ORDERS / ORDERS / RETURN_ORDERS / INVENTORY_CHECKS / DISPOSAL_REQUESTS tùy `reference_type`.
 
@@ -561,6 +573,9 @@ erDiagram
   BATCHES ||--o{ RETURN_ORDER_DETAILS : ""
   ORDERS |o--o{ POINT_HISTORIES : ""
   RETURN_ORDERS |o--o{ POINT_HISTORIES : ""
+  RETURN_ORDERS |o--o{ ORDERS : "đơn mua hàng đổi"
+  PROMOTIONS |o--o{ RETURN_ORDERS : "voucher bù chênh lệch"
+  CUSTOMERS |o--o{ PROMOTIONS : "voucher riêng"
 ```
 
 *(Các FK “người thực hiện” như created_by, approved_by… tới USERS được lược bớt khỏi sơ đồ cho dễ đọc; xem bảng ở trên.)*
@@ -573,7 +588,10 @@ erDiagram
 | ROLES.role_code | ADMIN, STORE_MANAGER, INVENTORY_STAFF, CASHIER |
 | CATEGORIES / BRANDS / SUPPLIERS / RETURN_POLICIES.status | ACTIVE, INACTIVE |
 | PRODUCTS.status | ACTIVE, DISCONTINUED |
-| STOCK_MOVEMENTS.reference_type | PURCHASE, SALE, RETURN, CHECK_ADJUST, DISPOSAL |
+| STOCK_MOVEMENTS.reference_type | PURCHASE, SALE, RETURN, CHECK_ADJUST, DISPOSAL, TESTER, SUPPLIER_RETURN |
+| DISPOSAL_REQUESTS.issue_type | DESTROY, TESTER, RETURN_TO_SUPPLIER |
+| DISPOSAL_REQUESTS.reason_code | EXPIRED, NEAR_EXPIRY, DAMAGED, RECALL, RETURN_DEFECT, TESTER_USE |
+| RETURN_ORDERS.return_reason | DEFECTIVE, WRONG_ITEM, CHANGE_OF_MIND |
 | INVENTORY_CHECKS.status | IN_PROGRESS, WAITING_APPROVAL, APPROVED, REJECTED, CANCELLED, NO_DIFFERENCE |
 | DISPOSAL_REQUESTS.status | WAITING_APPROVAL, APPROVED, REJECTED |
 | PURCHASE_ORDERS.status | DRAFT, COMPLETED, CANCELLED |
@@ -587,7 +605,7 @@ erDiagram
 | ORDERS.status | DRAFT, COMPLETED, CANCELLED |
 | ORDERS.payment_method | CASH, BANK_TRANSFER, CARD |
 | RETURN_ORDERS.status | COMPLETED, CANCELLED |
-| RETURN_ORDERS.refund_method | CASH, BANK_TRANSFER |
+| RETURN_ORDERS.refund_method | CASH, BANK_TRANSFER, EXCHANGE |
 | RETURN_ORDER_DETAILS.item_condition | INTACT, DAMAGED_OR_OPENED |
 
 ## 8. Index & ràng buộc nghiệp vụ
@@ -613,8 +631,12 @@ erDiagram
 4. Chứng từ `COMPLETED` / `APPROVED` không sửa, không xóa.
 5. Tổng `RETURN_ORDER_DETAILS.quantity` theo một `order_detail_id` ≤ `ORDER_DETAILS.quantity`.
 6. `ORDERS.discount_amount = tier + voucher + points`; `Σ ORDER_DETAILS.discount_allocated = ORDERS.discount_amount`.
-7. Voucher có `min_tier_id` hoặc `limit_per_customer` thì đơn bắt buộc có `customer_id`.
+7. Voucher có `min_tier_id`, `limit_per_customer` hoặc `customer_id` thì đơn bắt buộc có `customer_id` (voucher riêng chỉ dùng được bởi đúng khách đó).
 8. Chỉ một `RETURN_POLICIES` có `is_default = TRUE`.
+9. Phiếu `DISPOSAL_REQUESTS` loại `TESTER`: SKU `is_sellable = FALSE` chỉ được xuất bằng loại `TESTER` hoặc `DESTROY`; POS/FEFO không bao giờ chọn SKU này.
+10. `RETURN_ORDERS.refund_method = EXCHANGE` bắt buộc khi `return_reason = CHANGE_OF_MIND`; hàng `DAMAGED_OR_OPENED` + `CHANGE_OF_MIND` bị từ chối (không tạo phiếu). `DEFECTIVE` luôn cộng `blocked_qty`.
+11. Tiền mặt phải nộp của đơn = `total_amount − exchange_credit_amount`; chốt ca chỉ tính phần này, và chỉ chi tiền hoàn khi `refund_method = CASH`.
+12. `compensation_promotion_id` chỉ khác NULL khi `refund_method = EXCHANGE`; voucher có `discount_type = FIXED_AMOUNT`, `usage_limit = 1`, `customer_id` = khách đổi hàng (bắt buộc có khách).
 
 ## 9. Thay đổi so với PDF
 
@@ -624,5 +646,6 @@ erDiagram
 | Thêm bảng | `PURCHASE_ORDER_DETAILS` · `SYSTEM_SETTINGS` · `REFRESH_TOKENS` |
 | Bỏ cột | SUPPLIERS.debt_limit · PURCHASE_ORDERS.paid_amount, debt_amount · ORDERS.salesperson_id · PROMOTIONS.is_stackable |
 | Thêm / sửa cột | Đánh dấu **Mới** / **Sửa** trong từng bảng ở trên |
+| Chốt nghiệp vụ trả hàng & tester | `PRODUCTS.is_sellable` · `DISPOSAL_REQUESTS.issue_type`, `reason_code` · `STOCK_MOVEMENTS.reference_type` thêm `TESTER`, `SUPPLIER_RETURN` · `RETURN_ORDERS.return_reason` (enum), `return_note`, `refund_method = EXCHANGE`, `compensation_promotion_id` · `ORDERS.exchange_return_id`, `exchange_credit_amount` · `PROMOTIONS.customer_id` · `SYSTEM_SETTINGS`: `EXCHANGE_VOUCHER_VALUES`, `EXCHANGE_VOUCHER_TOLERANCE` |
 
 Tổng: 30 − 3 + 3 = **30 bảng** (29 nếu không dùng JWT).

@@ -154,8 +154,8 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | STK-03 | Theo dõi hàng cận hạn / hết hạn | NV kho, Manager | = STK-06 cũ, N lấy từ SYSTEM_SETTINGS |
 | STK-04 | Lập phiếu kiểm kho | NV kho | = STK-07 cũ; bắt đầu kiểm → gán `locked_by_check_id`; gửi duyệt/hủy → gỡ khóa |
 | STK-05 | Duyệt điều chỉnh sau kiểm kho | Manager | = STK-08 cũ |
-| STK-06 | Lập đề nghị xuất hủy | NV kho | **Mới viết đặc tả**. Điền sẵn từ STK-03 hoặc hàng trả hỏng (POS) |
-| STK-07 | Duyệt đề nghị xuất hủy | Manager | **Mới viết đặc tả**. Duyệt = trừ tồn |
+| STK-06 | Lập phiếu xuất kho khác (hủy / tester / trả NCC) | NV kho | **Mới viết đặc tả**. Chọn `issue_type`: `DESTROY`, `TESTER`, `RETURN_TO_SUPPLIER`. Điền sẵn từ STK-03 hoặc hàng trả hỏng (POS). Phiếu `TESTER` ưu tiên lô cận hạn nhất |
+| STK-07 | Duyệt phiếu xuất kho khác | Manager | **Mới viết đặc tả**. Duyệt = trừ tồn, mọi loại phiếu (kể cả tester) đều cần Manager duyệt |
 
 ---
 
@@ -301,10 +301,26 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | POS-01 | **Mở ca làm việc** | Thu ngân | **Mới**: nhập tiền đầu ca; chặn nếu đã có ca OPEN |
 | POS-02 | Lập đơn bán hàng tại quầy (FEFO) | Thu ngân | = POS-01 cũ. `<<include>>` tra cứu/tạo nhanh KH; `<<extend>>` PROM-03; tự áp chiết khấu hạng |
 | POS-03 | Thanh toán & xuất hóa đơn | Thu ngân | = POS-02 cũ. `<<extend>>` CUS-04 (dùng điểm); `<<include>>` CUS-03 (tích điểm). Luồng phụ: In lại hóa đơn |
-| POS-04 | Đổi trả & hoàn tiền | Thu ngân | **Gộp POS-03 + POS-04 cũ** thành 1 giao dịch: chọn dòng trả → kiểm chính sách → tính tiền hoàn → xác nhận → cộng tồn (hỏng thì cộng cả `blocked_qty`) + thu hồi điểm + chi tiền trong 1 transaction |
+| POS-04 | Đổi trả & hoàn tiền | Thu ngân | **Gộp POS-03 + POS-04 cũ** thành 1 giao dịch: chọn dòng trả + lý do → kiểm chính sách theo lý do (xem mục 2.6.1) → tính giá trị hàng trả → hoàn tiền hoặc đổi hàng → cộng tồn (hỏng thì cộng cả `blocked_qty`) + thu hồi điểm trong 1 transaction |
 | POS-05 | Kiểm đếm tiền & chốt ca | Thu ngân (Manager xác nhận bàn giao — tùy chọn) | = POS-05 cũ. Chặn khi còn đơn `DRAFT` thuộc ca |
 
-**Công thức tiền hoàn (POS-04):**
+#### 2.6.1. Quy tắc đổi trả đã chốt
+
+| Lý do (`return_reason`) | Tình trạng hàng | Xử lý |
+|---|---|---|
+| `DEFECTIVE` (lỗi, hư, hết hạn) | Bất kỳ | Hoàn tiền (`CASH`/`BANK_TRANSFER`) hoặc đổi hàng, không tính phí. Hàng luôn vào `blocked_qty` chờ xuất hủy hoặc trả NCC |
+| `WRONG_ITEM` (giao nhầm) | Bất kỳ | Hoàn tiền hoặc đổi hàng, không tính phí. Còn nguyên seal thì về tồn bán |
+| `CHANGE_OF_MIND` (đổi ý, không hợp da) | Còn nguyên seal, trong `max_return_days` | **Chỉ đổi hàng, không hoàn tiền** (`refund_method = EXCHANGE`) |
+| `CHANGE_OF_MIND` | Đã mở seal | **Từ chối**, không tạo phiếu |
+
+**Đổi hàng (`EXCHANGE`):** phiếu trả sinh một giá trị quy đổi (`total_refund_amount`, không chi tiền). Thu ngân lập đơn bán mới với `exchange_return_id`; đơn này được trừ `exchange_credit_amount`.
+- Hàng mới **đắt hơn**: khách nộp phần chênh lệch.
+- Hàng mới **rẻ hơn** (còn dư), khách chọn một trong hai:
+  1. **Nhận voucher** giá trị cố định (`FIXED_AMOUNT`, dùng 1 lần, riêng khách đó). Mệnh giá lấy từ `EXCHANGE_VOUCHER_VALUES` sao cho lệch không quá `EXCHANGE_VOUCHER_TOLERANCE` (5.000đ, thấp hơn hoặc cao hơn) so với phần dư. Không có mệnh giá phù hợp, hoặc khách vãng lai (không có hồ sơ) thì không cấp voucher.
+  2. **Mua thêm một sản phẩm** để bù phần dư.
+- Điểm thưởng vẫn thu hồi theo công thức hiện hành; đơn đổi tích điểm theo số tiền khách thực nộp.
+
+**Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE`/`WRONG_ITEM` hoàn tiền):**
 `Tiền hoàn = Σ (line_total_gốc / qty_gốc × qty_trả) × (1 − restocking_fee_percent)`
 — đã tự động trừ phần giảm giá đã hưởng nhờ `discount_allocated`.
 
@@ -404,8 +420,8 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | | STK-03 | Theo dõi hàng cận hạn / hết hạn |
 | | STK-04 | Lập phiếu kiểm kho |
 | | STK-05 | Duyệt điều chỉnh sau kiểm kho |
-| | STK-06 | Lập đề nghị xuất hủy |
-| | STK-07 | Duyệt đề nghị xuất hủy |
+| | STK-06 | Lập phiếu xuất kho khác (hủy / tester / trả NCC) |
+| | STK-07 | Duyệt phiếu xuất kho khác |
 | **SUPP** | SUPP-01 | Quản lý nhà cung cấp |
 | | SUPP-02 | Tra cứu & xem chi tiết nhà cung cấp |
 | | SUPP-03 | Xem lịch sử nhập hàng của nhà cung cấp |
@@ -587,3 +603,12 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | 6 | Có cần **thanh toán kết hợp** (một phần tiền mặt + một phần chuyển khoản) không? | Không — 1 phương thức/đơn |
 | 7 | Hoàn tiền/đổi trả có cần **Manager duyệt** không (ma trận cũ có, đặc tả không có)? | Không cần duyệt; Manager xem lại qua báo cáo + Audit Log |
 | 8 | Dùng **JWT hay session**? | Quyết định theo công nghệ nhóm chọn; nếu JWT thì thêm REFRESH_TOKENS |
+
+### Quyết định đã chốt thêm (dòng hàng hóa)
+
+| # | Nội dung | Quyết định |
+|---|---|---|
+| 9 | Khách đổi ý có được hoàn tiền không? | **Không**, chỉ đổi hàng (nguyên seal, trong hạn) |
+| 10 | Đổi sang hàng rẻ hơn | Cấp voucher mệnh giá cố định (lệch tối đa ±5.000đ so với phần dư) hoặc khách mua thêm sản phẩm |
+| 11 | Hàng trưng bày móp hộp, bạc màu | **Không làm** giảm giá theo dòng. Hàng trên kệ là hàng bán bình thường, trừ tồn khi bán theo FEFO |
+| 12 | Tester | Xuất bằng phiếu `TESTER` dùng chung bảng `DISPOSAL_REQUESTS`; **Manager duyệt**; sau khi duyệt hệ thống hết trách nhiệm (không theo dõi hạn, không lập phiếu hủy) |
