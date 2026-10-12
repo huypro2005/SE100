@@ -84,7 +84,7 @@ Nhật ký thao tác. Cũng dùng để lưu lịch sử nâng hạng thẻ và 
 |---|---|---|---|---|
 | log_id | BIGINT | PK | Khóa chính | |
 | user_id | INT | NULL, FK → USERS | Người thực hiện (NULL = hệ thống) | |
-| action | VARCHAR(100) | NOT NULL | `LOGIN`, `LOGOUT`, `CREATE_PRODUCT`, `APPROVE_CHECK`, `CLOSE_SHIFT`, `TIER_UPGRADE`, `UPDATE_SETTING`… | |
+| action | VARCHAR(100) | NOT NULL | `LOGIN`, `LOGOUT`, `CREATE_PRODUCT`, `APPROVE_CHECK`, `CLOSE_SHIFT`, `TIER_UPGRADE`, `UPDATE_SETTING`, `OVERRIDE_FEFO` (thu ngân đổi lô khác FEFO)… | |
 | module | VARCHAR(50) | NOT NULL | Module phát sinh | |
 | entity_type | VARCHAR(50) | NULL | Loại đối tượng bị tác động (`PRODUCT`, `SUPPLIER`, `ORDER`…) | Mới |
 | entity_id | BIGINT | NULL | ID đối tượng | Mới |

@@ -149,7 +149,7 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 
 | Mã mới | Tên | Actor | Ghi chú |
 |---|---|---|---|
-| STK-01 | Lập phiếu nhập kho theo lô | NV kho | = STK-04 cũ + **chọn NCC (chỉ NCC ACTIVE)**, lưu chi tiết vào PURCHASE_ORDER_DETAILS |
+| STK-01 | Lập phiếu nhập kho theo lô | NV kho | = STK-04 cũ + **chọn NCC (chỉ NCC ACTIVE)**, lưu chi tiết vào PURCHASE_ORDER_DETAILS. Khi xác nhận: nếu lô mới có `exp_date` **sớm hơn** một lô còn tồn của cùng sản phẩm → **cảnh báo xoay kệ** (xem quy tắc chung số 9) |
 | STK-02 | Tra cứu tồn kho theo sản phẩm & lô (thẻ kho) | NV kho, Manager, Thu ngân (chỉ xem tồn khả dụng) | = STK-05 cũ |
 | STK-03 | Theo dõi hàng cận hạn / hết hạn | NV kho, Manager | = STK-06 cũ, N lấy từ SYSTEM_SETTINGS |
 | STK-04 | Lập phiếu kiểm kho | NV kho | = STK-07 cũ; bắt đầu kiểm → gán `locked_by_check_id`; gửi duyệt/hủy → gỡ khóa |
@@ -299,7 +299,7 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | Mã mới | Tên | Actor | Ghi chú |
 |---|---|---|---|
 | POS-01 | **Mở ca làm việc** | Thu ngân | **Mới**: nhập tiền đầu ca; chặn nếu đã có ca OPEN |
-| POS-02 | Lập đơn bán hàng tại quầy (FEFO) | Thu ngân | = POS-01 cũ. `<<include>>` tra cứu/tạo nhanh KH; `<<extend>>` PROM-03; tự áp chiết khấu hạng |
+| POS-02 | Lập đơn bán hàng tại quầy (FEFO) | Thu ngân | = POS-01 cũ. Quét mã vạch chỉ ra **sản phẩm**, hệ thống tự chọn lô theo FEFO. `<<include>>` tra cứu/tạo nhanh KH; `<<extend>>` PROM-03; tự áp chiết khấu hạng. Luồng phụ 3b **đổi lô thủ công** (thu ngân đọc số lô in trên chai) chỉ dùng khi phát hiện lô trên chai khác lô FEFO; ghi `AUDIT_LOGS` action `OVERRIDE_FEFO` |
 | POS-03 | Thanh toán & xuất hóa đơn | Thu ngân | = POS-02 cũ. `<<extend>>` CUS-04 (dùng điểm); `<<include>>` CUS-03 (tích điểm). Luồng phụ: In lại hóa đơn |
 | POS-04 | Đổi trả & hoàn tiền | Thu ngân | **Gộp POS-03 + POS-04 cũ** thành 1 giao dịch: chọn dòng trả + lý do → kiểm chính sách theo lý do (xem mục 2.6.1) → tính giá trị hàng trả → hoàn tiền hoặc đổi hàng → cộng tồn (hỏng thì cộng cả `blocked_qty`) + thu hồi điểm trong 1 transaction |
 | POS-05 | Kiểm đếm tiền & chốt ca | Thu ngân (Manager xác nhận bàn giao — tùy chọn) | = POS-05 cũ. Chặn khi còn đơn `DRAFT` thuộc ca |
@@ -563,6 +563,11 @@ Tổng: 30 − 3 bảng bỏ + 3 bảng mới = **30 bảng** (29 nếu không d
 6. **Báo cáo**: theo công thức mục 2.7; `FromDate ≤ ToDate`; đơn tính theo `completed_at`, trả hàng tính theo ngày trả.
 7. **Ca làm việc**: mỗi thu ngân tối đa 1 ca OPEN; mọi đơn/phiếu trả phải gắn ca OPEN của người thao tác; ca CLOSED không phát sinh thêm chứng từ.
 8. **Không cần job chạy nền**: trạng thái cận hạn/hết hạn, trạng thái “sắp diễn ra/đã kết thúc” của khuyến mãi đều **tính khi truy vấn**; tích điểm chạy **đồng bộ** trong transaction hoàn tất đơn.
+9. **Hàng trưng bày & xoay kệ**: hệ thống **không quản lý vị trí** (kệ hay kho), không có bảng trưng bày. Hàng nguyên seal trên kệ là tồn bán bình thường của lô, trừ khi thanh toán theo FEFO. Vì mã vạch chỉ mã hóa sản phẩm (không có lô), hệ thống không biết khách cầm chai lô nào, nên phải giữ hàng thực tế khớp với FEFO bằng vận hành:
+   - **Xoay kệ (bắt buộc)**: lô có hạn dùng sớm hơn phải được bày ra kệ trước; khi nhập lô mới hạn sớm hơn lô đang bày, nhân viên đưa lô mới ra kệ và cất lô hạn muộn vào kho.
+   - **Cảnh báo ở STK-01** nhắc việc xoay kệ khi lô mới có hạn sớm hơn lô còn tồn.
+   - **Kiểm kho theo lô (STK-04/05)** điều chỉnh số tồn từng lô nếu vẫn lệch.
+   - **Đổi lô thủ công ở POS-02** chỉ là ngoại lệ, có ghi audit.
 
 ---
 
@@ -610,3 +615,4 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | 10 | Đổi sang hàng rẻ hơn | Được đổi, nhưng **phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết thì tự mua thêm hàng |
 | 11 | Hàng trưng bày móp hộp, bạc màu | **Không làm** giảm giá theo dòng. Hàng trên kệ là hàng bán bình thường, trừ tồn khi bán theo FEFO |
 | 12 | Tester | Xuất bằng phiếu `TESTER` dùng chung bảng `DISPOSAL_REQUESTS`; **Manager duyệt**; sau khi duyệt hệ thống hết trách nhiệm (không theo dõi hạn, không lập phiếu hủy) |
+| 13 | Lô trên kệ hạn muộn hơn lô mới nhập (vd kệ 12/2027, lô mới 06/2027) | **Không thêm bảng trưng bày.** Giải quyết bằng xoay kệ + cảnh báo khi nhập + kiểm kho theo lô (quy tắc chung số 9). Lý do: bảng trưng bày chỉ giúp ghi đúng việc bán lô hạn muộn trước, không ngăn được lô hạn sớm hết hạn trong kho, và mỗi lần châm kệ phải lập phiếu chuyển |
