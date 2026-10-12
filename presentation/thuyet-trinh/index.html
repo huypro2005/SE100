@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thuyết trình SE100</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Trình chiếu: mỗi lần một slide, chữ to, ít chữ. Phím ← → để chuyển, N để mở ghi chú người nói, F toàn màn hình.
+   Cùng bộ màu với trang nghiệp vụ: kho xanh lá, khách hàng tím, bán hàng hồng, báo cáo xanh dương. */
+:root{
+  --bg:#f6f4f7; --surface:#ffffff; --surface-2:#efebf1; --line:#ddd6e1;
+  --ink:#251c2e; --ink-2:#5c5266; --ink-3:#8a8094;
+  --accent:#b8325f; --accent-soft:#f6e1e9;
+  --ok:#1f7a62; --ok-soft:#dcefe8; --warn:#9a6200; --warn-soft:#f8ebd2; --bad:#b42318; --bad-soft:#f9e0dd;
+  --kho:#1f7a62; --crm:#6b4fb3; --pos:#b8325f; --rep:#2c63a8; --sys:#5c5266;
+  --shadow:0 1px 2px rgba(37,28,46,.06),0 10px 30px rgba(37,28,46,.08);
+  --f-display:"Bricolage Grotesque","Be Vietnam Pro",system-ui,sans-serif;
+  --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#17121c; --surface:#211a28; --surface-2:#2a2232; --line:#3a3044;
+  --ink:#f1ecf4; --ink-2:#c3b8cc; --ink-3:#958a9f;
+  --accent:#ec6f99; --accent-soft:#45233a;
+  --ok:#5cc7a4; --ok-soft:#173a30; --warn:#e8b45a; --warn-soft:#3d2f14; --bad:#f2877c; --bad-soft:#45201c;
+  --kho:#5cc7a4; --crm:#a991f0; --pos:#ec6f99; --rep:#7fb0ee; --sys:#c3b8cc;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17121c; --surface:#211a28; --surface-2:#2a2232; --line:#3a3044;
+  --ink:#f1ecf4; --ink-2:#c3b8cc; --ink-3:#958a9f;
+  --accent:#ec6f99; --accent-soft:#45233a;
+  --ok:#5cc7a4; --ok-soft:#173a30; --warn:#e8b45a; --warn-soft:#3d2f14; --bad:#f2877c; --bad-soft:#45201c;
+  --kho:#5cc7a4; --crm:#a991f0; --pos:#ec6f99; --rep:#7fb0ee; --sys:#c3b8cc;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.5;overflow:hidden}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.12;text-wrap:balance}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.85em}
+.num{font-variant-numeric:tabular-nums}
+b{font-weight:600}
+
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr)}
+
+/* Thanh trên */
+.top{display:flex;align-items:center;gap:14px;padding:10px 24px;border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{font-family:var(--f-display);font-weight:700;font-size:17px;white-space:nowrap}
+.chap{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.chap::-webkit-scrollbar{display:none}
+.chap button{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:999px;padding:4px 12px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.chap button i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.chap button[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.count{font-size:14px;color:var(--ink-3);white-space:nowrap}
+
+/* Sân khấu */
+.stage{position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;overflow-y:auto;padding:40px 56px 32px;opacity:0;visibility:hidden;transition:opacity .25s ease}
+.slide.on{opacity:1;visibility:visible}
+@media (prefers-reduced-motion: reduce){.slide{transition:none}}
+.inner{max-width:1240px;margin:0 auto;min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:48px;align-items:center}
+.inner.one{grid-template-columns:minmax(0,1fr)}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c,var(--accent));margin-bottom:14px}
+.kicker::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+h2{font-size:clamp(30px,3.4vw,48px);letter-spacing:-.01em}
+.lead{font-size:clamp(18px,1.5vw,22px);color:var(--ink-2);margin-top:16px;max-width:36em}
+.pts{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:12px}
+.pts li{display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:clamp(17px,1.35vw,20px)}
+.pts li::before{content:counter(p);counter-increment:p;width:28px;height:28px;border-radius:50%;background:var(--surface-2);color:var(--c,var(--accent));font-weight:700;font-size:14px;display:grid;place-items:center;margin-top:1px}
+.pts{counter-reset:p}
+.say{margin-top:22px;padding:12px 16px;border-left:4px solid var(--c,var(--accent));background:var(--surface);border-radius:0 10px 10px 0;font-size:17px;color:var(--ink-2)}
+.say b{color:var(--ink)}
+
+/* Thẻ minh họa */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px}
+.card h3{font-size:17px;font-family:var(--f-body);font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.card + .card{margin-top:16px}
+.cap{font-size:14px;color:var(--ink-3);margin-top:12px}
+
+table{width:100%;border-collapse:collapse;font-size:17px}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:600;text-align:left;padding:0 8px 8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.r{text-align:right}
+.pill{display:inline-block;font-size:13px;font-weight:600;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.minus{color:var(--bad);font-weight:600}
+.plus{color:var(--ok);font-weight:600}
+
+/* Bìa */
+.cover{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;gap:18px}
+.cover h1{font-size:clamp(40px,5.2vw,72px);letter-spacing:-.02em;max-width:16em}
+.cover .lead{margin:0 auto;text-align:center}
+.route{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:18px}
+.route span{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:16px}
+.route span i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.route em{font-style:normal;color:var(--ink-3);align-self:center}
+.hint{font-size:14px;color:var(--ink-3)}
+
+/* Nhân vật */
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;border-top:4px solid var(--c)}
+.person b{display:block;font-size:18px}
+.person span{display:block;font-size:14px;color:var(--ink-3);margin:2px 0 8px}
+.person p{font-size:15px;color:var(--ink-2)}
+
+/* Bậc thang khuyến mãi */
+.ladder{display:grid;gap:10px}
+.step{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;font-size:16px}
+.step .bar{height:30px;border-radius:8px;background:var(--surface-2);position:relative;overflow:hidden}
+.step .bar i{position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--c,var(--crm));border-radius:8px;opacity:.9}
+.step .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.step small{display:block;font-size:13px;color:var(--ink-3)}
+.step.total .v{font-size:20px;color:var(--accent)}
+
+/* Lưới nhỏ */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{background:var(--surface-2);border-radius:12px;padding:14px 16px}
+.tile b{display:block;font-size:26px;font-family:var(--f-display);font-variant-numeric:tabular-nums}
+.tile span{font-size:14px;color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{padding:6px 12px;border-radius:999px;background:var(--surface-2);font-size:15px}
+.chips span.t1{background:color-mix(in srgb,var(--crm) 16%,transparent)}
+.chips span.t3{background:color-mix(in srgb,var(--pos) 14%,transparent)}
+.flowline{display:grid;gap:10px;counter-reset:f}
+.flowline div{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:16px}
+.flowline div::before{content:counter(f);counter-increment:f;width:34px;height:34px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-weight:700;color:var(--c,var(--accent))}
+.big{font-family:var(--f-display);font-size:clamp(34px,3.6vw,52px);font-variant-numeric:tabular-nums;line-height:1}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:17px}
+.kv .tot{font-weight:700;font-size:20px;padding-top:8px;border-top:1px solid var(--line)}
+.kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vs > div{border-radius:12px;padding:14px 16px;background:var(--surface-2)}
+.vs h4{margin:0 0 6px;font-size:15px}
+.vs .no{border:2px dashed var(--line);background:transparent}
+.vs .yes{border:2px solid var(--ok)}
+.vs p{font-size:15px;color:var(--ink-2)}
+
+/* Thanh dưới */
+.bottom{display:flex;align-items:center;gap:12px;padding:10px 24px;border-top:1px solid var(--line);background:var(--surface)}
+.btn{font:inherit;font-size:15px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 16px;cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:focus-visible,.chap button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.prog{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease}
+.keys{font-size:13px;color:var(--ink-3);white-space:nowrap}
+
+/* Ghi chú người nói */
+.notes{position:fixed;left:16px;right:16px;bottom:64px;max-width:900px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;font-size:16px;max-height:42vh;overflow:auto;z-index:5}
+.notes h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.notes p + p{margin-top:8px}
+aside.note{display:none}
+/* Khi mở ghi chú: chừa chỗ phía dưới để không che nội dung, slide cuộn được. */
+body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
+
+@media (max-width: 900px){
+  body{font-size:16px}
+  .top{padding:8px 16px}
+  .slide{padding:24px 16px}
+  .inner{grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+  .step{grid-template-columns:110px 1fr 96px}
+  .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .keys{display:none}
+  .bottom{padding:8px 16px}
+}
+@media (max-width: 520px){.vs,.grid2{grid-template-columns:1fr}.brand{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">SE100 · Cửa hàng mỹ phẩm</div>
+    <nav class="chap" id="chap" aria-label="Các chặng"></nav>
+    <div class="count num" id="count"></div>
+  </header>
+
+  <main class="stage" id="stage">
+
+  <!-- 1. Bìa -->
+  <section class="slide" data-chap="Mở đầu" data-c="--sys">
+    <div class="cover">
+      <div class="kicker" style="--c:var(--accent)">Hệ thống quản lý cửa hàng mỹ phẩm</div>
+      <h1>Một tuýp kem chống nắng đi qua cửa hàng như thế nào?</h1>
+      <p class="lead">Chúng em sẽ đi theo đúng một tuýp kem, từ lúc về kho đến lúc nằm trong túi khách, và xem hệ thống ghi lại những gì ở mỗi chặng.</p>
+      <div class="route">
+        <span style="--c:var(--kho)"><i></i>Nhập hàng</span><em>→</em>
+        <span style="--c:var(--kho)"><i></i>Kho &amp; hạn dùng</span><em>→</em>
+        <span style="--c:var(--crm)"><i></i>Khuyến mãi</span><em>→</em>
+        <span style="--c:var(--pos)"><i></i>Bán &amp; đổi trả</span><em>→</em>
+        <span style="--c:var(--rep)"><i></i>Báo cáo</span>
+      </div>
+      <p class="hint">Bấm → hoặc phím cách để bắt đầu · N: ghi chú người nói · F: toàn màn hình</p>
+    </div>
+    <aside class="note"><p>Chào thầy cô và các bạn. Nhóm em làm hệ thống quản lý cho một cửa hàng mỹ phẩm.</p><p>Thay vì liệt kê chức năng, nhóm em kể câu chuyện của một tuýp kem chống nắng: hàng về kho, nằm trên kệ, được bán, có khi bị trả lại, và cuối ngày thành con số trên báo cáo.</p></aside>
+  </section>
+
+  <!-- 2. Nhân vật -->
+  <section class="slide" data-chap="Mở đầu" data-c="--sys">
+    <div class="inner">
+      <div>
+        <div class="kicker">Vì sao mỹ phẩm khác quần áo</div>
+        <h2>Mỗi tuýp kem có hạn dùng, nên phải quản lý theo lô</h2>
+        <p class="lead">Cùng một mã sản phẩm, nhưng tuýp về tháng trước và tuýp về hôm nay có hạn dùng khác nhau. Bán nhầm tuýp hết hạn là mất uy tín.</p>
+        <ul class="pts">
+          <li><span>Mỗi lần nhập là một <b>lô</b>: mã lô, hạn dùng, số lượng, giá nhập.</span></li>
+          <li><span>Bán thì lấy lô <b>hết hạn trước, xuất trước</b> (FEFO).</span></li>
+          <li><span>Mọi lần hàng tăng hay giảm đều có <b>một dòng lịch sử</b> đi kèm.</span></li>
+        </ul>
+      </div>
+      <div class="people">
+        <div class="person" style="--c:var(--sys)"><b>Chủ cửa hàng</b><span>Admin</span><p>Tạo tài khoản, phân quyền, xem lợi nhuận.</p></div>
+        <div class="person" style="--c:var(--crm)"><b>Chị Mai</b><span>Quản lý cửa hàng</span><p>Duyệt kiểm kho, xuất hủy, tester. Cài khuyến mãi.</p></div>
+        <div class="person" style="--c:var(--kho)"><b>Anh Tâm</b><span>Nhân viên kho</span><p>Nhập hàng, kiểm kho, lập phiếu xuất.</p></div>
+        <div class="person" style="--c:var(--pos)"><b>Anh Khoa</b><span>Thu ngân</span><p>Mở ca, bán hàng, đổi trả, chốt ca.</p></div>
+        <div class="person" style="--c:var(--accent)"><b>Chị Hà</b><span>Khách hàng hạng Bạc</span><p>320 điểm, đã chi 4.860.000đ.</p></div>
+      </div>
+    </div>
+    <aside class="note"><p>Điểm khác của mỹ phẩm so với quần áo là hạn dùng. Vì vậy hệ thống không chỉ đếm "còn bao nhiêu tuýp" mà đếm "còn bao nhiêu tuýp của từng lô".</p><p>Câu chuyện có bốn người làm và một khách hàng. Mỗi người chỉ thấy và làm được phần việc của mình, nhờ phân quyền theo vai trò.</p></aside>
+  </section>
+
+  <!-- 3. Nhập hàng -->
+  <section class="slide" data-chap="Kho" data-c="--kho">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 1 · Nhập hàng · 28/09</div>
+        <h2>Hàng về là phải ghi đúng lô và hạn dùng</h2>
+        <p class="lead">Anh Tâm nhận thùng hàng từ nhà cung cấp Hoàng Anh, đếm thực tế rồi nhập vào phiếu nhập, mỗi dòng là một lô.</p>
+        <ul class="pts">
+          <li><span>Phiếu có thể <b>lưu nháp</b>; chỉ khi bấm xác nhận thì tồn kho mới tăng.</span></li>
+          <li><span>Hàng đã hết hạn thì <b>không cho nhập</b>.</span></li>
+          <li><span>Lô mới có hạn <b>sớm hơn</b> lô đang có trên kệ: hệ thống nhắc <b>"đưa lô mới ra kệ trước"</b>.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Phiếu nhập PN20260928-01</h3>
+        <table>
+          <thead><tr><th>Sản phẩm</th><th>Mã lô</th><th>Hạn dùng</th><th class="r">SL</th></tr></thead>
+          <tbody>
+            <tr><td>Anthelios 50ml</td><td class="mono">LRP25B12</td><td class="num">30/08/2027</td><td class="r num">24</td></tr>
+            <tr><td>CeraVe 236ml</td><td class="mono">52710CV</td><td class="num">15/03/2028</td><td class="r num">36</td></tr>
+            <tr><td>Niacinamide 30ml</td><td class="mono">TO2506A</td><td class="num">30/06/2027</td><td class="r num">48</td></tr>
+          </tbody>
+        </table>
+        <p class="cap">Xác nhận xong: thêm 3 lô, tồn tăng, và 3 dòng lịch sử kho loại "nhập hàng". Tất cả trong một lần ghi, lỗi thì không ghi gì cả.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Chặng đầu tiên là nhập hàng. Điểm quan trọng: mỗi dòng phiếu nhập là một lô, có mã lô và hạn dùng in trên bao bì.</p><p>Hệ thống chặn hàng hết hạn ngay từ cửa kho. Và nếu lô mới về lại có hạn sớm hơn lô đang bày, hệ thống nhắc nhân viên đổi chỗ trên kệ. Lát nữa ở phần bán hàng em sẽ giải thích vì sao việc này quan trọng.</p></aside>
+  </section>
+
+  <!-- 4. Tồn kho -->
+  <section class="slide" data-chap="Kho" data-c="--kho">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 2 · Tồn kho &amp; hạn dùng</div>
+        <h2>Một sản phẩm, ba lô, ba trạng thái khác nhau</h2>
+        <p class="lead">Tra Anthelios, anh Tâm thấy ngay lô nào sắp hết hạn, lô nào đã hết hạn và không được bán nữa.</p>
+        <ul class="pts">
+          <li><span><b>Bán được</b> = tồn thực tế − hàng bị cách ly, và chỉ tính lô còn hạn.</span></li>
+          <li><span>Lô <b>cận hạn</b> (còn ≤ 60 ngày) tô vàng để ưu tiên bán.</span></li>
+          <li><span>Lô <b>hết hạn</b> vẫn còn trong kho nhưng không bán được, chờ xuất hủy.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Anthelios · ngày 05/10/2026</h3>
+        <table>
+          <thead><tr><th>Lô</th><th>Hạn dùng</th><th class="r">Tồn</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">LRP24C02</td><td class="num">01/10/2026</td><td class="r num">2</td><td><span class="pill bad">Hết hạn</span></td></tr>
+            <tr><td class="mono">LRP24K07</td><td class="num">20/11/2026</td><td class="r num">1</td><td><span class="pill warn">Cận hạn · 46 ngày</span></td></tr>
+            <tr><td class="mono">LRP25B12</td><td class="num">30/08/2027</td><td class="r num">24</td><td><span class="pill ok">Còn hạn</span></td></tr>
+          </tbody>
+        </table>
+        <div class="grid2" style="margin-top:14px">
+          <div class="tile"><b>27</b><span>tuýp trong kho</span></div>
+          <div class="tile"><b>25</b><span>tuýp bán được</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="note"><p>Đây là màn hình mà nhân viên kho dùng nhiều nhất. Cùng một sản phẩm nhưng có ba lô: một lô đã hết hạn từ 01/10, một lô chỉ còn 46 ngày, một lô vừa nhập.</p><p>Thu ngân chỉ thấy con số "bán được" là 25. Hai tuýp hết hạn vẫn nằm trong kho nhưng hệ thống không bao giờ bán chúng.</p></aside>
+  </section>
+
+  <!-- 5. Kiểm kho -->
+  <section class="slide" data-chap="Kho" data-c="--kho">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 3 · Kiểm kho · 03/10</div>
+        <h2>Đếm thực tế, lệch bao nhiêu thì quản lý duyệt</h2>
+        <p class="lead">Anh Tâm kiểm kệ chống nắng. Lô LRP25B12 sổ sách ghi 24 nhưng chỉ đếm được 23: một tuýp đã bị bóc ra làm hàng thử mà không ai ghi lại.</p>
+        <ul class="pts">
+          <li><span>Lúc bắt đầu, hệ thống <b>chụp lại số tồn</b> và <b>khóa các lô</b> đang kiểm.</span></li>
+          <li><span>Tồn kho <b>chỉ đổi khi chị Mai duyệt</b>; từ chối thì giữ nguyên.</span></li>
+          <li><span>Chênh lệch được cộng vào tồn hiện tại, nên đúng cả khi đã bán thêm sau lúc kiểm.</span></li>
+        </ul>
+        <p class="say">Bài học: hàng rời kho mà không qua bán thì <b>phải có phiếu</b>. Đó là lý do có phiếu tester ở chặng sau.</p>
+      </div>
+      <div class="card">
+        <h3>Phiếu kiểm CHK20261003-01</h3>
+        <table>
+          <thead><tr><th>Lô</th><th class="r">Sổ sách</th><th class="r">Thực đếm</th><th class="r">Lệch</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">LRP24C02</td><td class="r num">2</td><td class="r num">2</td><td class="r num">0</td></tr>
+            <tr><td class="mono">LRP24K07</td><td class="r num">1</td><td class="r num">1</td><td class="r num">0</td></tr>
+            <tr><td class="mono">LRP25B12</td><td class="r num">24</td><td class="r num">23</td><td class="r num minus">−1</td></tr>
+          </tbody>
+        </table>
+        <p class="cap">Chị Mai duyệt: lô LRP25B12 còn 23, thêm 1 dòng lịch sử kho "điều chỉnh kiểm kho −1".</p>
+      </div>
+    </div>
+    <aside class="note"><p>Ba ngày sau là kiểm kho. Khi bắt đầu kiểm, hệ thống khóa các lô đó, nên đơn bán sẽ không lấy hàng từ lô đang đếm.</p><p>Kết quả lệch một tuýp: có người bóc ra làm hàng thử mà không ghi lại. Quản lý duyệt thì tồn được sửa. Chuyện này dẫn tới phiếu tester mà em trình bày ngay sau đây.</p></aside>
+  </section>
+
+  <!-- 6. Xuất hủy & tester -->
+  <section class="slide" data-chap="Kho" data-c="--kho">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 4 · Xuất hủy &amp; tester</div>
+        <h2>Hàng rời kho mà không bán thì phải có phiếu và có người duyệt</h2>
+        <p class="lead">Một loại phiếu dùng cho ba việc: tiêu hủy, đưa ra quầy làm tester, trả nhà cung cấp.</p>
+        <ul class="pts">
+          <li><span>Lập phiếu: hàng bị <b>cách ly ngay</b> để không ai bán nhầm.</span></li>
+          <li><span>Chị Mai duyệt mới <b>trừ tồn</b>. Từ chối thì trả lại phần cách ly.</span></li>
+          <li><span>Tester: duyệt xong là <b>hệ thống hết trách nhiệm</b>. Dùng hết hay hết hạn thì nhân viên tự bỏ, không lập phiếu hủy.</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Hai phiếu chị Mai duyệt sáng 05/10</h3>
+          <table>
+            <thead><tr><th>Loại phiếu</th><th>Lô</th><th class="r">SL</th><th>Ghi nhận</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill bad">Tiêu hủy</span></td><td class="mono">LRP24C02</td><td class="r num">2</td><td>Tổn thất theo giá vốn</td></tr>
+              <tr><td><span class="pill acc">Tester</span></td><td class="mono">LRP25B12</td><td class="r num">1</td><td>Chi phí tester</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Tester từ đâu ra?</h3>
+          <div class="grid2">
+            <div class="tile"><span>Hãng tặng</span><p style="font-size:15px;margin-top:4px">Nhập như một mã riêng <b>không bán</b>, giá 0đ. Chi phí: 0đ.</p></div>
+            <div class="tile"><span>Cửa hàng tự mở</span><p style="font-size:15px;margin-top:4px">Lấy từ lô hàng bán. Chi phí: giá vốn của lô.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="note"><p>Từ bài học kiểm kho, nhóm em gom mọi trường hợp hàng rời kho mà không bán vào một loại phiếu: tiêu hủy, làm tester, trả nhà cung cấp. Chung một quy trình: lập phiếu, cách ly, quản lý duyệt.</p><p>Riêng tester, nhóm em chọn cách đơn giản: duyệt xong là hệ thống không theo dõi nữa. Giá trị tester nhỏ, theo dõi từng chai trên quầy tốn công mà không đáng.</p></aside>
+  </section>
+
+  <!-- 7. Trưng bày -->
+  <section class="slide" data-chap="Kho" data-c="--kho">
+    <div class="inner">
+      <div>
+        <div class="kicker">Câu hỏi nhóm đã tranh luận</div>
+        <h2>Không cần bảng trưng bày, chỉ cần xoay kệ</h2>
+        <p class="lead">Kệ đang bày lô hạn 12/2027, kho vừa về lô hạn 06/2027. Hệ thống bán theo FEFO sẽ trừ lô 06/2027, nhưng khách lại cầm chai 12/2027 trên kệ.</p>
+        <ul class="pts">
+          <li><span>Quét mã vạch chỉ ra <b>sản phẩm</b>, không ra lô. Hệ thống không thể biết khách cầm chai nào.</span></li>
+          <li><span>Vậy phải làm cho <b>chai trên kệ chính là lô FEFO</b>: lô hạn sớm ra kệ trước.</span></li>
+          <li><span>Nếu vẫn lệch: <b>kiểm kho theo lô</b> sửa lại; thu ngân đổi lô tay khi phát hiện (có ghi lại).</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Hai cách giải quyết</h3>
+        <div class="vs">
+          <div class="no"><h4>Thêm bảng trưng bày</h4><p>Hệ thống ghi đúng là đã bán lô 12/2027. Nhưng lô 06/2027 vẫn nằm trong kho chờ hết hạn. Mỗi lần châm kệ lại phải lập phiếu chuyển.</p></div>
+          <div class="yes"><h4>Xoay kệ (nhóm chọn)</h4><p>Hàng thực tế khớp FEFO, lô hạn sớm được bán trước. Không thêm bảng, chỉ thêm một cảnh báo lúc nhập hàng.</p></div>
+        </div>
+        <p class="cap">Mục tiêu của FEFO là không để hàng hết hạn. Bảng trưng bày chỉ giúp ghi đúng việc bán sai lô; xoay kệ ngăn việc đó xảy ra.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Đây là câu hỏi nhóm em đã tranh luận: có cần bảng riêng cho hàng trưng bày không.</p><p>Kết luận là không. Vì mã vạch không chứa số lô, hệ thống không có cách nào biết khách cầm chai nào. Cách đúng là làm cho thực tế khớp với hệ thống: lô hạn sớm luôn được bày ra trước. Đây cũng là cách bán lẻ vẫn làm, gọi là xoay hàng trên kệ.</p></aside>
+  </section>
+
+  <!-- 8. Chuẩn bị bán -->
+  <section class="slide" data-chap="Khách hàng & khuyến mãi" data-c="--crm">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 5 · Chuẩn bị chính sách bán hàng</div>
+        <h2>Chị Mai cài sẵn hạng thẻ, điểm và khuyến mãi; thu ngân chỉ việc áp</h2>
+        <ul class="pts">
+          <li><span><b>Hạng thẻ</b> theo tổng chi tiêu: Đồng 0%, Bạc 3%, Vàng 5%, Kim Cương 8%.</span></li>
+          <li><span><b>Điểm</b>: trả 10.000đ được 1 điểm; 1 điểm = 100đ khi dùng; tối đa 50% đơn.</span></li>
+          <li><span><b>Tám loại khuyến mãi</b>, chia vào bốn tầng tính giá.</span></li>
+          <li><span>Khuyến mãi đã có người dùng thì <b>khóa sửa</b> mức giảm.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Tám loại khuyến mãi</h3>
+        <p style="font-size:15px;color:var(--ink-3);margin-bottom:8px">Tầng 1 · theo món</p>
+        <div class="chips"><span class="t1">Giảm theo sản phẩm / thương hiệu</span><span class="t1">Đồng giá giờ vàng</span><span class="t1">Mua X tặng Y</span><span class="t1">Combo</span></div>
+        <p style="font-size:15px;color:var(--ink-3);margin:14px 0 8px">Tầng 2 · theo khách</p>
+        <div class="chips"><span>Ưu đãi theo hạng thẻ</span></div>
+        <p style="font-size:15px;color:var(--ink-3);margin:14px 0 8px">Tầng 3 · theo hóa đơn</p>
+        <div class="chips"><span class="t3">Bậc thang theo tổng đơn</span><span class="t3">Voucher mã</span><span class="t3">Quà theo hóa đơn</span></div>
+        <p style="font-size:15px;color:var(--ink-3);margin:14px 0 8px">Tầng 4</p>
+        <div class="chips"><span>Dùng điểm thưởng</span></div>
+      </div>
+    </div>
+    <aside class="note"><p>Trước khi mở bán, quản lý cài chính sách. Thu ngân không sửa được, chỉ áp dụng.</p><p>Nhóm em chọn tám loại khuyến mãi phổ biến ở cửa hàng mỹ phẩm và xếp vào bốn tầng. Bốn tầng này là cách nhóm em trả lời câu hỏi khó nhất: khi nhiều khuyến mãi cùng áp vào một đơn thì tính cái nào trước.</p></aside>
+  </section>
+
+  <!-- 9. Mở ca -->
+  <section class="slide" data-chap="Bán hàng" data-c="--pos">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 6 · Mở ca · 13:00</div>
+        <h2>Chưa mở ca thì chưa bán được hàng</h2>
+        <p class="lead">Anh Khoa đếm tiền lẻ trong két, nhập 2.000.000đ và bấm mở ca.</p>
+        <ul class="pts">
+          <li><span>Ca là đơn vị để <b>đối chiếu tiền</b>: mọi hóa đơn, phiếu trả đều gắn vào ca đang mở.</span></li>
+          <li><span>Mỗi thu ngân chỉ có <b>một ca đang mở</b>.</span></li>
+          <li><span>Cuối ca, tiền trong két phải khớp với sổ của ca.</span></li>
+        </ul>
+      </div>
+      <div class="card" style="text-align:center">
+        <h3>Ca CA20261005-02 · Quầy 1</h3>
+        <div class="big">2.000.000đ</div>
+        <p class="cap">Tiền mặt đầu ca · trạng thái: <span class="pill ok">Đang mở</span></p>
+      </div>
+    </div>
+    <aside class="note"><p>Sang phần bán hàng. Việc đầu tiên của thu ngân là mở ca và khai báo tiền đầu ca. Đây là mốc để cuối ngày đối chiếu tiền trong két.</p></aside>
+  </section>
+
+  <!-- 10. Bán hàng FEFO -->
+  <section class="slide" data-chap="Bán hàng" data-c="--pos">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 7 · Bán hàng</div>
+        <h2>Thu ngân chỉ quét mã, hệ thống tự chọn lô hết hạn trước</h2>
+        <p class="lead">Chị Hà mua 2 tuýp Anthelios và 1 chai CeraVe. Anh Khoa quét mã, nhập số điện thoại của chị.</p>
+        <ul class="pts">
+          <li><span>Hệ thống <b>bỏ qua</b> lô hết hạn và lô đang khóa kiểm kho.</span></li>
+          <li><span>Lấy lô cận hạn trước; không đủ thì <b>tự tách</b> sang lô kế tiếp.</span></li>
+          <li><span>Đơn lúc này mới là <b>nháp</b>, chưa trừ tồn.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Hệ thống chọn lô cho 2 tuýp Anthelios</h3>
+        <div class="flowline" style="--c:var(--pos)">
+          <div><span><span class="mono">LRP24C02</span> · hết hạn 01/10</span><span class="pill bad">Bỏ qua</span></div>
+          <div><span><span class="mono">LRP24K07</span> · cận hạn 20/11</span><span class="pill warn">Lấy 1</span></div>
+          <div><span><span class="mono">LRP25B12</span> · hạn 30/08/2027</span><span class="pill ok">Lấy 1</span></div>
+        </div>
+        <p class="cap">Hóa đơn tự tách thành 2 dòng Anthelios, mỗi dòng gắn một lô. CeraVe lấy lô 52710CV.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Chị Hà đến mua hàng. Thu ngân không cần biết lô nào: quét mã là hệ thống tự chọn.</p><p>Lô hết hạn bị bỏ qua. Lô cận hạn chỉ còn một tuýp nên hệ thống lấy một tuýp ở đó, tuýp còn lại lấy ở lô mới. Đây chính là FEFO: hết hạn trước, xuất trước.</p></aside>
+  </section>
+
+  <!-- 11. Khuyến mãi 4 tầng -->
+  <section class="slide" data-chap="Bán hàng" data-c="--crm">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 8 · Tính khuyến mãi</div>
+        <h2>Bốn tầng giảm giá, tính theo đúng một thứ tự</h2>
+        <p class="lead">Đơn của chị Hà gặp cùng lúc: giảm 20% La Roche-Posay, hạng Bạc, bậc thang hóa đơn, voucher THU2026, và chị muốn dùng 200 điểm.</p>
+        <ul class="pts">
+          <li><span><b>Mỗi món</b> chỉ hưởng một khuyến mãi tầng 1.</span></li>
+          <li><span><b>Mỗi đơn</b> chỉ một khoản giảm cấp đơn: bậc thang giảm 120.000đ, voucher chỉ được 50.000đ, nên <b>lấy bậc thang</b>, voucher không bị trừ lượt.</span></li>
+          <li><span>Đơn sau tầng 2 vẫn trên 800.000đ nên được <b>tặng túi tote</b>.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Từ 1.375.000đ xuống 1.001.690đ</h3>
+        <div class="ladder">
+          <div class="step" style="--c:var(--ink-3)"><span>Tiền hàng</span><div class="bar"><i style="--w:100%"></i></div><span class="v">1.375.000</span></div>
+          <div class="step"><span>Tầng 1<small>La Roche-Posay −20%</small></span><div class="bar"><i style="--w:85.6%"></i></div><span class="v">1.177.000</span></div>
+          <div class="step"><span>Tầng 2<small>Hạng Bạc −3%</small></span><div class="bar"><i style="--w:83%"></i></div><span class="v">1.141.690</span></div>
+          <div class="step" style="--c:var(--pos)"><span>Tầng 3<small>Bậc thang −120.000</small></span><div class="bar"><i style="--w:74.3%"></i></div><span class="v">1.021.690</span></div>
+          <div class="step total" style="--c:var(--accent)"><span>Tầng 4<small>200 điểm −20.000</small></span><div class="bar"><i style="--w:72.9%"></i></div><span class="v">1.001.690</span></div>
+        </div>
+        <p class="cap">Mỗi khoản giảm được chia xuống từng dòng hàng và lưu lại. Nhờ vậy lúc trả hàng không phải tính lại khuyến mãi.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Đây là phần khó nhất về nghiệp vụ. Một đơn có thể dính nhiều khuyến mãi cùng lúc. Nếu để từng chương trình tự quyết "có cộng dồn không" thì rất rối.</p><p>Nhóm em chốt bốn tầng cố định: giảm theo món, rồi hạng thẻ, rồi một khoản giảm cho cả đơn, cuối cùng là điểm. Ở tầng 3, hệ thống so bậc thang với voucher và lấy cái lợi hơn cho khách; voucher thua thì không bị trừ lượt.</p></aside>
+  </section>
+
+  <!-- 12. Thanh toán -->
+  <section class="slide" data-chap="Bán hàng" data-c="--pos">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 9 · Thanh toán</div>
+        <h2>Một lần bấm, mọi thứ được ghi cùng lúc</h2>
+        <p class="lead">Chị Hà đưa 1.010.000đ tiền mặt, anh Khoa bấm hoàn tất và in hóa đơn.</p>
+        <ul class="pts">
+          <li><span>Hệ thống <b>kiểm tra lại lô</b> lần cuối (còn hàng, không bị khóa).</span></li>
+          <li><span>Năm việc trong <b>một giao dịch</b>: lỗi ở bước nào thì không bước nào được ghi.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Sau khi bấm "Hoàn tất"</h3>
+        <div class="flowline" style="--c:var(--pos)">
+          <div><span>Trừ tồn: LRP24K07, LRP25B12, 52710CV và túi tote</span><span class="minus">−1 mỗi lô</span></div>
+          <div><span>Ghi 4 dòng lịch sử kho loại "bán hàng"</span><span class="pill acc">SALE</span></div>
+          <div><span>Đơn chuyển sang Hoàn tất, tiền vào ca</span><span class="num">1.001.690</span></div>
+          <div><span>Điểm của chị Hà: 320 − 200 + 100</span><span class="num plus">220</span></div>
+          <div><span>Tiền thừa trả khách</span><span class="num">8.310</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="note"><p>Khi thanh toán, nhiều việc xảy ra cùng lúc: trừ tồn đúng lô, ghi lịch sử kho, cộng tiền vào ca, trừ 200 điểm đã dùng và cộng 100 điểm mới.</p><p>Tất cả nằm trong một giao dịch cơ sở dữ liệu. Nếu một bước lỗi, ví dụ lô vừa bị khóa kiểm kho, thì không có gì bị ghi nửa vời.</p></aside>
+  </section>
+
+  <!-- 13. Đổi trả: hàng lỗi -->
+  <section class="slide" data-chap="Bán hàng" data-c="--pos">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 10 · Đổi trả · 07/10</div>
+        <h2>Hàng lỗi thì hoàn tiền, theo đúng số tiền khách đã trả</h2>
+        <p class="lead">Hai ngày sau, chị Hà mang chai CeraVe bị hỏng vòi bơm đến trả.</p>
+        <ul class="pts">
+          <li><span>Hoàn <b>327.656đ</b>, không phải giá niêm yết 385.000đ, vì chai đó đã được giảm khi mua.</span></li>
+          <li><span>Chai lỗi về <b>đúng lô cũ</b> và bị cách ly, chờ hủy hoặc trả nhà cung cấp.</span></li>
+          <li><span>Điểm đã dùng <b>không hoàn</b>; vì là hàng lỗi nên chị được một <b>voucher bù 6.542đ</b>. Thu hồi 32 điểm đã tích.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Còn túi tote thì sao?</h3>
+        <p style="font-size:17px">Trả CeraVe xong, phần chị Hà còn giữ chỉ còn <b>768.240đ</b>, dưới mức 800.000đ để được tặng tote.</p>
+        <div class="vs" style="margin-top:14px">
+          <div class="yes"><h4>Chị mang tote trả lại</h4><p>Hoàn đủ <b>327.656đ</b>.</p></div>
+          <div class="no"><h4>Chị giữ tote</h4><p>Trừ giá trị tote 15.000đ, hoàn <b>312.656đ</b>.</p></div>
+        </div>
+        <p class="cap">Không tính lại khuyến mãi khi trả hàng: mọi con số lấy từ hóa đơn đã lưu, chỉ xét lại điều kiện nhận quà.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Hàng lỗi là lỗi của cửa hàng, nên khách được hoàn tiền. Nhưng hoàn bằng số tiền khách thực trả cho chai đó, đã trừ mọi khoản giảm, chứ không phải giá niêm yết.</p><p>Điểm đã dùng thì không hoàn, nhưng vì hàng lỗi nên cửa hàng bù cho chị một voucher bằng đúng phần giá trị điểm đã dùng cho chai CeraVe.</p><p>Chỗ hay là túi tote: trả CeraVe xong thì đơn không còn đủ 800 nghìn, nên chị phải trả lại tote, hoặc bị trừ giá trị tote vào tiền hoàn.</p></aside>
+  </section>
+
+  <!-- 14. Đổi trả: đổi ý -->
+  <section class="slide" data-chap="Bán hàng" data-c="--pos">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 10 · Đổi trả</div>
+        <h2>Khách đổi ý thì đổi hàng, không hoàn tiền</h2>
+        <p class="lead">Mỹ phẩm là hàng dùng trên da. Hàng đã mở không thể bán lại, nên chính sách tách rõ lỗi của cửa hàng và ý muốn của khách.</p>
+        <ul class="pts">
+          <li><span>Đổi sang hàng <b>đắt hơn</b>: khách trả thêm phần chênh lệch.</span></li>
+          <li><span>Đổi sang hàng <b>rẻ hơn</b>: phần dư <b>không được lấy lại</b>, không đổi thành voucher. Muốn dùng hết thì khách tự mua thêm.</span></li>
+          <li><span>Hệ thống hiện cảnh báo phần dư cho thu ngân và khách trước khi xác nhận.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Quy tắc đổi trả</h3>
+        <table>
+          <thead><tr><th>Lý do</th><th>Tình trạng</th><th>Xử lý</th></tr></thead>
+          <tbody>
+            <tr><td>Hàng lỗi, hư, hết hạn</td><td>Bất kỳ</td><td><span class="pill ok">Hoàn tiền</span> hoặc đổi</td></tr>
+            <tr><td>Giao nhầm</td><td>Bất kỳ</td><td><span class="pill ok">Hoàn tiền</span> hoặc đổi</td></tr>
+            <tr><td>Đổi ý, không hợp da</td><td>Còn seal, trong 7 ngày</td><td><span class="pill warn">Chỉ đổi hàng</span></td></tr>
+            <tr><td>Đổi ý, không hợp da</td><td>Đã mở seal</td><td><span class="pill bad">Từ chối</span></td></tr>
+          </tbody>
+        </table>
+        <p class="cap">Hàng còn seal quay lại kệ bán tiếp; hàng lỗi hoặc đã mở bị cách ly.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Trường hợp còn lại là khách đổi ý, ví dụ mua về thấy không hợp da. Đó không phải lỗi của cửa hàng, nên chỉ cho đổi sang sản phẩm khác, và chỉ khi còn nguyên seal.</p><p>Nếu đổi sang món rẻ hơn thì phần dư cửa hàng giữ lại. Nhóm em cố ý không phát voucher để đơn giản và tránh lạm dụng; hệ thống sẽ cảnh báo trước để khách biết.</p></aside>
+  </section>
+
+  <!-- 15. Chốt ca -->
+  <section class="slide" data-chap="Bán hàng" data-c="--pos">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 11 · Chốt ca · 21:30</div>
+        <h2>Tiền trong két phải khớp với sổ của ca</h2>
+        <p class="lead">Hệ thống tự tính tiền mặt lẽ ra phải có. Anh Khoa đếm két; lệch bao nhiêu cũng phải ghi lý do.</p>
+        <ul class="pts">
+          <li><span>Còn đơn nháp thì <b>chưa cho chốt</b>.</span></li>
+          <li><span>Chuyển khoản và quẹt thẻ <b>không tính vào két</b>.</span></li>
+          <li><span>Ca đã chốt thì <b>không phát sinh thêm</b> hóa đơn.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Ca CA20261005-02</h3>
+        <div class="kv">
+          <span>Tiền đầu ca</span><span>2.000.000</span>
+          <span>Thu tiền mặt (14 hóa đơn)</span><span class="plus">+8.465.500</span>
+          <span>Chi hoàn tiền mặt (1 phiếu)</span><span class="minus">−189.000</span>
+          <span class="tot">Hệ thống tính</span><span class="tot">10.276.500</span>
+          <span>Thực đếm</span><span>10.256.500</span>
+          <span><b>Chênh lệch</b></span><span class="minus">−20.000</span>
+        </div>
+        <p class="cap">Ghi chú bắt buộc: "Thối nhầm tiền lẻ cho khách khoảng 18h". Quản lý xác nhận nhận tiền.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Cuối ngày, thu ngân chốt ca. Hệ thống tính: tiền đầu ca cộng tiền mặt thu vào, trừ tiền mặt đã hoàn cho khách.</p><p>Thực đếm thiếu 20 nghìn thì hệ thống không chặn, nhưng bắt buộc ghi lý do. Vậy là cuối tháng ai làm thiếu tiền ca nào đều có dấu vết rõ ràng.</p></aside>
+  </section>
+
+  <!-- 16. Báo cáo -->
+  <section class="slide" data-chap="Báo cáo" data-c="--rep">
+    <div class="inner">
+      <div>
+        <div class="kicker">Chặng 12 · Báo cáo</div>
+        <h2>Mọi chặng trước đều đổ về đây</h2>
+        <p class="lead">Báo cáo tính thẳng từ hóa đơn, phiếu trả, lô hàng và phiếu hủy. Không có bảng tổng hợp riêng nên không bao giờ bị lệch số.</p>
+        <ul class="pts">
+          <li><span>Đơn tính theo <b>ngày hoàn tất</b>.</span></li>
+          <li><span>Hàng trả trừ vào <b>ngày trả</b>, nên báo cáo kỳ trước không bị sửa.</span></li>
+          <li><span>Lợi nhuận dùng <b>giá vốn của đúng lô</b> đã bán.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Doanh thu &amp; lợi nhuận ngày 05/10</h3>
+        <div class="kv">
+          <span>Tiền hàng</span><span>17.580.000</span>
+          <span>Giảm giá</span><span class="minus">−640.000</span>
+          <span>Hàng bán bị trả</span><span class="minus">−240.000</span>
+          <span class="tot">Doanh thu thuần (gồm VAT)</span><span class="tot">16.700.000</span>
+          <span>Doanh thu chưa VAT</span><span>15.181.818</span>
+          <span>Giá vốn</span><span class="minus">−9.850.000</span>
+          <span class="tot">Lợi nhuận gộp</span><span class="tot">5.331.818</span>
+        </div>
+        <div class="grid4" style="margin-top:16px">
+          <div class="tile"><b>38</b><span>đơn</span></div>
+          <div class="tile"><b>31</b><span>khách</span></div>
+          <div class="tile"><b>6</b><span>lô cận hạn</span></div>
+          <div class="tile"><b>2</b><span>phiếu trả</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="note"><p>Chặng cuối là báo cáo. Mọi thứ đã ghi ở các chặng trước đổ về đây: tiền hàng, giảm giá, hàng trả, giá vốn từng lô.</p><p>Hai nguyên tắc: đơn tính theo ngày hoàn tất, hàng trả tính theo ngày trả. Như vậy báo cáo tháng trước đã chốt sẽ không tự thay đổi khi khách trả hàng tháng này.</p></aside>
+  </section>
+
+  <!-- 17. Tổng kết -->
+  <section class="slide" data-chap="Tổng kết" data-c="--sys">
+    <div class="inner one">
+      <div style="max-width:980px;margin:0 auto;width:100%">
+        <div class="kicker" style="--c:var(--accent)">Tổng kết</div>
+        <h2>Năm điều nhóm em muốn thầy cô nhớ</h2>
+        <div class="flowline" style="--c:var(--accent);margin-top:28px">
+          <div><span><b>Quản lý theo lô và hạn dùng</b>, bán theo FEFO, hàng hết hạn không bao giờ được bán.</span><span></span></div>
+          <div><span><b>Mọi thay đổi tồn kho có một dòng lịch sử</b>, ghi trong cùng một giao dịch.</span><span></span></div>
+          <div><span><b>Hàng rời kho không qua bán phải có phiếu và có người duyệt</b>: hủy, tester, trả NCC.</span><span></span></div>
+          <div><span><b>Khuyến mãi tính theo bốn tầng cố định</b>, lưu xuống từng dòng hàng.</span><span></span></div>
+          <div><span><b>Chứng từ đã hoàn tất không sửa</b>; sai thì làm chứng từ ngược. Trả hàng không tính lại khuyến mãi.</span><span></span></div>
+        </div>
+        <p class="hint" style="margin-top:28px;text-align:center">Cảm ơn thầy cô và các bạn đã lắng nghe. Nhóm em sẵn sàng nhận câu hỏi.</p>
+      </div>
+    </div>
+    <aside class="note"><p>Tóm lại, nếu chỉ nhớ năm điều thì đó là: theo dõi theo lô, mọi biến động kho có lịch sử, hàng rời kho phải có phiếu, khuyến mãi bốn tầng, và chứng từ đã xong thì không sửa.</p><p>Em xin cảm ơn, nhóm em sẵn sàng nhận câu hỏi.</p></aside>
+  </section>
+
+  </main>
+
+  <footer class="bottom">
+    <button type="button" class="btn" id="prev" aria-label="Slide trước">←</button>
+    <div class="prog" aria-hidden="true"><i id="bar"></i></div>
+    <span class="keys">← → chuyển · N ghi chú · F toàn màn hình</span>
+    <button type="button" class="btn" id="tnotes" aria-pressed="false">Ghi chú</button>
+    <button type="button" class="btn pri" id="next" aria-label="Slide tiếp">→</button>
+  </footer>
+</div>
+<div class="notes" id="notes" hidden><h4 id="notesh">Ghi chú người nói</h4><div id="notesb"></div></div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var cur=0, n=slides.length;
+  var chap=document.getElementById('chap'), count=document.getElementById('count'), bar=document.getElementById('bar');
+  var notes=document.getElementById('notes'), notesb=document.getElementById('notesb'), tnotes=document.getElementById('tnotes');
+
+  // Thanh chặng: mỗi chặng trỏ tới slide đầu tiên của nó.
+  var firsts=[];
+  slides.forEach(function(s,i){
+    var name=s.dataset.chap;
+    if(!firsts.some(function(f){return f.name===name}))firsts.push({name:name,i:i,c:s.dataset.c});
+  });
+  firsts.forEach(function(f){
+    var b=document.createElement('button');b.type='button';
+    b.innerHTML='<i style="--c:var('+f.c+')"></i>'+f.name;
+    b.addEventListener('click',function(){go(f.i)});
+    f.el=b;chap.appendChild(b);
+  });
+
+  function go(i){
+    cur=Math.max(0,Math.min(n-1,i));
+    slides.forEach(function(s,k){s.classList.toggle('on',k===cur);s.setAttribute('aria-hidden',k===cur?'false':'true')});
+    var s=slides[cur];
+    s.scrollTop=0;
+    count.textContent=(cur+1)+' / '+n;
+    bar.style.width=((cur+1)/n*100)+'%';
+    firsts.forEach(function(f){f.el.setAttribute('aria-current',String(f.name===s.dataset.chap))});
+    var note=s.querySelector('aside.note');
+    notesb.innerHTML=note?note.innerHTML:'<p>(Không có ghi chú)</p>';
+    try{history.replaceState(null,'','#'+(cur+1))}catch(e){}
+  }
+  function toggleNotes(){
+    var show=notes.hidden;notes.hidden=!show;tnotes.setAttribute('aria-pressed',String(show));document.body.classList.toggle('notes-on',show);
+  }
+  document.getElementById('prev').addEventListener('click',function(){go(cur-1)});
+  document.getElementById('next').addEventListener('click',function(){go(cur+1)});
+  tnotes.addEventListener('click',toggleNotes);
+  document.addEventListener('keydown',function(e){
+    if(e.target.closest&&e.target.closest('input,textarea'))return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1)}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1)}
+    else if(e.key==='Home')go(0);
+    else if(e.key==='End')go(n-1);
+    else if(e.key==='n'||e.key==='N')toggleNotes();
+    else if(e.key==='f'||e.key==='F'){
+      if(!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});
+      else if(document.exitFullscreen)document.exitFullscreen().catch(function(){});
+    }
+  });
+  // Vuốt trên điện thoại.
+  var x0=null;
+  document.getElementById('stage').addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+  document.getElementById('stage').addEventListener('touchend',function(e){
+    if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;
+    if(Math.abs(dx)>60)go(cur+(dx<0?1:-1));
+  });
+  // Địa chỉ #5 mở thẳng slide 5 (kể cả khi đổi số trên thanh địa chỉ lúc đang trình chiếu).
+  function fromHash(){var h=parseInt(location.hash.slice(1),10);return isNaN(h)?0:h-1}
+  window.addEventListener('hashchange',function(){var i=fromHash();if(i!==cur)go(i)});
+  go(fromHash());
+})();
+</script>
+</body>
+</html>

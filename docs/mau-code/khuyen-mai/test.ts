@@ -145,6 +145,7 @@ test('VD6b: trả kèm tote thì không bị trừ', () => {
   });
   assert.equal(ret.totalRefund, 353_846);
   assert.ok(!ret.lines.some(l => l.kind === 'GIFT_CHARGE'));
+  assert.equal(ret.lines.find(l => l.orderDetailId === tote.orderDetailId)!.toBlocked, false); // quà còn nguyên không bị cách ly
 });
 
 test('VD7: mua 2 B tặng mini, trả 1 B → mất điều kiện, không trả mini thì trừ 80.000', () => {
