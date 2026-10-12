@@ -58,8 +58,9 @@ Khi chuyển người, người trước nói **câu nối** (ghi cuối mỗi s
 > Đây là toàn cảnh nghiệp vụ. Đọc **từ trái sang phải** là **sáu bước**: nhập hàng, quản lý kho và hạn dùng, cài chính sách bán hàng, bán hàng, đổi trả, và cuối ngày là chốt ca, báo cáo.
 >
 > Đọc **từ trên xuống** là **ai làm gì**:
+> - **Chủ cửa hàng**, tức Admin, tạo tài khoản và phân quyền cho nhân viên ngay từ đầu, và là người duy nhất xem **lợi nhuận** ở cuối.
 > - **Nhân viên kho** lo hai bước đầu: nhập hàng, kiểm kho, lập phiếu hủy và tester.
-> - **Quản lý** duyệt những việc làm giảm hàng trong kho, cài chính sách bán hàng, và xác nhận chốt ca.
+> - **Quản lý** duyệt những việc làm giảm hàng trong kho, cài chính sách bán hàng, xác nhận chốt ca và xem báo cáo doanh thu.
 > - **Thu ngân** mở ca, bán hàng, nhận đổi trả, chốt ca.
 > - **Khách hàng** mua hàng và có khi mang hàng đến trả.
 >
@@ -201,7 +202,7 @@ Khi chuyển người, người trước nói **câu nối** (ghi cuối mỗi s
 >
 > Cuối ca, hệ thống tự tính tiền mặt lẽ ra phải có: **đầu ca, cộng tiền mặt thu vào, trừ tiền mặt đã hoàn**. Thu ngân đếm két, thiếu 20 nghìn. Hệ thống không chặn, nhưng **bắt buộc ghi lý do** và quản lý xác nhận. Cuối tháng, ca nào thiếu tiền và vì sao đều có dấu vết.
 >
-> Mọi thứ ghi ở các bước trước **đổ về báo cáo**: tiền hàng, giảm giá, hàng trả, giá vốn từng lô. Báo cáo tính thẳng từ chứng từ, không có bảng tổng hợp riêng nên không lệch số. Đơn tính theo **ngày hoàn tất**, hàng trả tính theo **ngày trả**, nên báo cáo tháng trước đã chốt không tự thay đổi.
+> Mọi thứ ghi ở các bước trước **đổ về báo cáo**. Quản lý xem được doanh thu; **lợi nhuận gộp chỉ chủ cửa hàng xem**. Số liệu lấy từ tiền hàng, giảm giá, hàng trả và giá vốn từng lô, tính thẳng từ chứng từ, không có bảng tổng hợp riêng nên không lệch số. Đơn tính theo **ngày hoàn tất**, hàng trả tính theo **ngày trả**, nên báo cáo tháng trước đã chốt không tự thay đổi.
 
 **Câu nối:** "Xin mời bạn [Người 1] tổng kết."
 
@@ -233,6 +234,7 @@ Khi chuyển người, người trước nói **câu nối** (ghi cuối mỗi s
 | Tester duyệt xong không theo dõi nữa, có mất kiểm soát không? | Giá trị tester nhỏ. Kiểm soát nằm ở lúc xuất: phải có phiếu, quản lý duyệt, chi phí được ghi lại. Theo dõi từng chai trên quầy tốn công hơn giá trị mang lại. |
 | Thanh toán lỗi giữa chừng thì sao? | Mọi việc khi hoàn tất đơn nằm trong một giao dịch cơ sở dữ liệu; lỗi ở bước nào thì không bước nào được ghi. |
 | Hàng trả tháng sau thì báo cáo tháng trước có đổi không? | Không. Hàng trả tính vào ngày trả, như "hàng bán bị trả lại" trong kế toán. |
+| Ai xem được lợi nhuận? | Chỉ chủ cửa hàng (Admin). Quản lý xem doanh thu nhưng không xem giá vốn và lợi nhuận. Phân quyền theo vai trò, mỗi vai chỉ thấy phần việc của mình. |
 | Hệ thống có cho nhiều chi nhánh không? | Phạm vi đồ án là một cửa hàng. Muốn mở rộng thì thêm mã cửa hàng vào các bảng kho và bán hàng. |
 
 ## Lưu ý khi lên trình bày

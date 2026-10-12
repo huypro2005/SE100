@@ -178,6 +178,20 @@ aside.note{display:none}
 /* Khi mở ghi chú: chừa chỗ phía dưới để không che nội dung, slide cuộn được. */
 body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
 
+/* Màn hình thấp (máy chiếu 1280x720): thu gọn sơ đồ luồng để vừa một khung hình. */
+@media (max-height: 960px) and (min-width: 901px){
+  .slide{padding-top:20px;padding-bottom:16px}
+  .slide .kicker{margin-bottom:6px}
+  .lanes{margin-top:10px}
+  .lanes + *{margin:0}
+  .slide h2{font-size:clamp(26px,2.6vw,36px)}
+  .slide .lead{font-size:16px;margin-top:8px}
+  .lg{gap:4px}
+  .lg .h{padding:5px 9px;font-size:12.5px}
+  .lg .role{padding:4px 6px;font-size:13px}
+  .lg .cell{padding:3px 0;gap:3px}
+  .lg .box{font-size:12.5px;line-height:1.28;padding:4px 7px}
+}
 @media (max-width: 900px){
   body{font-size:16px}
   .top{padding:8px 16px}
@@ -235,6 +249,11 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
             <div class="h" style="--c:var(--pos)"><i>5</i>Đổi trả</div>
             <div class="h" style="--c:var(--rep)"><i>6</i>Chốt ca &amp; báo cáo</div>
 
+            <div class="role">Chủ cửa hàng (Admin)</div>
+            <div class="cell"><span class="box" style="--c:var(--sys)">Tạo tài khoản, phân quyền cho nhân viên</span></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"><span class="box" style="--c:var(--rep)">Xem lợi nhuận, nhật ký hệ thống</span></div>
+
             <div class="role">Nhân viên kho</div>
             <div class="cell"><span class="box" style="--c:var(--kho)">Lập phiếu nhập theo lô</span></div>
             <div class="cell"><span class="box" style="--c:var(--kho)">Tra tồn, theo dõi hạn</span><span class="box" style="--c:var(--kho)">Kiểm kho</span><span class="box" style="--c:var(--kho)">Lập phiếu hủy / tester</span></div>
@@ -245,7 +264,7 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
             <div class="cell"><span class="box" style="--c:var(--kho)">Duyệt kiểm kho</span><span class="box" style="--c:var(--kho)">Duyệt hủy / tester</span></div>
             <div class="cell"><span class="box" style="--c:var(--crm)">Cài hạng thẻ, điểm, khuyến mãi</span></div>
             <div class="cell"></div><div class="cell"></div>
-            <div class="cell"><span class="box" style="--c:var(--rep)">Xác nhận chốt ca</span><span class="box" style="--c:var(--rep)">Xem báo cáo</span></div>
+            <div class="cell"><span class="box" style="--c:var(--rep)">Xác nhận chốt ca</span><span class="box" style="--c:var(--rep)">Xem báo cáo doanh thu</span></div>
 
             <div class="role">Thu ngân</div>
             <div class="cell"></div><div class="cell"></div><div class="cell"></div>
@@ -270,7 +289,7 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
         </div>
       </div>
     </div>
-    <aside class="note"><p>Đây là toàn cảnh nghiệp vụ. Có sáu bước, đi từ trái sang phải: nhập hàng, quản lý kho và hạn dùng, cài chính sách bán hàng, bán hàng, đổi trả, cuối cùng là chốt ca và báo cáo.</p><p>Mỗi hàng là một vai trò. Nhân viên kho lo hai bước đầu. Quản lý duyệt những việc làm giảm tài sản và cài chính sách. Thu ngân lo bán hàng, đổi trả và chốt ca. Hàng cuối cùng là những việc hệ thống tự làm, đây là phần giá trị nhất của phần mềm.</p><p>Thanh trên cùng màn hình chính là sáu bước này, nên lúc nào cũng biết mình đang ở đâu. Em xin bắt đầu từ bước 1.</p></aside>
+    <aside class="note"><p>Đây là toàn cảnh nghiệp vụ. Có sáu bước, đi từ trái sang phải: nhập hàng, quản lý kho và hạn dùng, cài chính sách bán hàng, bán hàng, đổi trả, cuối cùng là chốt ca và báo cáo.</p><p>Mỗi hàng là một vai trò. Chủ cửa hàng, tức Admin, tạo tài khoản và phân quyền ở đầu, và là người duy nhất xem lợi nhuận ở cuối. Nhân viên kho lo hai bước đầu. Quản lý duyệt những việc làm giảm tài sản và cài chính sách. Thu ngân lo bán hàng, đổi trả và chốt ca. Hàng cuối cùng là những việc hệ thống tự làm, đây là phần giá trị nhất của phần mềm.</p><p>Thanh trên cùng màn hình chính là sáu bước này, nên lúc nào cũng biết mình đang ở đâu. Em xin bắt đầu từ bước 1.</p></aside>
   </section>
 
   <!-- 3. Nhập hàng -->
@@ -595,7 +614,7 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
           <p class="cap">Ghi chú bắt buộc: “Thối nhầm tiền lẻ khoảng 18h”. Quản lý xác nhận.</p>
         </div>
         <div class="card">
-          <h3>Báo cáo ngày 05/10</h3>
+          <h3>Báo cáo ngày 05/10 · lợi nhuận chỉ Admin xem</h3>
           <div class="kv">
             <span>Tiền hàng − giảm giá − hàng bị trả</span><span>16.700.000</span>
             <span>Doanh thu chưa VAT</span><span>15.181.818</span>
@@ -605,7 +624,7 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
         </div>
       </div>
     </div>
-    <aside class="note"><p>Bước cuối cùng. Cuối ca, hệ thống tính tiền mặt lẽ ra phải có: đầu ca cộng tiền thu vào, trừ tiền đã hoàn. Thực đếm thiếu 20 nghìn thì hệ thống không chặn, nhưng bắt buộc ghi lý do và quản lý xác nhận.</p><p>Mọi thứ ghi ở các bước trước đổ về báo cáo: tiền hàng, giảm giá, hàng trả, giá vốn từng lô. Hai nguyên tắc: đơn tính theo ngày hoàn tất, hàng trả tính theo ngày trả, nên báo cáo tháng trước đã chốt không tự thay đổi.</p></aside>
+    <aside class="note"><p>Bước cuối cùng. Cuối ca, hệ thống tính tiền mặt lẽ ra phải có: đầu ca cộng tiền thu vào, trừ tiền đã hoàn. Thực đếm thiếu 20 nghìn thì hệ thống không chặn, nhưng bắt buộc ghi lý do và quản lý xác nhận.</p><p>Mọi thứ ghi ở các bước trước đổ về báo cáo: tiền hàng, giảm giá, hàng trả, giá vốn từng lô. Hai nguyên tắc: đơn tính theo ngày hoàn tất, hàng trả tính theo ngày trả, nên báo cáo tháng trước đã chốt không tự thay đổi.</p><p>Báo cáo doanh thu quản lý xem được; còn lợi nhuận gộp, tức doanh thu trừ giá vốn, chỉ chủ cửa hàng xem.</p></aside>
   </section>
 
   <!-- 14. Tổng kết -->
