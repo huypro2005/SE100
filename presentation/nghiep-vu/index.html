@@ -803,6 +803,7 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
             <li><span><b>Cấu hình hạng thẻ</b>: mốc chi tiêu của hạng sau phải lớn hơn hạng trước.</span></li>
             <li><span><b>Cấu hình điểm</b>: 10.000đ thanh toán = 1 điểm; 1 điểm = 100đ khi đổi; tối đa 50% giá trị đơn.</span></li>
             <li><span><b>Tạo voucher</b> THU2026: giảm 10%, tối đa 50.000đ, đơn từ 500.000đ, chỉ cho hạng Bạc trở lên.</span></li>
+            <li><span><b>Tạo các chương trình khác</b>: giảm theo thương hiệu, bậc thang hóa đơn, quà theo hóa đơn… (xem trang <b>Khuyến mãi 4 tầng</b>).</span></li>
             <li><span><span class="sys">Hệ thống</span>kiểm ngày bắt đầu ≤ ngày kết thúc, mã không trùng, lượt/khách ≤ tổng lượt.</span></li>
             <li><span><b>Thu ngân tạo hồ sơ khách</b> bằng số điện thoại khi khách muốn tích điểm.</span></li>
           </ol>
@@ -855,6 +856,80 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
         <div class="drow"><span class="mono">SYSTEM_SETTINGS</span><span>POINT_EARN_AMOUNT = 10000, POINT_REDEEM_VALUE = 100, POINT_MAX_REDEEM_PERCENT = 50</span></div>
         <div class="drow"><span class="mono">PROMOTIONS</span><span><span class="plus">+1</span> THU2026, min_tier_id = Bạc, status = ACTIVE</span></div>
         <div class="drow"><span class="mono">CUSTOMERS</span><span>KH0042, tier = Bạc, reward_points = 320</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7b. PROMOTION ENGINE -->
+  <section class="slide" data-label="Khuyến mãi 4 tầng" data-c="--crm" data-desc="8 loại KM, thứ tự tính, phân bổ">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow"><span class="dot" style="--c:var(--crm)"></span>Khâu 5 · Khuyến mãi: các loại và cách tính</div>
+        <h2>Tám loại khuyến mãi, tính theo bốn tầng cố định</h2>
+        <p class="lead">Thay vì để từng chương trình tự đặt “có cộng dồn không, ưu tiên mấy”, hệ thống tính theo một thứ tự cố định: giảm theo món, rồi hạng thẻ, rồi một khoản giảm cấp đơn, cuối cùng là điểm. Mọi khoản giảm được chia xuống từng dòng và lưu lại, nên khi trả hàng không phải tính lại khuyến mãi.</p>
+      </div>
+
+      <h3 class="sec">Các loại khuyến mãi chính <small>PROMOTIONS.promotion_type</small></h3>
+      <div class="mods">
+        <div class="mod" style="--c:var(--crm)"><h4>Giảm theo sản phẩm <small>Tầng 1</small></h4><p>Giảm 20% mọi sản phẩm La Roche-Posay. Phạm vi: sản phẩm, thương hiệu hoặc danh mục; có trần giảm.</p><div class="tbls">PRODUCT_DISCOUNT · PROMOTION_ITEMS / BRANDS / CATEGORIES</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Đồng giá giờ vàng <small>Tầng 1</small></h4><p>Serum 199.000đ từ 12h đến 14h. Chỉ áp khi rẻ hơn giá hiện tại; giới hạn tổng số lượng.</p><div class="tbls">FLASH_PRICE · fixed_price, khung giờ, weekdays, max_quantity</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Mua X tặng Y <small>Tầng 1</small></h4><p>Mua 2 kem chống nắng tặng 1 bản mini. Quà là dòng 0đ, vẫn trừ lô và ghi giá vốn. Quà hết thì không tặng.</p><div class="tbls">BUY_X_GET_Y · buy_quantity, is_repeatable, role BUY / GIFT</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Combo <small>Tầng 1</small></h4><p>Toner + kem = 380.000đ. Mỗi món vẫn là một dòng gắn một lô; giá bộ chia về từng món theo tỷ lệ giá niêm yết.</p><div class="tbls">COMBO · combo_price, role COMBO_ITEM</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Ưu đãi theo hạng <small>Tầng 2</small></h4><p>Bạc 3%, Vàng 5%, Kim Cương 8%. Không phải bản ghi khuyến mãi, tự áp khi có khách.</p><div class="tbls">CUSTOMER_TIERS.discount_rate</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Bậc thang theo hóa đơn <small>Tầng 3</small></h4><p>Từ 500.000đ giảm 50.000đ, từ 1.000.000đ giảm 120.000đ. Tự áp, lấy bậc cao nhất đạt được.</p><div class="tbls">ORDER_TIERED · PROMOTION_STEPS</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Voucher mã <small>Tầng 3</small></h4><p>THU2026 giảm 10%, tối đa 50.000đ. Có thể giới hạn hạng, tổng lượt, lượt mỗi khách, hoặc riêng một khách.</p><div class="tbls">VOUCHER · voucher_code, customer_id</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Quà theo hóa đơn <small>Tầng 3 · cộng thêm</small></h4><p>Đơn từ 800.000đ tặng túi tote. Quà có thể là hàng không bán (is_sellable = FALSE).</p><div class="tbls">ORDER_GIFT · min_order_value, role GIFT</div></div>
+      </div>
+      <p class="hint">Không làm: món thứ N+1 giảm giá, nhân điểm, chi tiêu tích lũy đổi voucher, giảm hàng cận date theo lô. Điểm thưởng (tầng 4) không phải khuyến mãi: 1 điểm = 100đ, tối đa 50% phần còn lại.</p>
+
+      <div class="split">
+        <div class="flow" style="--c:var(--crm)">
+          <div class="ucrow"><span class="uc">POS-02</span><span class="uc">POS-03</span><span class="uc">PROM-03</span><span class="uc">CUS-04</span><span class="actor">Hệ thống tự tính</span></div>
+          <ol class="steps">
+            <li><span><b>Tầng 1 · Dòng hàng</b> (giảm theo sản phẩm, giờ vàng, mua X tặng Y, combo): <b>mỗi sản phẩm hưởng tối đa 1 khuyến mãi</b>. <span class="sys">Hệ thống</span> lần lượt chọn khuyến mãi có lợi nhất cho khách trên phần hàng còn lại.</span></li>
+            <li><span><b>Tầng 2 · Hạng thẻ</b>: % trên tiền sau tầng 1, áp cả món đã giảm ở tầng 1.</span></li>
+            <li><span><b>Tầng 3 · Đơn hàng</b>: <b>tối đa 1 khoản giảm tiền</b>. Bậc thang và voucher cùng tính, lấy cái lợi hơn; bằng nhau lấy bậc thang và voucher không bị trừ lượt. Quà theo hóa đơn được cộng thêm.</span></li>
+            <li><span><b>Tầng 4 · Điểm thưởng</b>: trừ trên phần còn lại, tối đa 50%.</span></li>
+            <li><span><span class="sys">Hệ thống</span>chia khoản giảm tầng 2, 3, 4 xuống từng dòng theo tỷ lệ tiền dòng (làm tròn đến đồng, dòng cuối nhận phần dư), rồi tách lô FEFO.</span></li>
+          </ol>
+          <div class="exc"><h4>Quy tắc cần nhớ</h4>
+            <p><b>Ngưỡng</b> “đơn từ … đ” của bậc thang, voucher, quà xét trên <b>tiền sau tầng 1 và 2</b>, không tính dòng quà.</p>
+            <p><b>Voucher bị thua</b>: thu ngân thấy thông báo lý do, mã không bị trừ lượt.</p>
+            <p><b>Trả hàng không tính lại khuyến mãi</b>: hoàn theo line_total đã lưu. Trả làm mất điều kiện quà mà không mang quà trả lại thì trừ giá trị quà (giá niêm yết; quà không bán lấy giá vốn).</p>
+            <p><b>Điểm đã dùng không hoàn.</b> Riêng hàng lỗi: phát voucher bù bằng phần điểm của hàng trả.</p></div>
+        </div>
+        <div>
+          <div class="win">
+            <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Tính giá · Đơn HD20261005-0015</b><span class="who">Khách Bạc · nhập THU2026 · dùng 200 điểm</span></div>
+            <div class="win-body">
+              <div class="tblw"><table>
+                <thead><tr><th>Dòng</th><th class="r">Tầng 1</th><th class="r">Tầng 2</th><th class="r">Tầng 3</th><th class="r">Tầng 4</th><th class="r">Thành tiền</th></tr></thead>
+                <tbody>
+                  <tr><td>Anthelios × 2 <div class="lotline">990.000 · KM La Roche-Posay −20%</div></td><td class="r">−198.000</td><td class="r">−23.760</td><td class="r">−80.748</td><td class="r">−13.458</td><td class="r">674.034</td></tr>
+                  <tr><td>CeraVe × 1 <div class="lotline">385.000 · không có KM tầng 1</div></td><td class="r">0</td><td class="r">−11.550</td><td class="r">−39.252</td><td class="r">−6.542</td><td class="r">327.656</td></tr>
+                  <tr class="hl"><td>Túi tote × 1 <div class="lotline">Quà theo hóa đơn · dòng GIFT</div></td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">0</td></tr>
+                </tbody>
+              </table></div>
+              <div class="kv">
+                <span>Tiền hàng</span><span>1.375.000đ</span>
+                <span>Tầng 1 · Giảm La Roche-Posay 20%</span><span>−198.000đ</span>
+                <span>Tầng 2 · Hạng Bạc 3% × 1.177.000</span><span>−35.310đ</span>
+                <span>Tầng 3 · Bậc thang ≥ 1.000.000 (1.141.690)</span><span>−120.000đ</span>
+                <span>Tầng 4 · 200 điểm</span><span>−20.000đ</span>
+                <hr>
+                <span class="tot">Cần thanh toán</span><span class="tot">1.001.690đ</span>
+              </div>
+              <div class="note">THU2026 chỉ giảm được 50.000đ (trần), thua bậc thang 120.000đ nên không áp dụng và không bị trừ lượt. Đơn sau tầng 2 là 1.141.690đ ≥ 800.000đ nên được tặng tote.</div>
+            </div>
+          </div>
+          <p class="mock-cap">Số liệu tính bằng code mẫu docs/mau-code/khuyen-mai (có test). Thiết kế bảng chi tiết: docs/KHUYEN_MAI.md (bản đề xuất).</p>
+        </div>
+      </div>
+      <div class="data"><h4>Dữ liệu ghi nhận</h4>
+        <div class="drow"><span class="mono">ORDER_DETAILS</span><span>line_type (NORMAL / GIFT), line_promotion_id, promo_group_no (cùng combo / bộ mua-tặng), line_discount, tier_discount, order_discount, points_discount, line_total</span></div>
+        <div class="drow"><span class="mono">ORDERS</span><span>line_discount_amount = 198.000, tier_discount_amount = 35.310, order_promotion_id = bậc thang, order_discount_amount = 120.000, points_used = 200</span></div>
+        <div class="drow"><span class="mono">PROMOTIONS</span><span>Lượt dùng đếm từ order_promotion_id và line_promotion_id của đơn COMPLETED (không cần PROMOTION_USAGES)</span></div>
+        <div class="drow"><span class="mono">BATCHES · STOCK_MOVEMENTS</span><span>Dòng quà cũng trừ lô và ghi SALE như hàng bán</span></div>
       </div>
     </div>
   </section>

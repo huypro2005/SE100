@@ -66,7 +66,8 @@ export function calculateReturn(input: ReturnInput): ReturnResult {
     const refund = isLast ? l.lineTotal - done(l.orderDetailId).amount : Math.round((l.lineTotal * it.quantity) / l.quantity);
     out.push({
       orderDetailId: l.orderDetailId, kind: 'RETURN', quantity: it.quantity, refundAmount: refund,
-      toBlocked: input.reason === 'DEFECTIVE' || it.condition === 'DAMAGED_OR_OPENED',
+      // Hàng lỗi luôn cách ly; quà trả kèm thì xét theo tình trạng thực tế của quà.
+      toBlocked: it.condition === 'DAMAGED_OR_OPENED' || (input.reason === 'DEFECTIVE' && l.lineType === 'NORMAL'),
     });
     compensation += Math.round((l.pointsDiscount * it.quantity) / l.quantity);
   }
