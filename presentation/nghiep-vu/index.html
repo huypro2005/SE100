@@ -391,7 +391,7 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
         <div class="mod" style="--c:var(--sys)"><h4>Xác thực &amp; hệ thống <small>AUTH 01–07</small></h4><p>Đăng nhập, tài khoản, vai trò &amp; quyền, Audit Log, cấu hình.</p><div class="tbls">USERS · ROLES · PERMISSIONS · USER_ROLES · ROLE_PERMISSIONS · AUDIT_LOGS · SYSTEM_SETTINGS · REFRESH_TOKENS</div></div>
         <div class="mod" style="--c:var(--sys)"><h4>Sản phẩm <small>PROD 01–03</small></h4><p>SKU, giá bán, VAT, danh mục, thương hiệu.</p><div class="tbls">PRODUCTS · CATEGORIES · BRANDS</div></div>
         <div class="mod" style="--c:var(--sys)"><h4>Nhà cung cấp <small>SUPP 01–03</small></h4><p>Hồ sơ NCC, sản phẩm cung ứng, lịch sử nhập.</p><div class="tbls">SUPPLIERS</div></div>
-        <div class="mod" style="--c:var(--kho)"><h4>Kho – Lô – Date <small>STK 01–07</small></h4><p>Nhập theo lô, tồn, cận hạn, kiểm kho, xuất hủy.</p><div class="tbls">BATCHES · STOCK_MOVEMENTS · PURCHASE_ORDERS · PURCHASE_ORDER_DETAILS · INVENTORY_CHECKS · INVENTORY_CHECK_DETAILS · DISPOSAL_REQUESTS · DISPOSAL_DETAILS</div></div>
+        <div class="mod" style="--c:var(--kho)"><h4>Kho – Lô – Date <small>STK 01–07</small></h4><p>Nhập theo lô, tồn, cận hạn, kiểm kho, xuất hủy, xuất tester, trả NCC.</p><div class="tbls">BATCHES · STOCK_MOVEMENTS · PURCHASE_ORDERS · PURCHASE_ORDER_DETAILS · INVENTORY_CHECKS · INVENTORY_CHECK_DETAILS · DISPOSAL_REQUESTS · DISPOSAL_DETAILS</div></div>
         <div class="mod" style="--c:var(--crm)"><h4>Khách hàng <small>CUS 01–05</small></h4><p>Hồ sơ, hạng thẻ, tích &amp; dùng điểm.</p><div class="tbls">CUSTOMERS · CUSTOMER_TIERS · POINT_HISTORIES</div></div>
         <div class="mod" style="--c:var(--crm)"><h4>Khuyến mãi <small>PROM 01–04</small></h4><p>Voucher cấp đơn, hạng tối thiểu, hiệu quả.</p><div class="tbls">PROMOTIONS</div></div>
         <div class="mod" style="--c:var(--pos)"><h4>Bán hàng &amp; đổi trả <small>POS 01–05</small></h4><p>Ca, đơn FEFO, thanh toán, đổi trả, chốt ca.</p><div class="tbls">CASHIER_SHIFTS · ORDERS · ORDER_DETAILS · RETURN_ORDERS · RETURN_ORDER_DETAILS · RETURN_POLICIES</div></div>
@@ -578,7 +578,8 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
           <div class="exc"><h4>Ngoại lệ chính</h4>
             <p><b>Hạn dùng đã qua</b>: chặn xác nhận, không nhận hàng hết hạn.</p>
             <p><b>Cùng mã lô nhưng khác hạn dùng</b>: yêu cầu kiểm tra, không tự gộp.</p>
-            <p><b>Bấm xác nhận 2 lần</b>: lần sau chỉ trả về trạng thái, không cộng tồn lần nữa.</p></div>
+            <p><b>Bấm xác nhận 2 lần</b>: lần sau chỉ trả về trạng thái, không cộng tồn lần nữa.</p>
+            <p><b>Lô mới có hạn sớm hơn lô đang tồn</b> của cùng sản phẩm (ví dụ kệ đang bày lô 12/2027, lô mới về 06/2027): hệ thống cảnh báo <b>“đưa lô mới ra kệ trước”</b>, không chặn nhập. Đây là cách giữ hàng thực tế khớp FEFO (xem khâu Bán hàng).</p></div>
         </div>
         <div>
           <div class="win">
@@ -726,28 +727,36 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
   <section class="slide" data-label="Xuất hủy" data-c="--kho" data-desc="Hàng hết hạn, hư hỏng">
     <div class="wrap">
       <div class="head">
-        <div class="eyebrow"><span class="dot" style="--c:var(--kho)"></span>Khâu 4 · Xuất hủy hàng hết hạn, hư hỏng</div>
+        <div class="eyebrow"><span class="dot" style="--c:var(--kho)"></span>Khâu 4 · Xuất hủy, xuất tester, trả nhà cung cấp</div>
         <h2>Cách ly ngay khi đề nghị, chỉ trừ tồn khi được duyệt</h2>
-        <p class="lead">Lúc lập đề nghị, hàng được cách ly để không ai bán nhầm. Quản lý duyệt thì hàng rời khỏi kho và giá trị hàng hủy vào báo cáo tổn thất. Nếu từ chối, phần vừa cách ly được trả lại.</p>
+        <p class="lead">Ba việc cùng một phiếu: tiêu hủy hàng hỏng, đưa hàng ra quầy làm tester, trả hàng cho nhà cung cấp. Lúc lập đề nghị, hàng được cách ly để không ai bán nhầm. Quản lý duyệt thì hàng rời khỏi kho và giá trị được ghi nhận (tổn thất hoặc chi phí tester). Nếu từ chối, phần vừa cách ly được trả lại.</p>
       </div>
       <div class="split">
         <div class="flow" style="--c:var(--kho)">
           <div class="ucrow"><span class="uc">STK-06</span><span class="uc">STK-07</span><span class="actor">NV kho → Quản lý</span></div>
           <ol class="steps">
-            <li><span><b>Lập đề nghị</b> từ màn hình hạn dùng (đã điền sẵn lô) hoặc chọn lô có hàng trả bị hỏng.</span></li>
-            <li><span><b>Nhập số lượng và lý do</b> cho từng lô.</span></li>
-            <li><span><span class="sys">Hệ thống</span>cách ly thêm phần chưa bị chặn (blocked_qty tăng) và ghi lại phần đã cách ly thêm.</span></li>
-            <li><span><b>Quản lý duyệt</b>: <span class="sys">hệ thống</span> giảm tồn và lượng cách ly, ghi lịch sử kho DISPOSAL.</span></li>
-            <li><span><b>Nhân viên kho tiêu hủy</b> hàng thực tế theo phiếu đã duyệt.</span></li>
+            <li><span><b>Chọn loại phiếu</b> (tiêu hủy, tester hoặc trả NCC) và <b>lập đề nghị</b> từ màn hình hạn dùng (đã điền sẵn lô) hoặc chọn lô có hàng trả bị hỏng. Phiếu tester gợi ý lô cận hạn nhất.</span></li>
+            <li><span><b>Nhập số lượng và mã lý do</b> (hết hạn, cận hạn, hư hỏng, thu hồi, hàng trả lỗi, dùng làm tester) cho từng lô.</span></li>
+            <li><span><span class="sys">Hệ thống</span>cách ly thêm phần chưa bị chặn (blocked_qty tăng) và ghi lại phần đã cách ly thêm. <b>Mọi loại phiếu đều cần Quản lý duyệt</b>, kể cả tester.</span></li>
+            <li><span><b>Quản lý duyệt</b>: <span class="sys">hệ thống</span> giảm tồn và lượng cách ly, ghi lịch sử kho theo loại phiếu (DISPOSAL, TESTER hoặc SUPPLIER_RETURN).</span></li>
+            <li><span><b>Nhân viên kho</b> tiêu hủy, đưa ra quầy làm tester hoặc gửi trả NCC theo phiếu đã duyệt.</span></li>
           </ol>
           <div class="exc"><h4>Ngoại lệ chính</h4>
             <p><b>Số lượng vượt tồn còn lại</b> (đã trừ các phiếu đang chờ): chặn.</p>
             <p><b>Từ chối</b>: blocked_qty giảm đúng phần đã cách ly thêm, tồn giữ nguyên.</p></div>
+          <div class="exc"><h4>Riêng phiếu tester: duyệt xong là hết trách nhiệm</h4>
+            <p><b>Hệ thống không theo dõi chai tester nữa.</b> Tester dùng hết hoặc hết hạn thì nhân viên tự bỏ, không lập phiếu hủy. Phiếu in kèm hạn dùng của lô để biết khi nào thay.</p>
+            <p><b>Hai nguồn tester</b>: (1) của hãng tặng, nhập kho như một SKU riêng không bán (is_sellable = FALSE), giá nhập 0đ, chi phí 0đ; (2) cửa hàng tự mở hàng bán, chi phí bằng giá vốn của lô.</p>
+            <p><b>Không phát sinh</b> hóa đơn, doanh thu, điểm thưởng, ca làm việc. Tester chỉ là chi phí.</p></div>
         </div>
         <div>
           <div class="win">
             <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><b>Đề nghị hủy DISP20261005-01</b><span class="pill warn">Chờ duyệt</span><span class="who">Quản lý · Phạm Ngọc Mai</span></div>
             <div class="win-body">
+              <div class="fields">
+                <div class="field"><span class="lb">Loại phiếu</span><div class="in">Tiêu hủy</div></div>
+                <div class="field"><span class="lb">Mã lý do</span><div class="in mono">EXPIRED</div></div>
+              </div>
               <div class="tblw"><table>
                 <thead><tr><th>Sản phẩm · Lô</th><th>Hạn dùng</th><th class="r">SL hủy</th><th class="r">Giá vốn</th><th>Lý do</th></tr></thead>
                 <tbody>
@@ -760,14 +769,21 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
               <div class="btns"><span class="mbtn">Từ chối</span><span class="mbtn pri">Duyệt xuất hủy</span></div>
             </div>
           </div>
-          <p class="mock-cap">Bản cũ dùng bảng DISPOSAL_ALLOCATIONS. Bản này thay bằng một cột blocked_added_qty trên chi tiết phiếu.</p>
+          <p class="mock-cap">Bản cũ dùng bảng DISPOSAL_ALLOCATIONS. Bản này thay bằng một cột blocked_added_qty trên chi tiết phiếu. Phiếu tester và phiếu trả NCC dùng chung màn hình này, chỉ khác loại phiếu.</p>
         </div>
       </div>
       <div class="data"><h4>Dữ liệu ghi nhận</h4>
-        <div class="drow"><span class="mono">DISPOSAL_REQUESTS</span><span>WAITING_APPROVAL → APPROVED, approved_by, approved_at</span></div>
+        <div class="drow"><span class="mono">DISPOSAL_REQUESTS</span><span>issue_type = DESTROY, reason_code = EXPIRED · WAITING_APPROVAL → APPROVED, approved_by, approved_at</span></div>
         <div class="drow"><span class="mono">DISPOSAL_DETAILS</span><span>2 dòng: quantity, blocked_added_qty = 2, unit_cost chụp lúc duyệt</span></div>
         <div class="drow"><span class="mono">BATCHES</span><span>Khi lập: blocked <span class="plus">+2</span> mỗi lô · Khi duyệt: on_hand <span class="minus">−2</span>, blocked <span class="minus">−2</span></span></div>
         <div class="drow"><span class="mono">STOCK_MOVEMENTS</span><span><span class="plus">+2</span> dòng DISPOSAL <span class="minus">−2</span></span></div>
+      </div>
+      <div class="data"><h4>Ví dụ phiếu tester: 2 chai serum lô LRP25B12 (giá vốn 330.000)</h4>
+        <div class="drow"><span class="mono">DISPOSAL_REQUESTS</span><span>issue_type = TESTER, reason_code = TESTER_USE · WAITING_APPROVAL → APPROVED</span></div>
+        <div class="drow"><span class="mono">BATCHES</span><span>Khi lập: blocked <span class="plus">+2</span> (còn bán được 22) · Khi duyệt: on_hand <span class="minus">−2</span>, blocked <span class="minus">−2</span></span></div>
+        <div class="drow"><span class="mono">STOCK_MOVEMENTS</span><span><span class="plus">+1</span> dòng TESTER, quantity_change <span class="minus">−2</span>, balance_after = 22</span></div>
+        <div class="drow"><span class="mono">DISPOSAL_DETAILS</span><span>unit_cost = 330.000 → chi phí tester 660.000 (tester của hãng: 0)</span></div>
+        <div class="drow"><span class="mono">AUDIT_LOGS</span><span>1 dòng ghi thao tác duyệt</span></div>
       </div>
     </div>
   </section>
@@ -905,7 +921,8 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
             <li><span><b>Bấm Thanh toán</b>. Đơn vẫn là nháp, chưa trừ tồn.</span></li>
           </ol>
           <div class="exc"><h4>Ngoại lệ chính</h4>
-            <p><b>Hộp khách cầm thuộc lô khác</b>: thu ngân đổi lô thủ công (lô đó phải còn hạn).</p>
+            <p><b>Chai khách cầm thuộc lô khác lô hệ thống chọn</b>: mã vạch chỉ ra sản phẩm, không ra lô, nên thu ngân đọc số lô in trên chai rồi đổi lô thủ công (lô đó phải còn hạn). Chỉ là ngoại lệ, có ghi audit OVERRIDE_FEFO.</p>
+            <p><b>Hàng trưng bày</b>: hệ thống không quản lý vị trí kệ hay kho, không có bảng trưng bày. Chai nguyên seal trên kệ là tồn bán bình thường, trừ tồn khi thanh toán theo FEFO. Để chai trên kệ khớp với lô FEFO, kho phải <b>xoay kệ</b>: lô hạn sớm ra kệ trước (nhắc ở khâu Nhập hàng), kiểm kho theo lô sẽ sửa nếu vẫn lệch.</p>
             <p><b>Hết hàng bán được</b>: báo lỗi, không thêm vào đơn.</p>
             <p><b>Voucher không hợp lệ</b>: báo lý do cụ thể, giữ nguyên tổng tiền.</p>
             <p><b>Khách cần lấy thêm hàng</b>: lưu tạm đơn, phục vụ khách sau.</p></div>
@@ -1385,12 +1402,12 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
 
     ['CATEGORIES','kho','Danh mục','',['category_id|INT|PK','category_code|VARCHAR(50)|UQ','category_name|VARCHAR(100)','status|VARCHAR(20)||ACTIVE, INACTIVE','+description|VARCHAR(255)||Form có trường mô tả']],
     ['BRANDS','kho','Thương hiệu','',['brand_id|INT|PK','brand_code|VARCHAR(50)|UQ','brand_name|VARCHAR(100)','status|VARCHAR(20)','+description|VARCHAR(255)']],
-    ['PRODUCTS','kho','Sản phẩm / SKU','',['product_id|INT|PK','sku|VARCHAR(50)|UQ','barcode|VARCHAR(50)|UQ','product_name|VARCHAR(255)','category_id|INT|FK','brand_id|INT|FK','unit|VARCHAR(20)','skin_type|VARCHAR(50)','retail_price|DECIMAL(12,2)','tax_rate|DECIMAL(4,2)','min_stock_alert|INT','status|VARCHAR(20)||ACTIVE, DISCONTINUED','+volume|VARCHAR(30)||Quy cách, vd 50ml','+description|TEXT','+image_url|VARCHAR(255)','+created_at|DATETIME','+updated_at|DATETIME']],
+    ['PRODUCTS','kho','Sản phẩm / SKU','',['product_id|INT|PK','sku|VARCHAR(50)|UQ','barcode|VARCHAR(50)|UQ','product_name|VARCHAR(255)','category_id|INT|FK','brand_id|INT|FK','unit|VARCHAR(20)','skin_type|VARCHAR(50)','retail_price|DECIMAL(12,2)','tax_rate|DECIMAL(4,2)','min_stock_alert|INT','status|VARCHAR(20)||ACTIVE, DISCONTINUED','+is_sellable|BOOLEAN||FALSE = SKU tester của hãng, POS và FEFO bỏ qua','+volume|VARCHAR(30)||Quy cách, vd 50ml','+description|TEXT','+image_url|VARCHAR(255)','+created_at|DATETIME','+updated_at|DATETIME']],
     ['BATCHES','kho','Lô hàng & hạn dùng','',['batch_id|INT|PK','product_id|INT|FK','~lot_code|VARCHAR(50)|UQ|UNIQUE(product_id, lot_code)','mfg_date|DATE','exp_date|DATE||Cơ sở FEFO','~cost_price|DECIMAL(12,2)||Bình quân gia quyền khi nhập thêm','on_hand_qty|INT','blocked_qty|INT||Hàng cách ly','+locked_by_check_id|INT|FK|Lô đang bị khóa kiểm kho','+created_at|DATETIME||Tính tuổi tồn kho']],
-    ['STOCK_MOVEMENTS','kho','Lịch sử biến động kho (+/−)','',['movement_id|BIGINT|PK','batch_id|INT|FK','~reference_type|VARCHAR(30)||PURCHASE, SALE, RETURN, CHECK_ADJUST, DISPOSAL','reference_id|BIGINT','quantity_change|INT','reason|VARCHAR(255)','created_at|DATETIME','+created_by|INT|FK','+balance_after|INT||Tồn sau biến động, cho thẻ kho']],
+    ['STOCK_MOVEMENTS','kho','Lịch sử biến động kho (+/−)','',['movement_id|BIGINT|PK','batch_id|INT|FK','~reference_type|VARCHAR(30)||PURCHASE, SALE, RETURN, CHECK_ADJUST, DISPOSAL, TESTER, SUPPLIER_RETURN','reference_id|BIGINT','quantity_change|INT','reason|VARCHAR(255)','created_at|DATETIME','+created_by|INT|FK','+balance_after|INT||Tồn sau biến động, cho thẻ kho']],
     ['INVENTORY_CHECKS','kho','Phiếu kiểm kho','',['check_id|INT|PK','check_code|VARCHAR(50)|UQ','created_by|INT|FK','approved_by|INT|FK','~status|VARCHAR(30)||+ CANCELLED, NO_DIFFERENCE','snapshot_at|DATETIME','+scope_note|VARCHAR(255)','+submitted_at|DATETIME','+approved_at|DATETIME','+reject_reason|TEXT']],
     ['INVENTORY_CHECK_DETAILS','kho','Chi tiết đếm theo lô','',['check_detail_id|INT|PK','check_id|INT|FK','batch_id|INT|FK','snapshot_qty|INT','~counted_qty|INT||Cho phép NULL khi đang đếm','~difference_qty|INT||NULL đến khi gửi duyệt','note|VARCHAR(255)']],
-    ['DISPOSAL_REQUESTS','kho','Phiếu đề nghị xuất hủy','',['disposal_id|INT|PK','disposal_code|VARCHAR(50)|UQ','requested_by|INT|FK','approved_by|INT|FK','~status|VARCHAR(30)||WAITING_APPROVAL, APPROVED, REJECTED','reason|TEXT','created_at|DATETIME','+approved_at|DATETIME','+reject_reason|TEXT']],
+    ['DISPOSAL_REQUESTS','kho','Phiếu xuất kho khác (hủy / tester / trả NCC)','',['disposal_id|INT|PK','disposal_code|VARCHAR(50)|UQ','+issue_type|VARCHAR(30)||DESTROY, TESTER, RETURN_TO_SUPPLIER','+reason_code|VARCHAR(30)||EXPIRED, NEAR_EXPIRY, DAMAGED, RECALL, RETURN_DEFECT, TESTER_USE','requested_by|INT|FK','approved_by|INT|FK','~status|VARCHAR(30)||WAITING_APPROVAL, APPROVED, REJECTED','reason|TEXT','created_at|DATETIME','+approved_at|DATETIME','+reject_reason|TEXT']],
     ['DISPOSAL_DETAILS','kho','Chi tiết lô xuất hủy','',['disposal_detail_id|INT|PK','disposal_id|INT|FK','batch_id|INT|FK','quantity|INT','item_reason|VARCHAR(255)','+blocked_added_qty|INT||Thay cho DISPOSAL_ALLOCATIONS','+unit_cost|DECIMAL(12,2)||Giá vốn lúc duyệt']],
     ['DISPOSAL_ALLOCATIONS','kho','Phân bổ giữ chỗ chống trừ trùng','drop',['allocation_id|INT|PK','disposal_id|INT|FK','batch_id|INT|FK','from_blocked_qty|INT','from_unblocked_qty|INT']],
 
@@ -1431,8 +1448,8 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
     ['STK-03','Theo dõi hàng cận hạn / hết hạn','NV kho, Quản lý','STK-06','','BATCHES PRODUCTS SYSTEM_SETTINGS'],
     ['STK-04','Lập phiếu kiểm kho','NV kho','STK-07','INVENTORY_CHECKS INVENTORY_CHECK_DETAILS BATCHES','PRODUCTS'],
     ['STK-05','Duyệt điều chỉnh sau kiểm kho','Quản lý','STK-08','INVENTORY_CHECKS BATCHES STOCK_MOVEMENTS AUDIT_LOGS','INVENTORY_CHECK_DETAILS'],
-    ['STK-06','Lập đề nghị xuất hủy','NV kho','Mới (ma trận có STK-06..08)','DISPOSAL_REQUESTS DISPOSAL_DETAILS BATCHES','PRODUCTS'],
-    ['STK-07','Duyệt đề nghị xuất hủy','Quản lý','Mới','DISPOSAL_REQUESTS DISPOSAL_DETAILS BATCHES STOCK_MOVEMENTS AUDIT_LOGS',''],
+    ['STK-06','Lập phiếu xuất kho khác (hủy / tester / trả NCC)','NV kho','Mới (ma trận có STK-06..08)','DISPOSAL_REQUESTS DISPOSAL_DETAILS BATCHES','PRODUCTS'],
+    ['STK-07','Duyệt phiếu xuất kho khác','Quản lý','Mới','DISPOSAL_REQUESTS DISPOSAL_DETAILS BATCHES STOCK_MOVEMENTS AUDIT_LOGS',''],
     ['SUPP-01','Quản lý nhà cung cấp','Admin, Quản lý','SUPP-02, 03, 06, 09','SUPPLIERS AUDIT_LOGS','PURCHASE_ORDERS'],
     ['SUPP-02','Tra cứu & xem chi tiết NCC','Admin, Quản lý, NV kho','SUPP-01, 04, 05, 08','','SUPPLIERS PURCHASE_ORDER_DETAILS PRODUCTS'],
     ['SUPP-03','Xem lịch sử nhập hàng của NCC','Admin, Quản lý, NV kho','SUPP-07','','PURCHASE_ORDERS PURCHASE_ORDER_DETAILS BATCHES USERS'],
