@@ -3,7 +3,8 @@
 // Chỉ xét lại một việc: khách còn đủ điều kiện giữ quà (BUY_X_GET_Y, ORDER_GIFT) hay không.
 // Dữ liệu KM lúc trả = lúc bán, vì KM đã có lượt dùng thì bị khóa sửa (PROM-02).
 //
-// Với lý do CHANGE_OF_MIND, "tiền hoàn" ở đây là giá trị quy đổi để mua hàng đổi (không chi tiền).
+// Với lý do CHANGE_OF_MIND, "tiền hoàn" ở đây là giá trị quy đổi để mua hàng đổi (không chi tiền);
+// đơn đổi phải có tổng ≥ giá trị này. Không phát voucher bù; điểm đã dùng không hoàn.
 
 import { giftValue } from './tinh-gia.ts';
 import type { PricedLine, Product, Promotion } from './types.ts';
@@ -22,7 +23,7 @@ export interface ReturnInput {
   // Đã trả ở các phiếu trước: Σ RETURN_ORDER_DETAILS theo order_detail_id (kể cả dòng GIFT_CHARGE).
   history: Map<number, { quantity: number; amount: number }>;
   items: ReturnRequestItem[];
-  reason: 'DEFECTIVE' | 'WRONG_ITEM' | 'CHANGE_OF_MIND';
+  reason: 'DEFECTIVE' | 'CHANGE_OF_MIND';  // không có giao nhầm: hàng được quét mã khi bán
   promotions: Map<number, Promotion>;
   products: Map<number, Product>;
 }
@@ -40,7 +41,6 @@ export interface ReturnResult {
   lines: ReturnLine[];
   totalRefund: number;             // RETURN_ORDERS.total_refund_amount
   pointsRevoked: number;           // RETURN_ORDERS.points_revoked
-  compensationVoucher: number;     // giá trị voucher bù điểm (chỉ DEFECTIVE), 0 = không phát
   messages: string[];
 }
 
@@ -57,7 +57,6 @@ export function calculateReturn(input: ReturnInput): ReturnResult {
 
   // 1. Tiền từng dòng trả = phần tương ứng của line_total đã lưu.
   const out: ReturnLine[] = [];
-  let compensation = 0;
   for (const it of items) {
     const l = byId.get(it.orderDetailId)!;
     const left = l.quantity - done(l.orderDetailId).quantity;
@@ -69,7 +68,6 @@ export function calculateReturn(input: ReturnInput): ReturnResult {
       // Hàng lỗi luôn cách ly; quà trả kèm thì xét theo tình trạng thực tế của quà.
       toBlocked: it.condition === 'DAMAGED_OR_OPENED' || (input.reason === 'DEFECTIVE' && l.lineType === 'NORMAL'),
     });
-    compensation += Math.round((l.pointsDiscount * it.quantity) / l.quantity);
   }
 
   // 2. Quà: tính số quà khách còn được giữ sau lần trả này; quà dư mà không trả lại thì tính tiền.
@@ -116,7 +114,6 @@ export function calculateReturn(input: ReturnInput): ReturnResult {
     lines: out,
     totalRefund,
     pointsRevoked: Math.floor((input.order.pointsEarned * totalRefund) / input.order.totalAmount),
-    compensationVoucher: input.reason === 'DEFECTIVE' ? compensation : 0,
     messages,
   };
 }

@@ -309,16 +309,18 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | Lý do (`return_reason`) | Tình trạng hàng | Xử lý |
 |---|---|---|
 | `DEFECTIVE` (lỗi, hư, hết hạn) | Bất kỳ | Hoàn tiền (`CASH`/`BANK_TRANSFER`) hoặc đổi hàng, không tính phí. Hàng luôn vào `blocked_qty` chờ xuất hủy hoặc trả NCC |
-| `WRONG_ITEM` (giao nhầm) | Bất kỳ | Hoàn tiền hoặc đổi hàng, không tính phí. Còn nguyên seal thì về tồn bán |
 | `CHANGE_OF_MIND` (đổi ý, không hợp da) | Còn nguyên seal, trong `max_return_days` | **Chỉ đổi hàng, không hoàn tiền** (`refund_method = EXCHANGE`) |
 | `CHANGE_OF_MIND` | Đã mở seal | **Từ chối**, không tạo phiếu |
 
-**Đổi hàng (`EXCHANGE`):** phiếu trả sinh một giá trị quy đổi (`total_refund_amount`, không chi tiền). Thu ngân lập đơn bán mới với `exchange_return_id`; đơn này được trừ `exchange_credit_amount`.
-- Hàng mới **đắt hơn**: khách nộp phần chênh lệch.
-- Hàng mới **rẻ hơn** (còn dư): **vẫn được đổi, nhưng phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết giá trị thì khách tự mua thêm hàng. Hệ thống nên cảnh báo thu ngân và khách trước khi xác nhận. Đơn đổi có `exchange_credit_amount = MIN(giá trị hàng trả, tổng đơn mới)`; `total_refund_amount` của phiếu trả bằng đúng khoản này, nên phần dư vẫn tính là doanh thu của cửa hàng.
-- Điểm thưởng vẫn thu hồi theo công thức hiện hành; đơn đổi tích điểm theo số tiền khách thực nộp.
+Không có lý do **giao nhầm**: thu ngân quét mã từng sản phẩm khi thanh toán nên hàng trên hóa đơn luôn đúng hàng khách cầm.
 
-**Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE`/`WRONG_ITEM` hoàn tiền):**
+**Đổi hàng (`EXCHANGE`):** phiếu trả sinh một giá trị quy đổi (`total_refund_amount`, không chi tiền). Thu ngân lập đơn bán mới với `exchange_return_id`; đơn này được trừ `exchange_credit_amount = giá trị hàng trả`.
+- Tổng đơn mới **phải lớn hơn hoặc bằng** giá trị hàng trả. Thấp hơn thì hệ thống **chặn hoàn tất**, yêu cầu khách chọn thêm hàng.
+- Phần vượt: khách nộp thêm. Không hoàn tiền, **không cấp voucher** cho bất kỳ phần chênh nào.
+- Điểm thưởng vẫn thu hồi theo công thức hiện hành; đơn đổi tích điểm theo số tiền khách thực nộp.
+- Trả hàng **không phát voucher bù** (kể cả hàng lỗi); điểm đã dùng không hoàn.
+
+**Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE` hoàn tiền):**
 `Tiền hoàn = Σ (line_total_gốc / qty_gốc × qty_trả) × (1 − restocking_fee_percent)`
 — đã tự động trừ phần giảm giá đã hưởng nhờ `discount_allocated`.
 
@@ -612,7 +614,9 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | # | Nội dung | Quyết định |
 |---|---|---|
 | 9 | Khách đổi ý có được hoàn tiền không? | **Không**, chỉ đổi hàng (nguyên seal, trong hạn) |
-| 10 | Đổi sang hàng rẻ hơn | Được đổi, nhưng **phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết thì tự mua thêm hàng |
+| 10 | Đổi sang hàng rẻ hơn | **Không cho.** Tổng đơn đổi phải ≥ giá trị hàng trả; thiếu thì khách chọn thêm hàng. Không hoàn tiền, không voucher |
+| 14 | Lý do giao nhầm | **Bỏ.** Thu ngân quét mã từng sản phẩm khi thanh toán nên không có giao nhầm |
+| 15 | Voucher bù khi trả hàng | **Không có** trong mọi trường hợp, kể cả hàng lỗi |
 | 11 | Hàng trưng bày móp hộp, bạc màu | **Không làm** giảm giá theo dòng. Hàng trên kệ là hàng bán bình thường, trừ tồn khi bán theo FEFO |
 | 12 | Tester | Xuất bằng phiếu `TESTER` dùng chung bảng `DISPOSAL_REQUESTS`; **Manager duyệt**; sau khi duyệt hệ thống hết trách nhiệm (không theo dõi hạn, không lập phiếu hủy) |
 | 13 | Lô trên kệ hạn muộn hơn lô mới nhập (vd kệ 12/2027, lô mới 06/2027) | **Không thêm bảng trưng bày.** Giải quyết bằng xoay kệ + cảnh báo khi nhập + kiểm kho theo lô (quy tắc chung số 9). Lý do: bảng trưng bày chỉ giúp ghi đúng việc bán lô hạn muộn trước, không ngăn được lô hạn sớm hết hạn trong kho, và mỗi lần châm kệ phải lập phiếu chuyển |

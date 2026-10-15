@@ -102,7 +102,7 @@ test('VD4: combo tách giá theo tỷ lệ giá niêm yết, cộng voucher %', 
   assert.equal(d.lineTotal, 190_000);
 });
 
-test('VD5: dùng điểm, trả B vì lỗi → hoàn 190.500, voucher bù 18.750, thu hồi 18 điểm', () => {
+test('VD5: dùng điểm, trả B vì lỗi → hoàn 190.500, không voucher bù, thu hồi 18 điểm', () => {
   const r = run([[A, 1], [B, 1]], { customer: vang, pointsRequested: 500 });
   assert.equal(r.pointsDiscountAmount, 50_000);
   assert.equal(r.totalAmount, 508_000);
@@ -114,7 +114,6 @@ test('VD5: dùng điểm, trả B vì lỗi → hoàn 190.500, voucher bù 18.75
     items: [{ orderDetailId: b.orderDetailId, quantity: 1, condition: 'DAMAGED_OR_OPENED' }],
   });
   assert.equal(ret.totalRefund, 190_500);
-  assert.equal(ret.compensationVoucher, 18_750);
   assert.equal(ret.pointsRevoked, 18);
   assert.equal(ret.lines[0].toBlocked, true);
 });

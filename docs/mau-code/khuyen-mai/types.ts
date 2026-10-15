@@ -43,7 +43,7 @@ export interface Promotion {       // PROMOTIONS + các bảng con đã nạp s�
   type: PromotionType;
   status: 'DRAFT' | 'ACTIVE' | 'PAUSED';
   voucherCode: string | null;
-  customerId: number | null;          // voucher riêng 1 khách (voucher bù điểm)
+  customerId: number | null;          // voucher riêng 1 khách
   applyScope: 'ALL' | 'PRODUCT' | 'BRAND' | 'CATEGORY' | null;
   brandIds: number[];                 // PROMOTION_BRANDS
   categoryIds: number[];              // PROMOTION_CATEGORIES

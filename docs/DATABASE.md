@@ -414,7 +414,7 @@ Ràng buộc nghiệp vụ: mỗi `cashier_id` tối đa 1 ca `OPEN` (kiểm ở
 | policy_id | INT | PK | Khóa chính | |
 | policy_name | VARCHAR(100) | NOT NULL | Tên (Tiêu chuẩn 7 ngày) | |
 | max_return_days | INT | NOT NULL, DEFAULT 7 | Số ngày được trả kể từ ngày mua | |
-| is_refund_allowed | BOOLEAN | NOT NULL, DEFAULT TRUE | Áp dụng cho lý do `CHANGE_OF_MIND`: FALSE = **chỉ đổi hàng, không hoàn tiền** (chính sách mặc định đặt FALSE). Hàng lỗi / giao nhầm luôn được hoàn tiền | Sửa: ghi rõ phạm vi |
+| is_refund_allowed | BOOLEAN | NOT NULL, DEFAULT TRUE | Áp dụng cho lý do `CHANGE_OF_MIND`: FALSE = **chỉ đổi hàng, không hoàn tiền** (chính sách mặc định đặt FALSE). Hàng lỗi luôn được hoàn tiền | Sửa: ghi rõ phạm vi |
 | restocking_fee_percent | DECIMAL(4,2) | NOT NULL, DEFAULT 0 | Phí trả hàng (chỉ có tác dụng khi `is_refund_allowed = TRUE`; chính sách mặc định không dùng) | |
 | is_default | BOOLEAN | NOT NULL, DEFAULT FALSE | Chính sách gắn mặc định cho đơn mới (chỉ 1 dòng TRUE) | Mới |
 | status | VARCHAR(20) | NOT NULL, DEFAULT 'ACTIVE' | `ACTIVE`, `INACTIVE` | Mới |
@@ -440,7 +440,7 @@ Hóa đơn bán hàng.
 | tax_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Tiền VAT | |
 | total_amount | DECIMAL(12,2) | NOT NULL | Khách phải trả | |
 | exchange_return_id | INT | NULL, FK → RETURN_ORDERS | Đơn này là đơn **mua hàng đổi** của phiếu trả nào | Mới |
-| exchange_credit_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Giá trị hàng trả được trừ vào đơn đổi (không phải giảm giá) = `MIN(giá trị hàng trả, total_amount)`. Tiền khách phải nộp = `total_amount − exchange_credit_amount` | Mới |
+| exchange_credit_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Giá trị hàng trả được trừ vào đơn đổi (không phải giảm giá) = **giá trị hàng trả**. Đơn đổi phải có `total_amount ≥ exchange_credit_amount`. Tiền khách phải nộp = `total_amount − exchange_credit_amount` (≥ 0) | Mới |
 | payment_method | VARCHAR(20) | **NULL** đến khi hoàn tất | `CASH`, `BANK_TRANSFER`, `CARD` | Sửa: PDF NOT NULL |
 | amount_received | DECIMAL(12,2) | NULL | Tiền khách đưa (tiền mặt) | Mới |
 | change_due | DECIMAL(12,2) | NULL | Tiền thừa | Mới |
@@ -477,7 +477,7 @@ Phiếu đổi trả. Nhận hàng và hoàn tiền là **một giao dịch**.
 | original_order_id | INT | NOT NULL, FK → ORDERS | Hóa đơn gốc (phải COMPLETED) | |
 | shift_id | INT | NOT NULL, FK → CASHIER_SHIFTS | Ca **hiện tại** chi tiền | |
 | processed_by | INT | NOT NULL, FK → USERS | Thu ngân xử lý | |
-| return_reason | VARCHAR(30) | NOT NULL | `DEFECTIVE` (lỗi, hư, hết hạn), `WRONG_ITEM` (giao nhầm), `CHANGE_OF_MIND` (đổi ý, không hợp da) | Sửa: từ TEXT sang enum |
+| return_reason | VARCHAR(30) | NOT NULL | `DEFECTIVE` (lỗi, hư, hết hạn), `CHANGE_OF_MIND` (đổi ý, không hợp da). Không có lý do giao nhầm: hàng được quét mã khi thanh toán | Sửa: từ TEXT sang enum |
 | return_note | TEXT | NULL | Ghi chú thêm của thu ngân | Mới |
 | restocking_fee_amount | DECIMAL(12,2) | NOT NULL, DEFAULT 0 | Phí trả hàng đã trừ | Mới |
 | total_refund_amount | DECIMAL(12,2) | NOT NULL | Tiền hoàn thực tế. Với `EXCHANGE` không chi tiền: bằng `exchange_credit_amount` của đơn đổi (phần được bù vào hàng mới); báo cáo trừ khoản này vào doanh thu | |
@@ -585,7 +585,7 @@ erDiagram
 | STOCK_MOVEMENTS.reference_type | PURCHASE, SALE, RETURN, CHECK_ADJUST, DISPOSAL, TESTER, SUPPLIER_RETURN |
 | DISPOSAL_REQUESTS.issue_type | DESTROY, TESTER, RETURN_TO_SUPPLIER |
 | DISPOSAL_REQUESTS.reason_code | EXPIRED, NEAR_EXPIRY, DAMAGED, RECALL, RETURN_DEFECT, TESTER_USE |
-| RETURN_ORDERS.return_reason | DEFECTIVE, WRONG_ITEM, CHANGE_OF_MIND |
+| RETURN_ORDERS.return_reason | DEFECTIVE, CHANGE_OF_MIND |
 | INVENTORY_CHECKS.status | IN_PROGRESS, WAITING_APPROVAL, APPROVED, REJECTED, CANCELLED, NO_DIFFERENCE |
 | DISPOSAL_REQUESTS.status | WAITING_APPROVAL, APPROVED, REJECTED |
 | PURCHASE_ORDERS.status | DRAFT, COMPLETED, CANCELLED |
@@ -630,7 +630,8 @@ erDiagram
 9. Phiếu `DISPOSAL_REQUESTS` loại `TESTER`: SKU `is_sellable = FALSE` chỉ được xuất bằng loại `TESTER` hoặc `DESTROY`; POS/FEFO không bao giờ chọn SKU này.
 10. `RETURN_ORDERS.refund_method = EXCHANGE` bắt buộc khi `return_reason = CHANGE_OF_MIND`; hàng `DAMAGED_OR_OPENED` + `CHANGE_OF_MIND` bị từ chối (không tạo phiếu). `DEFECTIVE` luôn cộng `blocked_qty`.
 11. Tiền mặt phải nộp của đơn = `total_amount − exchange_credit_amount`; chốt ca chỉ tính phần này, và chỉ chi tiền hoàn khi `refund_method = CASH`.
-12. Đơn đổi hàng (`exchange_return_id` khác NULL): `exchange_credit_amount = MIN(giá trị hàng trả, total_amount)`. Hàng mới **có thể rẻ hơn** hàng trả; phần dư **không hoàn lại và không cấp voucher** (cửa hàng giữ lại, vẫn tính vào doanh thu). Khách muốn dùng hết giá trị thì tự mua thêm hàng.
+12. Đơn đổi hàng (`exchange_return_id` khác NULL): `exchange_credit_amount = giá trị hàng trả`. **Chặn hoàn tất** khi `total_amount < exchange_credit_amount`: khách phải chọn thêm hàng cho đủ giá trị hàng cũ, phần vượt thì nộp thêm. Không hoàn tiền phần chênh, **không cấp voucher**.
+13. Trả hàng **không phát voucher bù** trong mọi trường hợp (kể cả hàng lỗi); điểm đã dùng không hoàn.
 
 ## 9. Thay đổi so với PDF
 
