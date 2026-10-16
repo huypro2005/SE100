@@ -1,6 +1,6 @@
 # KHUYẾN MÃI — THIẾT KẾ DỮ LIỆU VÀ CÁCH TÍNH (SE100)
 
-> **Trạng thái: bản đề xuất.** Khi nhóm chốt, phần bảng ở mục 3 sẽ được gộp vào [DATABASE.md](DATABASE.md) (thay mục PROMOTIONS hiện tại).
+> **Trạng thái: bản đề xuất.** Phần bảng ở mục 3 đã được gộp vào [DATABASE.md](DATABASE.md) (mục PROMOTIONS, các bảng `PROMOTION_*`, ORDERS, ORDER_DETAILS, RETURN_ORDER_DETAILS). Quy tắc cố định tổng hợp ở [QUY_TAC_NGHIEP_VU.md](QUY_TAC_NGHIEP_VU.md).
 > Code mẫu chạy được: [mau-code/khuyen-mai/](mau-code/khuyen-mai/). Chạy test: `node --experimental-strip-types --test docs/mau-code/khuyen-mai/test.ts`.
 > Tiền là số nguyên VNĐ. Giá niêm yết **đã gồm VAT** (chờ xác nhận, câu hỏi số 2 mục 8 DANH_GIA_USECASE).
 

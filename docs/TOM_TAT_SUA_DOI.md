@@ -87,7 +87,7 @@
 | AUTH-06 | Xem nhật ký hệ thống (Audit Log) | **Mới** |
 | AUTH-07 | Cấu hình hệ thống | **Mới** |
 
-## 3. Database: thay đổi chính (vẫn 30 bảng)
+## 3. Database: thay đổi chính (nay 34 bảng: thêm 4 bảng con khuyến mãi, xem DATABASE.md)
 
 - **Bỏ 3 bảng:** `DISPOSAL_ALLOCATIONS` (thay bằng cột `blocked_added_qty`), `PROMOTION_USAGES` (thay bằng `ORDERS.promotion_id`), `DAILY_SALES_REPORTS` (báo cáo truy vấn trực tiếp).
 - **Thêm 3 bảng:** `PURCHASE_ORDER_DETAILS`, `SYSTEM_SETTINGS`, `REFRESH_TOKENS` (chỉ cần nếu dùng JWT).

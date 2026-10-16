@@ -116,9 +116,9 @@
 | Thông số từng khuyến mãi | `PROMOTIONS` và bảng con | Mức giảm, ngưỡng, thời gian, số lượt |
 | Ngưỡng tồn tối thiểu | `PRODUCTS.min_stock_alert` | Theo từng sản phẩm |
 
-## 10. Còn chờ chốt
+## 10. Các điểm đã chốt thêm
 
-| # | Câu hỏi | Đang ghi |
-|---|---|---|
-| 1 | Đổi hàng có cho **bằng giá** không? | Có (luật 17: lớn hơn hoặc bằng) |
-| 2 | `RETURN_POLICIES.is_refund_allowed`, `restocking_fee_percent` cho bật hoàn tiền khi đổi ý và đặt phí trả hàng, mâu thuẫn với luật 14. Có bỏ 2 cột này không? | Chưa bỏ |
+- Đổi hàng bằng giá được (luật 17: lớn hơn hoặc bằng).
+- Giá trị 1 điểm do chủ cửa hàng tự đặt, không phải luật cố định.
+- `RETURN_POLICIES` chỉ còn `max_return_days`; đã bỏ `is_refund_allowed`, `restocking_fee_percent` và `RETURN_ORDERS.restocking_fee_amount` vì ai được hoàn tiền và việc không tính phí là luật cố định (luật 14).
+- Cơ sở dữ liệu nay có 34 bảng (thêm 4 bảng con khuyến mãi), xem [DATABASE.md](DATABASE.md).

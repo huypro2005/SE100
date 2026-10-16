@@ -290,9 +290,9 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | CASHIER_SHIFTS | + `shift_code`. Đổi tên `expected_cash`/`actual_cash` cho khớp đặc tả (`expected_closing_cash`, `actual_closing_cash`) hoặc ngược lại — chọn một. + `handover_confirmed_by` (FK NULL, Manager xác nhận bàn giao — tùy chọn). Ràng buộc: mỗi thu ngân tối đa 1 ca `OPEN` (kiểm tra ở tầng ứng dụng) |
 | ORDERS | Bỏ `salesperson_id`. `payment_method` cho phép NULL đến khi hoàn tất. Status: `DRAFT` (đang lập/tạm giữ, chưa trừ tồn), `COMPLETED`, `CANCELLED`. + `promotion_id` (FK NULL), tách giảm giá: `tier_discount_amount`, `voucher_discount_amount`, `points_used`, `points_discount_amount` (giữ `discount_amount` = tổng). + `amount_received`, `change_due`, `completed_at` |
 | ORDER_DETAILS | + `tax_rate` (chụp tại thời điểm bán), + `discount_allocated` (phần giảm cấp đơn phân bổ theo tỷ lệ tiền dòng), + `line_total` (= qty×unit_price − discount_allocated) |
-| RETURN_ORDERS | Status: `COMPLETED`, `CANCELLED` (gộp nhận hàng + hoàn tiền thành 1 giao dịch). + `restocking_fee_amount`, `points_revoked`. Có `shift_id` của **ca hiện tại** (không phải ca của đơn gốc) |
+| RETURN_ORDERS | Status: `COMPLETED`, `CANCELLED` (gộp nhận hàng + hoàn tiền thành 1 giao dịch). + `points_revoked`. Không có phí trả hàng (quy tắc cố định). Có `shift_id` của **ca hiện tại** (không phải ca của đơn gốc) |
 | RETURN_ORDER_DETAILS | **+ `order_detail_id` (FK, bắt buộc)**; `batch_id` lấy theo dòng gốc. `refund_unit_price` = `line_total / quantity` của dòng gốc. + `unit_cost` (= `cost_price` dòng gốc, để trừ COGS) |
-| RETURN_POLICIES | Giữ. + `is_default`, `status`. Quản lý trong UC Cấu hình hệ thống |
+| RETURN_POLICIES | Chỉ giữ `max_return_days` làm tham số; **bỏ** `is_refund_allowed`, `restocking_fee_percent` (ai được hoàn tiền là quy tắc cố định). + `is_default`, `status`. Quản lý trong UC Cấu hình hệ thống |
 
 **Danh sách UC-POS đề xuất:**
 
@@ -321,8 +321,8 @@ Không có lý do **giao nhầm**: thu ngân quét mã từng sản phẩm khi t
 - Trả hàng **không phát voucher bù** (kể cả hàng lỗi); điểm đã dùng không hoàn.
 
 **Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE` hoàn tiền):**
-`Tiền hoàn = Σ (line_total_gốc / qty_gốc × qty_trả) × (1 − restocking_fee_percent)`
-— đã tự động trừ phần giảm giá đã hưởng nhờ `discount_allocated`.
+`Tiền hoàn = Σ (line_total_gốc / qty_gốc × qty_trả)` (không tính phí trả hàng)
+— `line_total` của dòng gốc đã trừ mọi khoản giảm khách được hưởng (4 cột giảm của `ORDER_DETAILS`).
 
 ---
 
@@ -548,7 +548,7 @@ Ký hiệu: ✔ toàn quyền · 👁 chỉ xem · — không có quyền
 | RETURN_POLICIES | `is_default`, `status` |
 | ORDERS | Status `DRAFT/COMPLETED/CANCELLED`; `payment_method` NULL được; `promotion_id`, tách 3 loại giảm giá, `points_used`, `amount_received`, `change_due`, `completed_at` |
 | ORDER_DETAILS | `tax_rate`, `discount_allocated`, `line_total` |
-| RETURN_ORDERS | Status `COMPLETED/CANCELLED`, `restocking_fee_amount`, `points_revoked` |
+| RETURN_ORDERS | Status `COMPLETED/CANCELLED`, `points_revoked` |
 | RETURN_ORDER_DETAILS | **`order_detail_id`**, `unit_cost` |
 
 Tổng: 30 − 3 bảng bỏ + 3 bảng mới = **30 bảng** (29 nếu không dùng JWT).
