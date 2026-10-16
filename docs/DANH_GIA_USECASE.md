@@ -14,7 +14,7 @@
 2. **Thiếu UC quan trọng**: Mở ca, toàn bộ Xuất hủy (có 3 bảng DB nhưng không có đặc tả), Nhập kho chưa gắn NCC, Dùng điểm thưởng, Xem Audit Log, Cấu hình hệ thống; thiếu bảng **chi tiết phiếu nhập**.
 3. **Độ chi tiết UC không đồng đều**: PROD gộp CRUD vào 1 UC, trong khi SUPP/CUS/PROM tách “xem danh sách / tìm kiếm / xem chi tiết” thành 3 UC riêng; REP tách “lọc theo thời gian”, “xuất file” thành UC dù đó là chức năng chung.
 
-**Quy mô:** bản hiện tại 58 UC + 30 bảng — hơi lớn cho 5 người code trong 1 kỳ, nhưng phần lớn là do tách vụn. Phương án đề xuất: **40 UC (39 UC người dùng + 1 tác vụ tự động), 30 bảng** (bỏ 3 bảng, thêm 3 bảng, bổ sung cột còn thiếu), giữ nguyên toàn bộ nghiệp vụ có giá trị.
+**Quy mô:** bản hiện tại 58 UC + 30 bảng — hơi lớn cho 5 người code trong 1 kỳ, nhưng phần lớn là do tách vụn. Phương án đề xuất: **40 UC (39 UC người dùng + 1 tác vụ tự động), 34 bảng** (bỏ 3 bảng, thêm 7 bảng gồm 4 bảng con khuyến mãi, bổ sung cột còn thiếu), giữ nguyên toàn bộ nghiệp vụ có giá trị.
 
 | Nhóm | Hiện tại | Đề xuất | Thay đổi chính |
 |---|---|---|---|
@@ -551,7 +551,7 @@ Ký hiệu: ✔ toàn quyền · 👁 chỉ xem · — không có quyền
 | RETURN_ORDERS | Status `COMPLETED/CANCELLED`, `points_revoked` |
 | RETURN_ORDER_DETAILS | **`order_detail_id`**, `unit_cost` |
 
-Tổng: 30 − 3 bảng bỏ + 3 bảng mới = **30 bảng** (29 nếu không dùng JWT).
+Tổng: 30 − 3 bảng bỏ + 7 bảng mới (3 bảng hỗ trợ và 4 bảng con khuyến mãi) = **34 bảng** (33 nếu không dùng JWT).
 
 ---
 
