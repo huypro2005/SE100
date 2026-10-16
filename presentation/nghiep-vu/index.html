@@ -383,7 +383,7 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
           <div class="chips"><span class="chip">Xác thực &amp; kiểm quyền (middleware)</span><span class="chip">Dịch vụ nghiệp vụ theo phân hệ</span><span class="chip">Bộ chọn lô FEFO</span><span class="chip">Tính giảm giá &amp; điểm</span><span class="chip">Ghi Audit Log</span><span class="chip">Xuất Excel</span></div></div>
         <div class="arrow">Giao dịch CSDL (transaction)</div>
         <div class="layer"><h4>Tầng 3<b>CSDL quan hệ</b></h4>
-          <div class="chips"><span class="chip">30 bảng</span><span class="chip">Khóa ngoại &amp; UNIQUE</span><span class="chip">Lịch sử kho có dấu (+/−)</span><span class="chip">Cấu hình trong SYSTEM_SETTINGS</span></div></div>
+          <div class="chips"><span class="chip">34 bảng</span><span class="chip">Khóa ngoại &amp; UNIQUE</span><span class="chip">Lịch sử kho có dấu (+/−)</span><span class="chip">Cấu hình trong SYSTEM_SETTINGS</span></div></div>
       </div>
 
       <h3 class="sec">Phân hệ <small>40 use case · bảng chính</small></h3>
@@ -393,7 +393,7 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
         <div class="mod" style="--c:var(--sys)"><h4>Nhà cung cấp <small>SUPP 01–03</small></h4><p>Hồ sơ NCC, sản phẩm cung ứng, lịch sử nhập.</p><div class="tbls">SUPPLIERS</div></div>
         <div class="mod" style="--c:var(--kho)"><h4>Kho – Lô – Date <small>STK 01–07</small></h4><p>Nhập theo lô, tồn, cận hạn, kiểm kho, xuất hủy, xuất tester, trả NCC.</p><div class="tbls">BATCHES · STOCK_MOVEMENTS · PURCHASE_ORDERS · PURCHASE_ORDER_DETAILS · INVENTORY_CHECKS · INVENTORY_CHECK_DETAILS · DISPOSAL_REQUESTS · DISPOSAL_DETAILS</div></div>
         <div class="mod" style="--c:var(--crm)"><h4>Khách hàng <small>CUS 01–05</small></h4><p>Hồ sơ, hạng thẻ, tích &amp; dùng điểm.</p><div class="tbls">CUSTOMERS · CUSTOMER_TIERS · POINT_HISTORIES</div></div>
-        <div class="mod" style="--c:var(--crm)"><h4>Khuyến mãi <small>PROM 01–04</small></h4><p>Voucher cấp đơn, hạng tối thiểu, hiệu quả.</p><div class="tbls">PROMOTIONS</div></div>
+        <div class="mod" style="--c:var(--crm)"><h4>Khuyến mãi <small>PROM 01–04</small></h4><p>Khuyến mãi 4 tầng: sản phẩm, giờ vàng, mua X tặng Y, combo, bậc thang, voucher, quà hóa đơn; hiệu quả.</p><div class="tbls">PROMOTIONS · PROMOTION_ITEMS · PROMOTION_BRANDS · PROMOTION_CATEGORIES · PROMOTION_STEPS</div></div>
         <div class="mod" style="--c:var(--pos)"><h4>Bán hàng &amp; đổi trả <small>POS 01–05</small></h4><p>Ca, đơn FEFO, thanh toán, đổi trả, chốt ca.</p><div class="tbls">CASHIER_SHIFTS · ORDERS · ORDER_DETAILS · RETURN_ORDERS · RETURN_ORDER_DETAILS · RETURN_POLICIES</div></div>
         <div class="mod" style="--c:var(--rep)"><h4>Báo cáo <small>REP 01–06</small></h4><p>Dashboard, doanh thu &amp; lợi nhuận, bán hàng, kho, nhập, khách.</p><div class="tbls">Truy vấn trực tiếp, không có bảng riêng</div></div>
       </div>
@@ -419,11 +419,11 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
   </section>
 
   <!-- DATABASE -->
-  <section class="slide" id="sl-db" data-label="Cơ sở dữ liệu" data-kicker="CSDL" data-c="--sys" data-desc="30 bảng, so sánh bản gốc và đề xuất">
+  <section class="slide" id="sl-db" data-label="Cơ sở dữ liệu" data-kicker="CSDL" data-c="--sys" data-desc="34 bảng, so sánh bản gốc và đề xuất">
     <div class="wrap">
       <div class="head">
         <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Thiết kế cơ sở dữ liệu</div>
-        <h2>30 bảng chia theo 5 cụm nghiệp vụ</h2>
+        <h2>34 bảng chia theo 5 cụm nghiệp vụ</h2>
         <p class="lead">Mặc định là bản hiện tại trong tài liệu PDF. Chuyển sang “Bản đề xuất” để xem bản đã chỉnh sửa, hoặc “So sánh” để thấy từng cột được thêm, bỏ hay sửa. Cuối mỗi bảng là các use case dùng bảng đó; bấm vào mã để xem chi tiết.</p>
       </div>
       <div class="toolbar">
@@ -446,12 +446,12 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
   </section>
 
   <!-- ERD -->
-  <section class="slide" id="sl-erd" data-label="Sơ đồ ERD" data-kicker="ERD" data-c="--sys" data-desc="Quan hệ giữa 30 bảng (bản đề xuất)">
+  <section class="slide" id="sl-erd" data-label="Sơ đồ ERD" data-kicker="ERD" data-c="--sys" data-desc="Quan hệ giữa 34 bảng (bản đề xuất)">
     <div class="wrap">
       <div class="head">
         <div class="eyebrow"><span class="dot" style="--c:var(--sys)"></span>Sơ đồ thực thể – quan hệ</div>
         <h2>BATCHES và ORDERS là hai trục của cả hệ thống</h2>
-        <p class="lead">Bản đề xuất, 30 bảng. Mọi nghiệp vụ kho đều đi qua <span class="mono">BATCHES</span>, mọi nghiệp vụ bán đều đi qua <span class="mono">ORDERS</span>. Bấm vào một bảng để làm nổi bật các liên kết của nó; kéo chuột để di chuyển sơ đồ.</p>
+        <p class="lead">Bản đề xuất, 34 bảng. Mọi nghiệp vụ kho đều đi qua <span class="mono">BATCHES</span>, mọi nghiệp vụ bán đều đi qua <span class="mono">ORDERS</span>. Bấm vào một bảng để làm nổi bật các liên kết của nó; kéo chuột để di chuyển sơ đồ.</p>
       </div>
       <div class="toolbar">
         <div class="seg" id="erdcols" role="group" aria-label="Số cột hiển thị">
@@ -467,7 +467,7 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
         <span class="dbstat num" id="zlbl"></span>
       </div>
       <div class="erdinfo" id="erdinfo"></div>
-      <div class="erdwrap" id="erdwrap"><svg id="erd" class="erd" role="img" aria-label="Sơ đồ ERD 30 bảng"></svg></div>
+      <div class="erdwrap" id="erdwrap"><svg id="erd" class="erd" role="img" aria-label="Sơ đồ ERD 34 bảng"></svg></div>
       <div class="keylegend">
         <span><svg width="64" height="14" aria-hidden="true"><path d="M2 7H62" class="edge"/><path d="M2 1L12 7L2 13M2 7H12" class="mk"/><path d="M54 1V13M58 1V13" class="mk"/></svg> nhiều ← → một</span>
         <span><svg width="40" height="14" aria-hidden="true"><path d="M2 7H38" class="edge actor"/></svg> người thực hiện (created_by, approved_by…)</span>
@@ -896,7 +896,7 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
             <p><b>Ngưỡng</b> “đơn từ … đ” của bậc thang, voucher, quà xét trên <b>tiền sau tầng 1 và 2</b>, không tính dòng quà.</p>
             <p><b>Voucher bị thua</b>: thu ngân thấy thông báo lý do, mã không bị trừ lượt.</p>
             <p><b>Trả hàng không tính lại khuyến mãi</b>: hoàn theo line_total đã lưu. Trả làm mất điều kiện quà mà không mang quà trả lại thì trừ giá trị quà (giá niêm yết; quà không bán lấy giá vốn).</p>
-            <p><b>Điểm đã dùng không hoàn.</b> Riêng hàng lỗi: phát voucher bù bằng phần điểm của hàng trả.</p></div>
+            <p><b>Điểm đã dùng không hoàn, không bù voucher</b> (kể cả hàng lỗi).</p></div>
         </div>
         <div>
           <div class="win">
@@ -1493,18 +1493,22 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
     ['CUSTOMER_TIERS','crm','Hạng thẻ thành viên','',['tier_id|INT|PK','tier_name|VARCHAR(50)|UQ','~min_spend|DECIMAL(12,2)|UQ|Thêm UNIQUE','discount_rate|DECIMAL(4,2)','+tier_code|VARCHAR(20)|UQ|BRONZE, SILVER, GOLD, DIAMOND']],
     ['CUSTOMERS','crm','Hồ sơ khách hàng','',['customer_id|INT|PK','customer_code|VARCHAR(50)|UQ','phone_number|VARCHAR(15)|UQ','full_name|VARCHAR(100)','tier_id|INT|FK','reward_points|INT','total_spent|DECIMAL(12,2)','skin_type|VARCHAR(50)','status|VARCHAR(20)','+email|VARCHAR(100)','+date_of_birth|DATE','+gender|VARCHAR(10)','+address|VARCHAR(255)','+note|TEXT','+created_at|DATETIME||Báo cáo khách mới','+updated_at|DATETIME']],
     ['POINT_HISTORIES','crm','Nhật ký điểm thưởng','',['point_id|BIGINT|PK','customer_id|INT|FK','order_id|INT|FK','points_changed|INT','~action_type|VARCHAR(30)||EARN, REDEEM, REVOKE, ADJUST','created_at|DATETIME','+return_id|INT|FK|Thu hồi điểm khi trả hàng','+balance_after|INT']],
-    ['PROMOTIONS','crm','Chương trình khuyến mãi','',['promotion_id|INT|PK','voucher_code|VARCHAR(50)|UQ','promotion_name|VARCHAR(255)','discount_type|VARCHAR(20)||PERCENT, FIXED_AMOUNT','discount_value|DECIMAL(12,2)','max_discount_amount|DECIMAL(12,2)','min_order_value|DECIMAL(12,2)','start_date|DATE','end_date|DATE','~usage_limit|INT||NULL = không giới hạn','~limit_per_customer|INT||NULL = không giới hạn','-is_stackable|BOOLEAN||1 voucher/đơn','~status|VARCHAR(20)||Chỉ ACTIVE, PAUSED; còn lại tính theo ngày','+min_tier_id|INT|FK|Hạng thẻ tối thiểu','+description|TEXT','+created_by|INT|FK','+created_at|DATETIME','+updated_at|DATETIME']],
+    ['PROMOTIONS','crm','Chương trình khuyến mãi','',['promotion_id|INT|PK','voucher_code|VARCHAR(50)|UQ|Cho phép NULL (chỉ VOUCHER có mã)','promotion_name|VARCHAR(255)','discount_type|VARCHAR(20)||PERCENT, FIXED_AMOUNT','discount_value|DECIMAL(12,2)','max_discount_amount|DECIMAL(12,2)','min_order_value|DECIMAL(12,2)','-start_date|DATE||Đổi thành start_at','-end_date|DATE||Đổi thành end_at','~usage_limit|INT||NULL = không giới hạn','~limit_per_customer|INT||NULL = không giới hạn','-is_stackable|BOOLEAN||Thay bằng 4 tầng cố định','~status|VARCHAR(20)||DRAFT, ACTIVE, PAUSED; còn lại tính theo ngày','+promotion_type|VARCHAR(30)||7 loại: PRODUCT_DISCOUNT, FLASH_PRICE, BUY_X_GET_Y, COMBO, ORDER_TIERED, VOUCHER, ORDER_GIFT','+customer_id|INT|FK|Voucher riêng 1 khách','+apply_scope|VARCHAR(20)||ALL, PRODUCT, BRAND, CATEGORY','+fixed_price|DECIMAL(12,2)||Giá đồng giá giờ vàng','+combo_price|DECIMAL(12,2)||Giá cả bộ','+buy_quantity|INT||Số món nhóm mua','+is_repeatable|BOOLEAN||Mua 4 tặng 2','+min_tier_id|INT|FK|Hạng thẻ tối thiểu','+start_at|DATETIME','+end_at|DATETIME','+daily_start_time|TIME||Khung giờ vàng','+daily_end_time|TIME','+weekdays|VARCHAR(20)||Các thứ áp dụng','+max_quantity|INT||Tổng số lượng giá khuyến mãi','+description|TEXT','+created_by|INT|FK','+created_at|DATETIME','+updated_at|DATETIME']],
+    ['PROMOTION_ITEMS','crm','Sản phẩm trong khuyến mãi','new',['promotion_id|INT|PK FK','product_id|INT|PK FK','role|VARCHAR(20)|PK|TARGET, BUY, GIFT, COMBO_ITEM','quantity|INT||Số lượng quà hoặc món trong combo']],
+    ['PROMOTION_BRANDS','crm','Phạm vi theo thương hiệu','new',['promotion_id|INT|PK FK','brand_id|INT|PK FK']],
+    ['PROMOTION_CATEGORIES','crm','Phạm vi theo danh mục','new',['promotion_id|INT|PK FK','category_id|INT|PK FK']],
+    ['PROMOTION_STEPS','crm','Bậc thang theo hóa đơn','new',['step_id|INT|PK','promotion_id|INT|FK','min_order_value|DECIMAL(12,2)||UNIQUE cùng promotion_id','discount_type|VARCHAR(20)','discount_value|DECIMAL(12,2)','max_discount_amount|DECIMAL(12,2)']],
     ['PROMOTION_USAGES','crm','Lịch sử dùng voucher','drop',['usage_id|INT|PK','promotion_id|INT|FK','customer_id|INT|FK','order_id|INT|FK','used_at|DATETIME']],
 
     ['CASHIER_SHIFTS','pos','Ca làm việc thu ngân','',['shift_id|INT|PK','cashier_id|INT|FK','opened_at|DATETIME','closed_at|DATETIME','opening_cash|DECIMAL(12,2)','expected_cash|DECIMAL(12,2)','actual_cash|DECIMAL(12,2)','difference_amount|DECIMAL(12,2)','note|TEXT||Bắt buộc khi lệch','status|VARCHAR(20)||OPEN, CLOSED','+shift_code|VARCHAR(30)|UQ','+handover_confirmed_by|INT|FK|Quản lý nhận bàn giao']],
-    ['RETURN_POLICIES','pos','Chính sách đổi trả','',['policy_id|INT|PK','policy_name|VARCHAR(100)','max_return_days|INT','is_refund_allowed|BOOLEAN','restocking_fee_percent|DECIMAL(4,2)','+is_default|BOOLEAN','+status|VARCHAR(20)']],
-    ['ORDERS','pos','Hóa đơn bán hàng','',['order_id|INT|PK','order_code|VARCHAR(50)|UQ','shift_id|INT|FK','customer_id|INT|FK','cashier_id|INT|FK','-salesperson_id|INT||Bỏ role SALES','policy_id|INT|FK','subtotal_amount|DECIMAL(12,2)','discount_amount|DECIMAL(12,2)||= hạng + voucher + điểm','tax_amount|DECIMAL(12,2)','total_amount|DECIMAL(12,2)','~payment_method|VARCHAR(20)||Cho phép NULL đến khi thanh toán','~status|VARCHAR(30)||DRAFT, COMPLETED, CANCELLED','created_at|DATETIME','+promotion_id|INT|FK|Thay PROMOTION_USAGES','+tier_discount_amount|DECIMAL(12,2)','+voucher_discount_amount|DECIMAL(12,2)','+points_used|INT','+points_discount_amount|DECIMAL(12,2)','+amount_received|DECIMAL(12,2)','+change_due|DECIMAL(12,2)','+completed_at|DATETIME||Báo cáo tính theo cột này']],
-    ['ORDER_DETAILS','pos','Chi tiết dòng bán (lưu giá vốn)','',['order_detail_id|BIGINT|PK','order_id|INT|FK','product_id|INT|FK','batch_id|INT|FK','quantity|INT','unit_price|DECIMAL(12,2)','cost_price|DECIMAL(12,2)||Giá vốn cho COGS','tax_amount|DECIMAL(12,2)','+tax_rate|DECIMAL(4,2)','+discount_allocated|DECIMAL(12,2)||Giảm giá phân bổ, để tính tiền hoàn','+line_total|DECIMAL(12,2)']],
-    ['RETURN_ORDERS','pos','Phiếu đổi trả','',['return_id|INT|PK','return_code|VARCHAR(50)|UQ','original_order_id|INT|FK','shift_id|INT|FK','processed_by|INT|FK','total_refund_amount|DECIMAL(12,2)','refund_method|VARCHAR(20)','~status|VARCHAR(30)||COMPLETED, CANCELLED (gộp hoàn tiền)','return_reason|TEXT','created_at|DATETIME','+restocking_fee_amount|DECIMAL(12,2)','+points_revoked|INT']],
-    ['RETURN_ORDER_DETAILS','pos','Chi tiết hàng trả','',['return_detail_id|INT|PK','return_id|INT|FK','batch_id|INT|FK','quantity|INT','refund_unit_price|DECIMAL(12,2)','item_condition|VARCHAR(30)||INTACT, DAMAGED_OR_OPENED','+order_detail_id|BIGINT|FK|Kiểm số lượng còn được trả','+unit_cost|DECIMAL(12,2)||Trừ giá vốn hàng trả']],
+    ['RETURN_POLICIES','pos','Chính sách đổi trả','',['policy_id|INT|PK','policy_name|VARCHAR(100)','max_return_days|INT','-is_refund_allowed|BOOLEAN||Bỏ: ai được hoàn tiền là quy tắc cố định','-restocking_fee_percent|DECIMAL(4,2)||Bỏ: không tính phí trả hàng','+is_default|BOOLEAN','+status|VARCHAR(20)']],
+    ['ORDERS','pos','Hóa đơn bán hàng','',['order_id|INT|PK','order_code|VARCHAR(50)|UQ','shift_id|INT|FK','customer_id|INT|FK','cashier_id|INT|FK','-salesperson_id|INT||Bỏ role SALES','policy_id|INT|FK','subtotal_amount|DECIMAL(12,2)','discount_amount|DECIMAL(12,2)||~ = tầng 1 + 2 + 3 + 4','tax_amount|DECIMAL(12,2)','total_amount|DECIMAL(12,2)','~payment_method|VARCHAR(20)||Cho phép NULL đến khi thanh toán','~status|VARCHAR(30)||DRAFT, COMPLETED, CANCELLED','created_at|DATETIME','+order_promotion_id|INT|FK|Khuyến mãi cấp đơn đã thắng, thay PROMOTION_USAGES','+line_discount_amount|DECIMAL(12,2)||Tổng giảm tầng 1','+tier_discount_amount|DECIMAL(12,2)||Tầng 2','+order_discount_amount|DECIMAL(12,2)||Tầng 3','+points_used|INT','+points_discount_amount|DECIMAL(12,2)','+amount_received|DECIMAL(12,2)','+change_due|DECIMAL(12,2)','+completed_at|DATETIME||Báo cáo tính theo cột này']],
+    ['ORDER_DETAILS','pos','Chi tiết dòng bán (lưu giá vốn)','',['order_detail_id|BIGINT|PK','order_id|INT|FK','product_id|INT|FK','batch_id|INT|FK','quantity|INT','unit_price|DECIMAL(12,2)','cost_price|DECIMAL(12,2)||Giá vốn cho COGS','tax_amount|DECIMAL(12,2)','+tax_rate|DECIMAL(4,2)','+line_type|VARCHAR(10)||NORMAL, GIFT','+line_promotion_id|INT|FK|Khuyến mãi tầng 1 của dòng','+promo_group_no|INT||Số bộ combo / mua-tặng','+line_discount|DECIMAL(12,2)||Giảm tầng 1','+tier_discount|DECIMAL(12,2)||Giảm tầng 2','+order_discount|DECIMAL(12,2)||Giảm tầng 3','+points_discount|DECIMAL(12,2)||Giảm tầng 4 (điểm)','+line_total|DECIMAL(12,2)||Tiền khách thực trả, để tính tiền hoàn']],
+    ['RETURN_ORDERS','pos','Phiếu đổi trả','',['return_id|INT|PK','return_code|VARCHAR(50)|UQ','original_order_id|INT|FK','shift_id|INT|FK','processed_by|INT|FK','total_refund_amount|DECIMAL(12,2)','refund_method|VARCHAR(20)','~status|VARCHAR(30)||COMPLETED, CANCELLED (gộp hoàn tiền)','return_reason|TEXT','created_at|DATETIME','+points_revoked|INT']],
+    ['RETURN_ORDER_DETAILS','pos','Chi tiết hàng trả','',['return_detail_id|INT|PK','return_id|INT|FK','batch_id|INT|FK','quantity|INT','-refund_unit_price|DECIMAL(12,2)||Thay bằng refund_amount','+line_kind|VARCHAR(20)||RETURN, GIFT_CHARGE (trừ quà không trả lại)','+refund_amount|DECIMAL(12,2)||Tiền của dòng; âm với GIFT_CHARGE','item_condition|VARCHAR(30)||INTACT, DAMAGED_OR_OPENED','+order_detail_id|BIGINT|FK|Kiểm số lượng còn được trả','+unit_cost|DECIMAL(12,2)||Trừ giá vốn hàng trả']],
     ['DAILY_SALES_REPORTS','pos','Tổng hợp báo cáo theo ngày','drop',['report_id|INT|PK','report_date|DATE|UQ','total_orders|INT','gross_revenue|DECIMAL(14,2)','total_discount|DECIMAL(14,2)','total_refund|DECIMAL(14,2)','net_revenue|DECIMAL(14,2)','total_cogs|DECIMAL(14,2)','gross_profit|DECIMAL(14,2)','calculated_at|DATETIME']]
   ];
-  var DROP_REASON={DISPOSAL_ALLOCATIONS:'Bỏ: thay bằng cột blocked_added_qty',PROMOTION_USAGES:'Bỏ: dùng ORDERS.promotion_id',DAILY_SALES_REPORTS:'Bỏ: báo cáo truy vấn trực tiếp'};
+  var DROP_REASON={DISPOSAL_ALLOCATIONS:'Bỏ: thay bằng cột blocked_added_qty',PROMOTION_USAGES:'Bỏ: đếm từ ORDERS.order_promotion_id và ORDER_DETAILS.line_promotion_id',DAILY_SALES_REPORTS:'Bỏ: báo cáo truy vấn trực tiếp'};
 
   /* Use case: [mã, tên, actor, mã cũ, bảng ghi, bảng đọc] */
   var UCS=[
@@ -1533,8 +1537,8 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
     ['CUS-03','Tích điểm, thu hồi điểm & xét hạng','Hệ thống','CUS-08','CUSTOMERS POINT_HISTORIES AUDIT_LOGS','CUSTOMER_TIERS SYSTEM_SETTINGS'],
     ['CUS-04','Dùng điểm thưởng khi thanh toán','Thu ngân','Mới','ORDERS POINT_HISTORIES CUSTOMERS','SYSTEM_SETTINGS'],
     ['CUS-05','Cấu hình tích điểm & hạng thẻ','Admin, Quản lý','CUS-09','CUSTOMER_TIERS SYSTEM_SETTINGS AUDIT_LOGS',''],
-    ['PROM-01','Tra cứu chương trình khuyến mãi','Admin, Quản lý, Thu ngân','PROM-01, 05','','PROMOTIONS ORDERS'],
-    ['PROM-02','Quản lý chương trình khuyến mãi','Admin, Quản lý','PROM-02, 03, 04','PROMOTIONS AUDIT_LOGS','CUSTOMER_TIERS ORDERS'],
+    ['PROM-01','Tra cứu chương trình khuyến mãi','Admin, Quản lý, Thu ngân','PROM-01, 05','','PROMOTIONS PROMOTION_ITEMS PROMOTION_STEPS ORDERS'],
+    ['PROM-02','Quản lý chương trình khuyến mãi','Admin, Quản lý','PROM-02, 03, 04','PROMOTIONS PROMOTION_ITEMS PROMOTION_BRANDS PROMOTION_CATEGORIES PROMOTION_STEPS AUDIT_LOGS','CUSTOMER_TIERS PRODUCTS BRANDS CATEGORIES ORDERS'],
     ['PROM-03','Áp dụng voucher khi bán hàng','Thu ngân','PROM-06','ORDERS','PROMOTIONS CUSTOMERS'],
     ['PROM-04','Xem hiệu quả chương trình khuyến mãi','Admin, Quản lý','PROM-07','','PROMOTIONS ORDERS CUSTOMERS'],
     ['POS-01','Mở ca làm việc','Thu ngân','Mới','CASHIER_SHIFTS AUDIT_LOGS',''],
@@ -1668,12 +1672,12 @@ h3.sec small{font:500 12px var(--f-body);color:var(--ink-3)}
   /* =====================================================================
      ERD (bản đề xuất) — vẽ SVG thủ công, không cần thư viện
      ===================================================================== */
-  var FKT={user_id:'USERS',created_by:'USERS',approved_by:'USERS',requested_by:'USERS',processed_by:'USERS',cashier_id:'USERS',handover_confirmed_by:'USERS',updated_by:'USERS',role_id:'ROLES',permission_id:'PERMISSIONS',category_id:'CATEGORIES',brand_id:'BRANDS',product_id:'PRODUCTS',batch_id:'BATCHES',locked_by_check_id:'INVENTORY_CHECKS',check_id:'INVENTORY_CHECKS',disposal_id:'DISPOSAL_REQUESTS',supplier_id:'SUPPLIERS',po_id:'PURCHASE_ORDERS',tier_id:'CUSTOMER_TIERS',min_tier_id:'CUSTOMER_TIERS',customer_id:'CUSTOMERS',order_id:'ORDERS',original_order_id:'ORDERS',return_id:'RETURN_ORDERS',promotion_id:'PROMOTIONS',shift_id:'CASHIER_SHIFTS',policy_id:'RETURN_POLICIES',order_detail_id:'ORDER_DETAILS'};
+  var FKT={user_id:'USERS',created_by:'USERS',approved_by:'USERS',requested_by:'USERS',processed_by:'USERS',cashier_id:'USERS',handover_confirmed_by:'USERS',updated_by:'USERS',role_id:'ROLES',permission_id:'PERMISSIONS',category_id:'CATEGORIES',brand_id:'BRANDS',product_id:'PRODUCTS',batch_id:'BATCHES',locked_by_check_id:'INVENTORY_CHECKS',check_id:'INVENTORY_CHECKS',disposal_id:'DISPOSAL_REQUESTS',supplier_id:'SUPPLIERS',po_id:'PURCHASE_ORDERS',tier_id:'CUSTOMER_TIERS',min_tier_id:'CUSTOMER_TIERS',customer_id:'CUSTOMERS',order_id:'ORDERS',original_order_id:'ORDERS',return_id:'RETURN_ORDERS',promotion_id:'PROMOTIONS',order_promotion_id:'PROMOTIONS',line_promotion_id:'PROMOTIONS',shift_id:'CASHIER_SHIFTS',policy_id:'RETURN_POLICIES',order_detail_id:'ORDER_DETAILS'};
   var LAYOUT=[
     ['CATEGORIES','BRANDS','SUPPLIERS','PURCHASE_ORDERS','PURCHASE_ORDER_DETAILS'],
     ['PRODUCTS','BATCHES','STOCK_MOVEMENTS'],
     ['INVENTORY_CHECKS','INVENTORY_CHECK_DETAILS','DISPOSAL_REQUESTS','DISPOSAL_DETAILS'],
-    ['ORDERS','ORDER_DETAILS','RETURN_ORDERS','RETURN_ORDER_DETAILS'],
+    ['ORDERS','ORDER_DETAILS','RETURN_ORDERS','RETURN_ORDER_DETAILS','PROMOTION_ITEMS','PROMOTION_BRANDS','PROMOTION_CATEGORIES','PROMOTION_STEPS'],
     ['CASHIER_SHIFTS','RETURN_POLICIES','PROMOTIONS','CUSTOMER_TIERS','CUSTOMERS','POINT_HISTORIES'],
     ['USERS','USER_ROLES','ROLES','ROLE_PERMISSIONS','PERMISSIONS','REFRESH_TOKENS','AUDIT_LOGS','SYSTEM_SETTINGS']
   ];

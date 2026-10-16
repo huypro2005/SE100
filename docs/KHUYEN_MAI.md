@@ -1,6 +1,6 @@
 # KHUYẾN MÃI — THIẾT KẾ DỮ LIỆU VÀ CÁCH TÍNH (SE100)
 
-> **Trạng thái: bản đề xuất.** Khi nhóm chốt, phần bảng ở mục 3 sẽ được gộp vào [DATABASE.md](DATABASE.md) (thay mục PROMOTIONS hiện tại).
+> **Trạng thái: bản đề xuất.** Phần bảng ở mục 3 đã được gộp vào [DATABASE.md](DATABASE.md) (mục PROMOTIONS, các bảng `PROMOTION_*`, ORDERS, ORDER_DETAILS, RETURN_ORDER_DETAILS). Quy tắc cố định tổng hợp ở [QUY_TAC_NGHIEP_VU.md](QUY_TAC_NGHIEP_VU.md).
 > Code mẫu chạy được: [mau-code/khuyen-mai/](mau-code/khuyen-mai/). Chạy test: `node --experimental-strip-types --test docs/mau-code/khuyen-mai/test.ts`.
 > Tiền là số nguyên VNĐ. Giá niêm yết **đã gồm VAT** (chờ xác nhận, câu hỏi số 2 mục 8 DANH_GIA_USECASE).
 
@@ -16,7 +16,7 @@
 | 6 | Bậc thang theo hóa đơn | `ORDER_TIERED` | 3. Đơn hàng |
 | 8 | Voucher mã | `VOUCHER` | 3. Đơn hàng |
 | 7 | Quà tặng theo hóa đơn | `ORDER_GIFT` | 3. Đơn hàng (quà) |
-| — | Điểm thưởng (1 điểm = 100đ, tối đa 50%) | Không phải KM: `ORDERS.points_used` | 4. Điểm |
+| — | Điểm thưởng (giá trị 1 điểm và mức tối đa do chủ cửa hàng cấu hình; mẫu 100đ, 50%) | Không phải KM: `ORDERS.points_used` | 4. Điểm |
 
 Không làm: 4 (món thứ N+1), 10 (nhân điểm), 11 (chi tiêu đổi voucher), 12 (giảm cận date theo lô).
 
@@ -48,7 +48,7 @@ Không làm: 4 (món thứ N+1), 10 (nhân điểm), 11 (chi tiêu đổi vouche
 | **promotion_type** | VARCHAR(30) | NOT NULL | Tất cả | Xem mục 1. **Đây là cột để phân biệt loại KM** |
 | status | VARCHAR(20) | NOT NULL, DEFAULT 'DRAFT' | Tất cả | `DRAFT`, `ACTIVE`, `PAUSED`. "Sắp diễn ra / Đã kết thúc" tính theo ngày |
 | voucher_code | VARCHAR(50) | UNIQUE, NULL | 8 | Bắt buộc khi `VOUCHER`, NULL với loại khác |
-| customer_id | INT | NULL, FK → CUSTOMERS | 8 | Voucher riêng 1 khách (voucher bù điểm khi trả hàng lỗi) |
+| customer_id | INT | NULL, FK → CUSTOMERS | 8 | Voucher riêng 1 khách (quản lý tạo khi cần; trả hàng **không** phát voucher bù) |
 | apply_scope | VARCHAR(20) | NULL | 1 | `ALL`, `PRODUCT`, `BRAND`, `CATEGORY` |
 | discount_type | VARCHAR(20) | NULL | 1, 8 | `PERCENT`, `FIXED_AMOUNT` |
 | discount_value | DECIMAL(12,2) | NULL | 1, 8 | |
@@ -119,7 +119,7 @@ Không dùng `JSONB`: mỗi thông số là một cột riêng (cho phép NULL),
 | tax_amount | Giữ | VAT tách ngược từ `line_total` |
 | cost_price, batch_id | Giữ | Dòng quà vẫn trừ lô và ghi giá vốn |
 
-Tách `discount_allocated` thành 3 cột để lúc trả hàng lấy **chính xác** phần điểm đã dùng (voucher bù) và tiền sau tầng 2 (xét lại ngưỡng quà), không phải ước lượng.
+Tách `discount_allocated` thành 3 cột để lúc trả hàng lấy **chính xác** tiền thực trả của dòng và tiền sau tầng 2 (xét lại ngưỡng quà), không phải ước lượng.
 
 ### 3.5. RETURN_ORDERS / RETURN_ORDER_DETAILS (sửa)
 
@@ -128,7 +128,6 @@ Tách `discount_allocated` thành 3 cột để lúc trả hàng lấy **chính 
 | RETURN_ORDER_DETAILS.**line_kind** | Mới | `RETURN` (nhận hàng về) / `GIFT_CHARGE` (tính tiền quà khách không trả lại, **không nhập kho**) |
 | RETURN_ORDER_DETAILS.**refund_amount** | Mới | Tiền của dòng; **âm** với `GIFT_CHARGE` |
 | RETURN_ORDERS.total_refund_amount | Giữ | Σ `refund_amount` (không âm) |
-| RETURN_ORDERS.**compensation_promotion_id** | Mới, FK NULL | Voucher bù điểm (chỉ khi `DEFECTIVE`), tạo thành 1 dòng PROMOTIONS loại `VOUCHER` có `customer_id`, `usage_limit = 1`, hạn 30 ngày |
 
 ### 3.6. Không cần
 
@@ -168,14 +167,14 @@ Tách `discount_allocated` thành 3 cột để lúc trả hàng lấy **chính 
 | 1. Tiền từng dòng trả | `line_total × qty_trả / quantity` (lần trả cuối của dòng nhận phần còn lại) | Dòng `RETURN` |
 | 2a. Mua X tặng Y còn đủ điều kiện không | Nhóm (`line_promotion_id`, `promo_group_no`); đếm số món "mua" còn giữ so với `buy_quantity` | Quà dư mà không trả lại → dòng `GIFT_CHARGE` |
 | 2b. Quà theo hóa đơn còn đủ ngưỡng không | Σ (`qty × unit_price − line_discount − tier_discount`) phần còn giữ so với `min_order_value` | Như trên |
-| 3. Voucher bù điểm (chỉ `DEFECTIVE`) | Σ `points_discount` phần trả | `compensation_promotion_id` |
-| 4. Thu hồi điểm đã tích | `floor(điểm đã tích × tiền hoàn / total_amount)` | `points_revoked` |
+| 3. Thu hồi điểm đã tích | `floor(điểm đã tích × tiền hoàn / total_amount)` | `points_revoked` |
 
 - Giá trị quà khi trừ: giá niêm yết; quà không bán (`is_sellable = FALSE`) lấy giá vốn. Khách mang quà trả lại thì không trừ.
 - Giảm cấp đơn (bậc thang, voucher) **không tính lại** khi đơn còn lại xuống dưới ngưỡng; không trả lại lượt voucher.
 - Dòng `GIFT_CHARGE` được tính vào "đã xử lý" của dòng quà, nên lần trả sau không trừ lần nữa.
 - Combo: code đang **cho trả lẻ từng món** theo giá đã phân bổ (chưa chốt, xem mục 8).
-- Đổi ý: cùng cách tính; số tiền là giá trị quy đổi sang đơn đổi hàng, không chi tiền.
+- Đổi ý: cùng cách tính; số tiền là giá trị quy đổi sang đơn đổi hàng, không chi tiền. Đơn đổi phải có tổng ≥ giá trị quy đổi (thiếu thì chặn).
+- **Không phát voucher bù** (kể cả hàng lỗi); điểm đã dùng không hoàn.
 
 ## 7. Ví dụ (đều có trong test.ts)
 
@@ -187,7 +186,7 @@ Giả định: Serum A 400k; Kem B 300k (KM1 giảm 20%); combo Toner C 200k + K
 | 2 | Vãng lai 2A + B, nhập `GIAM100` | Bậc thang 120k > 100k → lấy bậc thang. Tặng tote. Tổng 920.000 |
 | 3 | Mua 2 B (có cả KM1 và KM3) | Giảm 20% (120k) > mini (80k) → giảm 20%, không tặng mini |
 | 4 | Combo C + D, nhập `THU10` | Tách: C −31.111, D −38.889. `THU10` 38.000. C 152.000, D 190.000 |
-| 5 | Như VD1 + dùng 500 điểm, trả B vì lỗi | Hoàn 190.500; voucher bù 18.750; thu hồi 18 điểm |
+| 5 | Như VD1 + dùng 500 điểm, trả B vì lỗi | Hoàn 190.500; không voucher bù; thu hồi 18 điểm |
 | 6 | Từ VD2, trả 1 A vì lỗi, không trả tote | Đơn còn 640k < 800k → trừ tote 15.000. Hoàn 353.846 − 15.000 = 338.846 |
 | 7 | Chỉ có KM3, mua 2 B, trả 1 B, không trả mini | Mất điều kiện → trừ 80.000. Hoàn 220.000 |
 
@@ -197,6 +196,5 @@ Giả định: Serum A 400k; Kem B 300k (KM1 giảm 20%); combo Toner C 200k + K
 |---|---|---|
 | 1 | Combo cho trả lẻ hay chỉ nguyên bộ? | Cho trả lẻ theo giá đã phân bổ |
 | 2 | Hạng thẻ có áp lên món đã giảm tầng 1 không? | Có |
-| 3 | Hạn voucher bù điểm | 30 ngày |
-| 4 | Giá niêm yết đã gồm VAT? | Đã gồm, tách ngược |
-| 5 | Chọn KM tầng 1 theo cách "lần lượt lấy KM lợi nhất" có thể không tối ưu tuyệt đối khi nhiều combo chồng nhau. Chấp nhận? | Có (dễ giải thích, dễ test) |
+| 3 | Giá niêm yết đã gồm VAT? | Đã gồm, tách ngược |
+| 4 | Chọn KM tầng 1 theo cách "lần lượt lấy KM lợi nhất" có thể không tối ưu tuyệt đối khi nhiều combo chồng nhau. Chấp nhận? | Có (dễ giải thích, dễ test) |

@@ -185,10 +185,10 @@ Khi chuyển người, người trước nói **câu nối** (ghi cuối mỗi s
 **Lời nói**
 
 > Bước 5, **đổi trả**. Mỹ phẩm dùng trên da, đã mở thì không bán lại được, nên nhóm em tách rõ hai trường hợp:
-> - **Lỗi của cửa hàng** (hàng lỗi, giao nhầm): **hoàn tiền** hoặc đổi.
-> - **Khách đổi ý**, ví dụ không hợp da: **chỉ đổi hàng**, và chỉ khi còn nguyên seal trong 7 ngày. Đã mở seal thì từ chối. Đổi sang món rẻ hơn thì **phần dư không được lấy lại**.
+> - **Hàng lỗi**: **hoàn tiền** hoặc đổi. Không có trường hợp giao nhầm, vì thu ngân quét mã từng món khi thanh toán.
+> - **Khách đổi ý**, ví dụ không hợp da: **chỉ đổi hàng**, và chỉ khi còn nguyên seal trong 7 ngày. Đã mở seal thì từ chối. Khi đổi, tổng hàng mới **phải lớn hơn hoặc bằng** giá trị hàng cũ; thiếu thì khách chọn thêm. **Không bù voucher.**
 >
-> Ví dụ khách mang chai sữa rửa mặt **hỏng vòi bơm** đến trả, đây là hàng lỗi. Hoàn **327.656 đồng**, không phải giá niêm yết 385 nghìn, vì đó là số tiền khách thực trả cho chai này sau các khoản giảm. Điểm đã dùng không hoàn, nhưng vì hàng lỗi nên cửa hàng **bù một voucher**.
+> Ví dụ khách mang chai sữa rửa mặt **hỏng vòi bơm** đến trả, đây là hàng lỗi. Hoàn **327.656 đồng**, không phải giá niêm yết 385 nghìn, vì đó là số tiền khách thực trả cho chai này sau các khoản giảm. Điểm đã dùng không hoàn và **không bù voucher**.
 >
 > Còn **túi tote**: trả chai này xong, phần khách giữ lại chỉ còn 768 nghìn, dưới mức 800 nghìn, nên khách trả lại tote, hoặc bị trừ 15 nghìn.
 

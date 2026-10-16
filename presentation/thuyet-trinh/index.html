@@ -556,12 +556,12 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
     <div class="inner">
       <div>
         <div class="kicker" style="--c:var(--pos)">Bước 5 · Đổi trả</div>
-        <h2>Lỗi của cửa hàng thì hoàn tiền, khách đổi ý thì đổi hàng</h2>
+        <h2>Hàng lỗi thì hoàn tiền, khách đổi ý thì đổi hàng</h2>
         <p class="lead">Mỹ phẩm dùng trên da, đã mở thì không bán lại được, nên chính sách tách rõ hai trường hợp.</p>
         <ul class="pts" style="--c:var(--pos)">
           <li><span>Hoàn tiền theo <b>số tiền khách thực trả</b> cho món đó, không theo giá niêm yết.</span></li>
           <li><span><b>Không tính lại khuyến mãi</b>; chỉ xét lại khách còn đủ điều kiện giữ quà không.</span></li>
-          <li><span>Đổi sang hàng rẻ hơn: <b>phần dư không được lấy lại</b>.</span></li>
+          <li><span>Đổi hàng: tổng hàng mới <b>phải ≥ giá trị hàng cũ</b>, thiếu thì chọn thêm. <b>Không bù voucher.</b></span></li>
         </ul>
       </div>
       <div>
@@ -570,7 +570,7 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
           <table class="mini">
             <thead><tr><th>Lý do</th><th>Tình trạng</th><th>Xử lý</th></tr></thead>
             <tbody>
-              <tr><td>Hàng lỗi, giao nhầm</td><td>Bất kỳ</td><td><span class="pill ok">Hoàn tiền</span> hoặc đổi</td></tr>
+              <tr><td>Hàng lỗi</td><td>Bất kỳ</td><td><span class="pill ok">Hoàn tiền</span> hoặc đổi</td></tr>
               <tr><td>Đổi ý, không hợp da</td><td>Còn seal, ≤ 7 ngày</td><td><span class="pill warn">Chỉ đổi hàng</span></td></tr>
               <tr><td>Đổi ý, không hợp da</td><td>Đã mở seal</td><td><span class="pill bad">Từ chối</span></td></tr>
             </tbody>
@@ -581,13 +581,13 @@ body.notes-on .slide{padding-bottom:calc(42vh + 48px)}
           <div class="kv">
             <span>Giá niêm yết</span><span>385.000</span>
             <span class="tot">Hoàn (giá khách thực trả)</span><span class="tot">327.656</span>
-            <span>Điểm đã dùng</span><span>không hoàn · bù voucher 6.542</span>
+            <span>Điểm đã dùng</span><span>không hoàn · không bù voucher</span>
             <span>Túi tote (đơn còn 768.240 &lt; 800.000)</span><span>trả lại, hoặc trừ 15.000</span>
           </div>
         </div>
       </div>
     </div>
-    <aside class="note"><p>Bước 5 là đổi trả. Nguyên tắc: lỗi của cửa hàng thì hoàn tiền; khách đổi ý, ví dụ thấy không hợp da, thì chỉ đổi hàng còn nguyên seal. Đã mở seal thì từ chối, vì mỹ phẩm đã mở không bán lại được.</p><p>Ví dụ hai ngày sau, khách mang chai sữa rửa mặt hỏng vòi bơm đến trả. Hoàn 327.656 đồng, đúng số tiền khách thực trả cho chai đó, không phải giá niêm yết. Điểm đã dùng không hoàn, nhưng vì là hàng lỗi nên cửa hàng bù một voucher.</p><p>Chỗ đáng chú ý là túi tote: trả chai này xong, đơn không còn đủ 800 nghìn, nên khách phải trả lại tote hoặc bị trừ giá trị tote.</p></aside>
+    <aside class="note"><p>Bước 5 là đổi trả. Nguyên tắc: chỉ hàng lỗi mới được hoàn tiền (không có giao nhầm vì thu ngân quét mã từng món); khách đổi ý, ví dụ thấy không hợp da, thì chỉ đổi hàng còn nguyên seal. Đã mở seal thì từ chối, vì mỹ phẩm đã mở không bán lại được. Khi đổi, tổng hàng mới phải lớn hơn hoặc bằng giá trị hàng cũ.</p><p>Ví dụ hai ngày sau, khách mang chai sữa rửa mặt hỏng vòi bơm đến trả. Hoàn 327.656 đồng, đúng số tiền khách thực trả cho chai đó, không phải giá niêm yết. Điểm đã dùng không hoàn và không bù voucher.</p><p>Chỗ đáng chú ý là túi tote: trả chai này xong, đơn không còn đủ 800 nghìn, nên khách phải trả lại tote hoặc bị trừ giá trị tote.</p></aside>
   </section>
 
   <!-- 13. Chốt ca & báo cáo -->

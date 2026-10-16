@@ -113,5 +113,5 @@ Mỗi nhóm có một nhánh BE và một nhánh FE: `feature/<mã>-be-<mo-ta>` 
 | **POS-02, POS-03 khó nhất** (FEFO, transaction, giảm giá) | BE-B làm POS từ đầu S3. Viết unit test cho FEFO và công thức giảm giá trước khi nối FE |
 | **Công thức giảm giá** (hạng → voucher → điểm) ảnh hưởng POS-03, POS-04, CUS, REP | Chốt trong S0, ghi vào API contract. Không đổi sau khi chốt |
 | **8 câu hỏi nghiệp vụ** (mục 8 DANH_GIA) chưa trả lời | Bắt buộc chốt trong tuần 1. Câu VAT và câu dùng điểm ảnh hưởng trực tiếp DB |
-| **Migration DB conflict** khi nhiều người cùng sửa | Chốt toàn bộ 30 bảng trong G00. Cần sửa thì tạo migration mới và báo trong nhóm |
+| **Migration DB conflict** khi nhiều người cùng sửa | Chốt toàn bộ 34 bảng trong G00. Cần sửa thì tạo migration mới và báo trong nhóm |
 | **Team B quá tải ở S3 và S4** | BE-A làm phần BE của CUS-03..04. Nếu vẫn trễ thì cắt UC mức Could |

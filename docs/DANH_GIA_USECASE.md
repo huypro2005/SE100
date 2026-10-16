@@ -14,7 +14,7 @@
 2. **Thiếu UC quan trọng**: Mở ca, toàn bộ Xuất hủy (có 3 bảng DB nhưng không có đặc tả), Nhập kho chưa gắn NCC, Dùng điểm thưởng, Xem Audit Log, Cấu hình hệ thống; thiếu bảng **chi tiết phiếu nhập**.
 3. **Độ chi tiết UC không đồng đều**: PROD gộp CRUD vào 1 UC, trong khi SUPP/CUS/PROM tách “xem danh sách / tìm kiếm / xem chi tiết” thành 3 UC riêng; REP tách “lọc theo thời gian”, “xuất file” thành UC dù đó là chức năng chung.
 
-**Quy mô:** bản hiện tại 58 UC + 30 bảng — hơi lớn cho 5 người code trong 1 kỳ, nhưng phần lớn là do tách vụn. Phương án đề xuất: **40 UC (39 UC người dùng + 1 tác vụ tự động), 30 bảng** (bỏ 3 bảng, thêm 3 bảng, bổ sung cột còn thiếu), giữ nguyên toàn bộ nghiệp vụ có giá trị.
+**Quy mô:** bản hiện tại 58 UC + 30 bảng — hơi lớn cho 5 người code trong 1 kỳ, nhưng phần lớn là do tách vụn. Phương án đề xuất: **40 UC (39 UC người dùng + 1 tác vụ tự động), 34 bảng** (bỏ 3 bảng, thêm 7 bảng gồm 4 bảng con khuyến mãi, bổ sung cột còn thiếu), giữ nguyên toàn bộ nghiệp vụ có giá trị.
 
 | Nhóm | Hiện tại | Đề xuất | Thay đổi chính |
 |---|---|---|---|
@@ -290,9 +290,9 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | CASHIER_SHIFTS | + `shift_code`. Đổi tên `expected_cash`/`actual_cash` cho khớp đặc tả (`expected_closing_cash`, `actual_closing_cash`) hoặc ngược lại — chọn một. + `handover_confirmed_by` (FK NULL, Manager xác nhận bàn giao — tùy chọn). Ràng buộc: mỗi thu ngân tối đa 1 ca `OPEN` (kiểm tra ở tầng ứng dụng) |
 | ORDERS | Bỏ `salesperson_id`. `payment_method` cho phép NULL đến khi hoàn tất. Status: `DRAFT` (đang lập/tạm giữ, chưa trừ tồn), `COMPLETED`, `CANCELLED`. + `promotion_id` (FK NULL), tách giảm giá: `tier_discount_amount`, `voucher_discount_amount`, `points_used`, `points_discount_amount` (giữ `discount_amount` = tổng). + `amount_received`, `change_due`, `completed_at` |
 | ORDER_DETAILS | + `tax_rate` (chụp tại thời điểm bán), + `discount_allocated` (phần giảm cấp đơn phân bổ theo tỷ lệ tiền dòng), + `line_total` (= qty×unit_price − discount_allocated) |
-| RETURN_ORDERS | Status: `COMPLETED`, `CANCELLED` (gộp nhận hàng + hoàn tiền thành 1 giao dịch). + `restocking_fee_amount`, `points_revoked`. Có `shift_id` của **ca hiện tại** (không phải ca của đơn gốc) |
+| RETURN_ORDERS | Status: `COMPLETED`, `CANCELLED` (gộp nhận hàng + hoàn tiền thành 1 giao dịch). + `points_revoked`. Không có phí trả hàng (quy tắc cố định). Có `shift_id` của **ca hiện tại** (không phải ca của đơn gốc) |
 | RETURN_ORDER_DETAILS | **+ `order_detail_id` (FK, bắt buộc)**; `batch_id` lấy theo dòng gốc. `refund_unit_price` = `line_total / quantity` của dòng gốc. + `unit_cost` (= `cost_price` dòng gốc, để trừ COGS) |
-| RETURN_POLICIES | Giữ. + `is_default`, `status`. Quản lý trong UC Cấu hình hệ thống |
+| RETURN_POLICIES | Chỉ giữ `max_return_days` làm tham số; **bỏ** `is_refund_allowed`, `restocking_fee_percent` (ai được hoàn tiền là quy tắc cố định). + `is_default`, `status`. Quản lý trong UC Cấu hình hệ thống |
 
 **Danh sách UC-POS đề xuất:**
 
@@ -309,18 +309,20 @@ Phân quyền chi tiết (ai được khóa, ai được sửa) xử lý bằng 
 | Lý do (`return_reason`) | Tình trạng hàng | Xử lý |
 |---|---|---|
 | `DEFECTIVE` (lỗi, hư, hết hạn) | Bất kỳ | Hoàn tiền (`CASH`/`BANK_TRANSFER`) hoặc đổi hàng, không tính phí. Hàng luôn vào `blocked_qty` chờ xuất hủy hoặc trả NCC |
-| `WRONG_ITEM` (giao nhầm) | Bất kỳ | Hoàn tiền hoặc đổi hàng, không tính phí. Còn nguyên seal thì về tồn bán |
 | `CHANGE_OF_MIND` (đổi ý, không hợp da) | Còn nguyên seal, trong `max_return_days` | **Chỉ đổi hàng, không hoàn tiền** (`refund_method = EXCHANGE`) |
 | `CHANGE_OF_MIND` | Đã mở seal | **Từ chối**, không tạo phiếu |
 
-**Đổi hàng (`EXCHANGE`):** phiếu trả sinh một giá trị quy đổi (`total_refund_amount`, không chi tiền). Thu ngân lập đơn bán mới với `exchange_return_id`; đơn này được trừ `exchange_credit_amount`.
-- Hàng mới **đắt hơn**: khách nộp phần chênh lệch.
-- Hàng mới **rẻ hơn** (còn dư): **vẫn được đổi, nhưng phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết giá trị thì khách tự mua thêm hàng. Hệ thống nên cảnh báo thu ngân và khách trước khi xác nhận. Đơn đổi có `exchange_credit_amount = MIN(giá trị hàng trả, tổng đơn mới)`; `total_refund_amount` của phiếu trả bằng đúng khoản này, nên phần dư vẫn tính là doanh thu của cửa hàng.
-- Điểm thưởng vẫn thu hồi theo công thức hiện hành; đơn đổi tích điểm theo số tiền khách thực nộp.
+Không có lý do **giao nhầm**: thu ngân quét mã từng sản phẩm khi thanh toán nên hàng trên hóa đơn luôn đúng hàng khách cầm.
 
-**Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE`/`WRONG_ITEM` hoàn tiền):**
-`Tiền hoàn = Σ (line_total_gốc / qty_gốc × qty_trả) × (1 − restocking_fee_percent)`
-— đã tự động trừ phần giảm giá đã hưởng nhờ `discount_allocated`.
+**Đổi hàng (`EXCHANGE`):** phiếu trả sinh một giá trị quy đổi (`total_refund_amount`, không chi tiền). Thu ngân lập đơn bán mới với `exchange_return_id`; đơn này được trừ `exchange_credit_amount = giá trị hàng trả`.
+- Tổng đơn mới **phải lớn hơn hoặc bằng** giá trị hàng trả. Thấp hơn thì hệ thống **chặn hoàn tất**, yêu cầu khách chọn thêm hàng.
+- Phần vượt: khách nộp thêm. Không hoàn tiền, **không cấp voucher** cho bất kỳ phần chênh nào.
+- Điểm thưởng vẫn thu hồi theo công thức hiện hành; đơn đổi tích điểm theo số tiền khách thực nộp.
+- Trả hàng **không phát voucher bù** (kể cả hàng lỗi); điểm đã dùng không hoàn.
+
+**Công thức tiền hoàn (POS-04, áp dụng cho `DEFECTIVE` hoàn tiền):**
+`Tiền hoàn = Σ (line_total_gốc / qty_gốc × qty_trả)` (không tính phí trả hàng)
+— `line_total` của dòng gốc đã trừ mọi khoản giảm khách được hưởng (4 cột giảm của `ORDER_DETAILS`).
 
 ---
 
@@ -546,10 +548,10 @@ Ký hiệu: ✔ toàn quyền · 👁 chỉ xem · — không có quyền
 | RETURN_POLICIES | `is_default`, `status` |
 | ORDERS | Status `DRAFT/COMPLETED/CANCELLED`; `payment_method` NULL được; `promotion_id`, tách 3 loại giảm giá, `points_used`, `amount_received`, `change_due`, `completed_at` |
 | ORDER_DETAILS | `tax_rate`, `discount_allocated`, `line_total` |
-| RETURN_ORDERS | Status `COMPLETED/CANCELLED`, `restocking_fee_amount`, `points_revoked` |
+| RETURN_ORDERS | Status `COMPLETED/CANCELLED`, `points_revoked` |
 | RETURN_ORDER_DETAILS | **`order_detail_id`**, `unit_cost` |
 
-Tổng: 30 − 3 bảng bỏ + 3 bảng mới = **30 bảng** (29 nếu không dùng JWT).
+Tổng: 30 − 3 bảng bỏ + 7 bảng mới (3 bảng hỗ trợ và 4 bảng con khuyến mãi) = **34 bảng** (33 nếu không dùng JWT).
 
 ---
 
@@ -601,7 +603,7 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | 1 | Hệ thống cho **1 cửa hàng** hay nhiều chi nhánh? | 1 cửa hàng (DB hiện tại không có `store_id`) |
 | 2 | Giá niêm yết `retail_price` **đã gồm VAT** chưa? | Đã gồm VAT (đúng thực tế bán lẻ); hóa đơn tách ngược ra tiền thuế |
 | 3 | Lô có được bán **trong ngày hết hạn** không? Có ngừng bán trước hạn M ngày không? | Bán đến hết ngày `exp_date`; không chặn sớm (chỉ cảnh báo N ngày) |
-| 4 | Có cho **dùng điểm** trừ tiền không? Tỷ lệ? | Có: 1 điểm = 1.000đ, tối đa 50% giá trị đơn (cấu hình được) |
+| 4 | Có cho **dùng điểm** trừ tiền không? Tỷ lệ? | Có. Giá trị 1 điểm và mức tối đa do chủ cửa hàng tự đặt trong `SYSTEM_SETTINGS` (mẫu: 1 điểm = 100đ, tối đa 50% giá trị đơn) |
 | 5 | Trả hàng có làm **hạ hạng thẻ** không? | Không hạ hạng; chỉ giảm `total_spent` và thu hồi điểm |
 | 6 | Có cần **thanh toán kết hợp** (một phần tiền mặt + một phần chuyển khoản) không? | Không — 1 phương thức/đơn |
 | 7 | Hoàn tiền/đổi trả có cần **Manager duyệt** không (ma trận cũ có, đặc tả không có)? | Không cần duyệt; Manager xem lại qua báo cáo + Audit Log |
@@ -612,7 +614,9 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | # | Nội dung | Quyết định |
 |---|---|---|
 | 9 | Khách đổi ý có được hoàn tiền không? | **Không**, chỉ đổi hàng (nguyên seal, trong hạn) |
-| 10 | Đổi sang hàng rẻ hơn | Được đổi, nhưng **phần dư không được lấy lại** (không hoàn tiền, không voucher). Muốn dùng hết thì tự mua thêm hàng |
+| 10 | Đổi sang hàng rẻ hơn | **Không cho.** Tổng đơn đổi phải ≥ giá trị hàng trả; thiếu thì khách chọn thêm hàng. Không hoàn tiền, không voucher |
+| 14 | Lý do giao nhầm | **Bỏ.** Thu ngân quét mã từng sản phẩm khi thanh toán nên không có giao nhầm |
+| 15 | Voucher bù khi trả hàng | **Không có** trong mọi trường hợp, kể cả hàng lỗi |
 | 11 | Hàng trưng bày móp hộp, bạc màu | **Không làm** giảm giá theo dòng. Hàng trên kệ là hàng bán bình thường, trừ tồn khi bán theo FEFO |
 | 12 | Tester | Xuất bằng phiếu `TESTER` dùng chung bảng `DISPOSAL_REQUESTS`; **Manager duyệt**; sau khi duyệt hệ thống hết trách nhiệm (không theo dõi hạn, không lập phiếu hủy) |
 | 13 | Lô trên kệ hạn muộn hơn lô mới nhập (vd kệ 12/2027, lô mới 06/2027) | **Không thêm bảng trưng bày.** Giải quyết bằng xoay kệ + cảnh báo khi nhập + kiểm kho theo lô (quy tắc chung số 9). Lý do: bảng trưng bày chỉ giúp ghi đúng việc bán lô hạn muộn trước, không ngăn được lô hạn sớm hết hạn trong kho, và mỗi lần châm kệ phải lập phiếu chuyển |
