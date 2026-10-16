@@ -16,7 +16,7 @@
 | 6 | Bậc thang theo hóa đơn | `ORDER_TIERED` | 3. Đơn hàng |
 | 8 | Voucher mã | `VOUCHER` | 3. Đơn hàng |
 | 7 | Quà tặng theo hóa đơn | `ORDER_GIFT` | 3. Đơn hàng (quà) |
-| — | Điểm thưởng (1 điểm = 100đ, tối đa 50%) | Không phải KM: `ORDERS.points_used` | 4. Điểm |
+| — | Điểm thưởng (giá trị 1 điểm và mức tối đa do chủ cửa hàng cấu hình; mẫu 100đ, 50%) | Không phải KM: `ORDERS.points_used` | 4. Điểm |
 
 Không làm: 4 (món thứ N+1), 10 (nhân điểm), 11 (chi tiêu đổi voucher), 12 (giảm cận date theo lô).
 

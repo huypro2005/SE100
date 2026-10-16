@@ -603,7 +603,7 @@ Những điểm dưới đây tôi đã đưa ra phương án khuyến nghị tr
 | 1 | Hệ thống cho **1 cửa hàng** hay nhiều chi nhánh? | 1 cửa hàng (DB hiện tại không có `store_id`) |
 | 2 | Giá niêm yết `retail_price` **đã gồm VAT** chưa? | Đã gồm VAT (đúng thực tế bán lẻ); hóa đơn tách ngược ra tiền thuế |
 | 3 | Lô có được bán **trong ngày hết hạn** không? Có ngừng bán trước hạn M ngày không? | Bán đến hết ngày `exp_date`; không chặn sớm (chỉ cảnh báo N ngày) |
-| 4 | Có cho **dùng điểm** trừ tiền không? Tỷ lệ? | Có: 1 điểm = 1.000đ, tối đa 50% giá trị đơn (cấu hình được) |
+| 4 | Có cho **dùng điểm** trừ tiền không? Tỷ lệ? | Có. Giá trị 1 điểm và mức tối đa do chủ cửa hàng tự đặt trong `SYSTEM_SETTINGS` (mẫu: 1 điểm = 100đ, tối đa 50% giá trị đơn) |
 | 5 | Trả hàng có làm **hạ hạng thẻ** không? | Không hạ hạng; chỉ giảm `total_spent` và thu hồi điểm |
 | 6 | Có cần **thanh toán kết hợp** (một phần tiền mặt + một phần chuyển khoản) không? | Không — 1 phương thức/đơn |
 | 7 | Hoàn tiền/đổi trả có cần **Manager duyệt** không (ma trận cũ có, đặc tả không có)? | Không cần duyệt; Manager xem lại qua báo cáo + Audit Log |

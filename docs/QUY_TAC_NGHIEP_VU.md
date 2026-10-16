@@ -110,7 +110,7 @@
 | Số ngày cảnh báo cận hạn | `SYSTEM_SETTINGS.EXPIRY_WARNING_DAYS` | 60 |
 | Thời hạn đổi trả | `RETURN_POLICIES.max_return_days` | 7 ngày |
 | Tích điểm | `SYSTEM_SETTINGS.POINT_EARN_AMOUNT` | 10.000đ = 1 điểm |
-| Giá trị 1 điểm | `SYSTEM_SETTINGS.POINT_REDEEM_VALUE` | 100đ ⚠️ (DANH_GIA_USECASE ghi 1.000đ) |
+| Giá trị 1 điểm | `SYSTEM_SETTINGS.POINT_REDEEM_VALUE` | Chủ cửa hàng tự đặt (mẫu 100đ) |
 | Điểm dùng tối đa | `SYSTEM_SETTINGS.POINT_MAX_REDEEM_PERCENT` | 50% đơn |
 | Mốc chi tiêu và % giảm từng hạng | `CUSTOMER_TIERS` | Theo bảng hạng |
 | Thông số từng khuyến mãi | `PROMOTIONS` và bảng con | Mức giảm, ngưỡng, thời gian, số lượt |
@@ -121,5 +121,4 @@
 | # | Câu hỏi | Đang ghi |
 |---|---|---|
 | 1 | Đổi hàng có cho **bằng giá** không? | Có (luật 17: lớn hơn hoặc bằng) |
-| 2 | Giá trị 1 điểm là 100đ hay 1.000đ? | 100đ |
-| 3 | `RETURN_POLICIES.is_refund_allowed`, `restocking_fee_percent` cho bật hoàn tiền khi đổi ý và đặt phí trả hàng, mâu thuẫn với luật 14. Có bỏ 2 cột này không? | Chưa bỏ |
+| 2 | `RETURN_POLICIES.is_refund_allowed`, `restocking_fee_percent` cho bật hoàn tiền khi đổi ý và đặt phí trả hàng, mâu thuẫn với luật 14. Có bỏ 2 cột này không? | Chưa bỏ |

@@ -109,7 +109,7 @@ Dữ liệu mặc định:
 |---|---|---|
 | EXPIRY_WARNING_DAYS | 60 | Ngưỡng N ngày cảnh báo cận hạn |
 | POINT_EARN_AMOUNT | 10000 | Số tiền (VNĐ) khách trả để được 1 điểm |
-| POINT_REDEEM_VALUE | 100 | Giá trị 1 điểm khi đổi (VNĐ) |
+| POINT_REDEEM_VALUE | 100 | Giá trị 1 điểm khi đổi (VNĐ). Chủ cửa hàng tự đặt; 100 chỉ là giá trị mẫu |
 | POINT_MAX_REDEEM_PERCENT | 50 | Tối đa % giá trị đơn được trừ bằng điểm |
 | STORE_NAME / STORE_ADDRESS / STORE_PHONE | … | In trên hóa đơn |
 
