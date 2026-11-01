@@ -47,11 +47,19 @@
 24. Tồn bán được = `on_hand − blocked`, chỉ tính lô còn hạn và không bị khóa kiểm kho.
 25. FEFO: bán lô hết hạn sớm nhất trước, thiếu thì tự tách sang lô kế tiếp.
 26. Được bán đến hết ngày ghi trên hạn dùng; không chặn bán sớm, chỉ cảnh báo trước.
-27. Thu ngân đổi lô thủ công chỉ là ngoại lệ: lô phải còn hạn, và hệ thống ghi nhật ký (`OVERRIDE_FEFO`).
+27. Lô bị trừ khi bán do mã quét quyết định; thu ngân không đổi lô thủ công:
+    - Quét mã vạch của hãng: trừ theo FEFO (luật 25).
+    - Quét tem lô: trừ đúng lô của tem. Lô đã hết hạn hoặc đang khóa kiểm kho thì chặn bán, chai đó đưa vào cách ly.
+    - Tem lô quét được nhưng tồn bán được của lô không đủ (sổ lệch với thực tế): hệ thống chuyển phần thiếu từ lô cùng sản phẩm có hạn muộn nhất sang lô của tem rồi trừ, ghi thẻ kho và nhật ký. Cả sản phẩm không còn tồn bán được thì chặn, Manager điều chỉnh.
+    - Chai có tem mà bị quét mã vạch của hãng, hoặc quên dán tem, thì vẫn trừ theo FEFO. Đây là lỗi vận hành; sai lệch được sửa khi kiểm kho.
 28. Mọi thay đổi tồn phải ghi kèm thẻ kho (`STOCK_MOVEMENTS`) trong cùng 1 giao dịch. Luôn đảm bảo `0 ≤ blocked ≤ on_hand`.
 29. Nhập thêm vào lô đã có thì giá vốn tính bình quân gia quyền.
 30. Bấm xác nhận nhập kho 2 lần không cộng tồn 2 lần.
-31. Lô mới nhập có hạn sớm hơn lô đang tồn thì cảnh báo xoay kệ. Hệ thống không quản lý vị trí kệ hay kho.
+31. Xác nhận nhập một lô có hạn sớm hơn lô đang còn tồn của cùng sản phẩm thì hệ thống làm 2 việc:
+    - Thông báo xoay kệ: rút lô cũ ra sau, bày lô mới lên trước.
+    - Tạo mã tem cho lô cũ, gợi ý số bản in bằng tồn của lô. Dùng khi lô cũ còn ít và để trên kệ bán tiếp.
+
+    Nhân viên hoặc quản lý tự chọn cách xử lý. Mỗi lô có 1 mã tem, in bao nhiêu bản tùy nhu cầu; tem phải dán đè lên mã vạch của hãng để không quét nhầm. Hệ thống không quản lý vị trí kệ hay kho.
 32. Kiểm kho:
     - Bắt đầu kiểm thì chụp tồn và khóa lô.
     - Ô trống không hiểu là 0.
@@ -121,4 +129,5 @@
 - Đổi hàng bằng giá được (luật 17: lớn hơn hoặc bằng).
 - Giá trị 1 điểm do chủ cửa hàng tự đặt, không phải luật cố định.
 - `RETURN_POLICIES` chỉ còn `max_return_days`; đã bỏ `is_refund_allowed`, `restocking_fee_percent` và `RETURN_ORDERS.restocking_fee_amount` vì ai được hoàn tiền và việc không tính phí là luật cố định (luật 14).
+- Tem lô (luật 27, 31) thay cho việc thu ngân đổi lô thủ công (`OVERRIDE_FEFO`). [DATABASE.md](DATABASE.md) và [DANH_GIA_USECASE.md](DANH_GIA_USECASE.md) chưa cập nhật theo: cần bảng mã vạch có cột lô (tem lô) và bỏ luồng phụ đổi lô ở POS-02.
 - Cơ sở dữ liệu nay có 34 bảng (thêm 4 bảng con khuyến mãi), xem [DATABASE.md](DATABASE.md).
